@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <title>Game server (test)</title>
+</head>
+
+<body>
+    <h1>Welcome to the localhost</h1>
+    <p>Here is the client, that will connect to the server using WebSockets.</p>
+    <p>You can move with WASD and arrow keys.</p>
+    <p>Note: This server is only for testing purposes.</p>
+    <div style="display: flex;">
+        <canvas id="gameCanvas" width="200" height="140"></canvas>
+        <form id="login-form">
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username" required>
+            <input type="submit" value="Submit">
+        </form>
+    </div>
+</body>
+<script>
+    /** @type {HTMLCanvasElement} */
+    const canvas = document.getElementById("gameCanvas");
+    const loginForm = document.getElementById("login-form");
+
+    const state = {}
+
+    const MOVEMENT_KEYS = "KeyA,KeyD,KeyW,KeyS,ArrowLeft,ArrowRight,ArrowUp,ArrowDown".split(",");
+
+    // paint the canvas with black
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = "black";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    loginForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const username = document.getElementById("username").value;
+
+        const socket = new WebSocket("ws://localhost:3000/world");
+        socket.addEventListener("open", (event) => {
+            socket.send(JSON.stringify({ type: "login", username }));
+        });
+        socket.addEventListener("close", (event) => {
+            console.log("Connection closed");
+            window.onkeydown = null;
+        })
+        socket.addEventListener("message", (event) => {
+            try {
+                const data = JSON.parse(event.data);
+                if (data.type === "join") {
+                    console.log("Message from server:", data);
+                    Object.assign(state, data);
+                    drawUpdate(state);
+                } else if (data.type === "tick") {
+                    Object.assign(state, data);
+                    drawUpdate(state);
+                }
+            } catch (error) {
+                console.error("Websocket message error:", error);
+            }
+        });
+        window.onkeydown = (event) => {
+            // console.log(event.type, event.code, event.key)
+            if (MOVEMENT_KEYS.includes(event.code)) {
+                socket.send(JSON.stringify({ type: "move", code: event.code }));
+            }
+        };
+    });
+
+    function drawUpdate(data) {
+        // update size
+        if (data.width) canvas.width = data.width;
+        if (data.height) canvas.height = data.height;
+        // paint the canvas with green
+        ctx.fillStyle = "green";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // draw the NPCs
+        data.entities.forEach((entity) => {
+            if (entity.type === 0) { // NPC
+                drawRect("brown", entity.x, entity.y, 8, 8);
+                // display the entity name as text in the canvas
+                ctx.fillStyle = "white";
+                ctx.font = "10px Arial";
+                ctx.fillText(entity.name, (entity.x - (entity.name.length * 2)), (entity.y - 2));
+            } else if (entity.type === 1) { // PLAYER
+                drawCircle("black", entity.x, entity.y, 8);
+                // display the username as text in the canvas
+                ctx.fillStyle = "white";
+                ctx.font = "10px Arial";
+                ctx.fillText(entity.name, (entity.x - (entity.name.length * 2.5)), (entity.y - 8));
+            } else if (entity.type === 2) { // MONSTER
+                drawCircle("red", entity.x, entity.y, 8);
+                // display the username as text in the canvas
+                ctx.fillStyle = "red";
+                ctx.font = "10px Arial";
+                ctx.fillText(entity.name, (entity.x - (entity.name.length * 2.5)), (entity.y - 8));
+            }
+        });
+    }
+
+    function fillRect(x, y, width, height) {
+        ctx.fillStyle = "black";
+        ctx.fillRect(x, y, width, height);
+    }
+
+    function drawRect(fill, x, y, width, height) {
+        ctx.beginPath();
+        ctx.rect(x, y, width, height);
+        ctx.fillStyle = fill || "red";
+        ctx.fill();
+    }
+
+    function drawCircle(fill, x, y, radius) {
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, 2 * Math.PI);
+        ctx.fillStyle = fill || "red";
+        ctx.fill();
+    }
+</script>
+
+</html>

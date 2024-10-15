@@ -1,0 +1,12 @@
+/node_modules
+/test
+/tests
+/backup
+/backups
+
+.env
+.7z
+.zip
+.grf
+
+package-lock.json
