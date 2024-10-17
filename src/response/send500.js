@@ -24,10 +24,10 @@ const BODY = `<!DOCTYPE html>
  * @param {import("http").ServerResponse} response
  */
 export function send500(response) {
-    response.writeHead(500, {
-        'Content-Length': Buffer.byteLength(BODY),
-        'Content-Type': 'text/html',
-        'X-Powered-By': 'Magic',
-    });
-    response.end(BODY, 'utf-8');
+	response.writeHead(500, {
+		'Content-Length': Buffer.byteLength(BODY),
+		'Content-Type': 'text/html',
+		'X-Powered-By': 'Magic',
+	});
+	response.end(BODY, 'utf-8');
 }
