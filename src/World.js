@@ -1,7 +1,7 @@
 import WebSocket from 'ws';
 import { WorldMap } from './maps/WorldMap.js';
-import { Player } from './entities/Player.js';
-import { Entity } from './entities/Entity.js';
+import { PlayerControl } from './control/PlayerControl.js';
+import { ENTITY_TYPE } from './data/enum/Entity.js';
 
 /**
  * @typedef {import("ws").WebSocketServer} WebSocketServer
@@ -32,7 +32,7 @@ export class World {
 
 	/**
 	 * Join a map (or create it if it doesn't exist), and tell the Player to join it
-	 * @param {Player} player - The Player that wants to join the map
+	 * @param {PlayerControl} player - The Player that wants to join the map
 	 * @param {string} name - The name of the map to join (default: "lobby")
 	 * @returns {Promise<WorldMap>} - The map that was joined
 	 */
@@ -57,7 +57,7 @@ export class World {
 		player.y = Math.round(map.height / 2)
 		player.dir = 0
 		// Player is also an Entity
-		map.entities.set(player.id, player)
+		map.entities.set(player.gid, player)
 		return map
 	}
 
@@ -68,7 +68,9 @@ export class World {
 	 */
 	async onConnection(ws, req) {
 		this.playersCountTotal++
-		const player = new Player(this, ws, req)
+		const player = new PlayerControl({ world: this, socket: ws })
+		// TODO load user data from database, like id etc.
+		player.id = this.playersCountTotal
 		// you can also read headers here
 		// custom way of finding the access token
 		// const authorization = req.headers['sec-websocket-protocol']; // ws, wss, Bearer.123
@@ -83,7 +85,7 @@ export class World {
 
 	/**
 	 * Called every tick, runs the onTick function of all clients in all maps
-	 * @see Player.onTick
+	 * @see PlayerControl.onTick
 	 */
 	onTick() {
 		this.maps.forEach((map) => {
@@ -98,7 +100,7 @@ export class World {
 		this.maps.forEach((map) => {
 			map.entities.forEach((entity) => {
 				// Entity with a socket is a Player
-				if (entity.socket != null && entity.socket.readyState === WebSocket.OPEN) {
+				if (entity instanceof PlayerControl && entity.socket.readyState === WebSocket.OPEN) {
 					entity.socket.send(data, { binary: isBinary });
 				}
 			})
@@ -110,7 +112,7 @@ export class World {
 		this.broadcast(JSON.stringify({ type: "leave", name: player.name }));
 		// remove player from map
 		this.maps.forEach((map) => {
-			if (!map.entities.delete(player.id)) {
+			if (!map.entities.delete(player.gid)) {
 				console.log(`[WARN]: unable to remove player ${player.id} from map ${map.name}`)
 			}
 		})
@@ -124,7 +126,7 @@ export class World {
 		let count = 0
 		this.maps.forEach((map) => {
 			map.entities.forEach((entity) => {
-				if (entity.type === Entity.TYPE.PLAYER) {
+				if (entity.type === ENTITY_TYPE.PLAYER) {
 					count++
 				}
 			})

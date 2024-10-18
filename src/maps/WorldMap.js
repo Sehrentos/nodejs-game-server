@@ -1,4 +1,5 @@
-import { Entity } from "../entities/Entity.js"
+import { EntityControl } from "../control/EntityControl.js"
+import { MonsterControl } from "../control/MonsterControl.js"
 import { randomIntFromInterval } from "../utils/randomIntFromInterval.js"
 
 /**
@@ -11,6 +12,7 @@ export class WorldMap {
 		this.height = 0
 		this.width = 0
 		this.isLoaded = false
+		/** @type {Map<string, EntityControl|MonsterControl|import("../control/PlayerControl.js").PlayerControl>} */
 		this.entities = new Map()
 	}
 
@@ -20,25 +22,29 @@ export class WorldMap {
 
 	onCreate() {
 		// create dummy NPC entities
-		Array(25).fill(0).forEach((_v, i) => {
-			let entity = new Entity(0, Entity.TYPE.NPC, `npc-${i}`)
-			entity.x = randomIntFromInterval(5, this.width - 5)
-			entity.y = randomIntFromInterval(5, this.height - 5)
-			entity.dir = Math.floor(Math.random() * 4)
-			entity.map = this
-			this.entities.set(entity.id, entity)
-		})
+		for (let i = 0; i < 25; i++) {
+			let x = randomIntFromInterval(5, this.width - 5)
+			let y = randomIntFromInterval(5, this.height - 5)
+			let dir = Math.floor(Math.random() * 4)
+			this.addNpc(0, `npc-${i}`, this, x, y, dir)
+		}
 		// create dummy MONSTER entities
-		Array(100).fill(0).forEach((_v, i) => {
-			let entity = new Entity(0, Entity.TYPE.MONSTER, `mob-${i}`)
-			entity.x = randomIntFromInterval(5, this.width - 5)
-			entity._x = Number(entity.x)
-			entity.y = randomIntFromInterval(5, this.height - 5)
-			entity._y = Number(entity.y)
-			entity.dir = Math.floor(Math.random() * 4)
-			entity.map = this
-			this.entities.set(entity.id, entity)
-		})
+		for (let i = 0; i < 100; i++) {
+			let x = randomIntFromInterval(5, this.width - 5)
+			let y = randomIntFromInterval(5, this.height - 5)
+			let dir = Math.floor(Math.random() * 4)
+			this.addMonster(100, `mob-${i}`, this, x, y, dir)
+		}
 		console.log(`WorldMap ${this.name} created with ${this.entities.size} entities.`)
+	}
+
+	addNpc(id, name, map, x, y, dir) {
+		const npc = new EntityControl({ id, name, map, x, y, dir });
+		this.entities.set(npc.gid, npc)
+	}
+
+	addMonster(id, name, map, x, y, dir) {
+		const mob = new MonsterControl({ id, name, map, x, y, dir, savePosition: { x, y } });
+		this.entities.set(mob.gid, mob)
 	}
 }

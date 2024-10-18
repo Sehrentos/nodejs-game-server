@@ -87,8 +87,13 @@ server.on('request', (req, res) => {
 		return res.end();
 	}
 
+	// serve index.html
 	if (url.pathname === '/') {
-		return sendFile(res, './index.html', false);
+		return sendFile(res, './dist/index.html', false);
+	}
+	// serve bundle.js
+	if (url.pathname === '/bundle.js') {
+		return sendFile(res, './dist/bundle.js', false);
 	}
 
 	// user authentication with POST request
@@ -122,10 +127,11 @@ server.on('request', (req, res) => {
 						'cache-control': 'no-cache',
 						'expires': '-1',
 						'pragma': 'no-cache',
-						'access-control-allow-headers': '*',
-						'access-control-allow-credentials': 'true',
-						'access-control-allow-methods': '*',
-						'access-control-allow-origin': '*',
+						// CORS
+						// 'access-control-allow-headers': '*',
+						// 'access-control-allow-credentials': 'true',
+						// 'access-control-allow-methods': '*',
+						// 'access-control-allow-origin': '*',
 						'content-length': Buffer.byteLength(response),
 						'content-type': 'application/json',
 					});
@@ -139,10 +145,11 @@ server.on('request', (req, res) => {
 				'cache-control': 'no-cache',
 				'expires': '-1',
 				'pragma': 'no-cache',
-				'access-control-allow-headers': '*',
-				'access-control-allow-credentials': 'true',
-				'access-control-allow-methods': '*',
-				'access-control-allow-origin': '*',
+				// CORS
+				// 'access-control-allow-headers': '*',
+				// 'access-control-allow-credentials': 'true',
+				// 'access-control-allow-methods': '*',
+				// 'access-control-allow-origin': '*',
 				'content-length': Buffer.byteLength(response),
 				'Content-Type': 'application/json',
 			});

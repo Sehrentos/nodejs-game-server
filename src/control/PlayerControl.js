@@ -1,40 +1,34 @@
-import { Entity } from "./Entity.js";
+import { randomBytes } from 'node:crypto';
+import { Player } from '../data/player/Player.js';
+import { Packets } from '../data/Packets.js';
 
 /**
- * @typedef {import("../World.js").World} World
  * @typedef {import("../maps/WorldMap.js").WorldMap} WorldMap
- * @typedef {import("ws").WebSocket} WebSocket
- * @typedef {import("http").IncomingMessage} IncomingMessage
+ * @typedef {import("../data/player/Player.js").PlayerProps} PlayerProps
+ * @typedef {Object} PlayerExtraProps
+ * @prop {import("../World.js").World=} world - World instance.
+ * @prop {import("ws").WebSocket=} socket - Websocket instance.
+ * @typedef {PlayerProps & PlayerExtraProps} PlayerControlProps
  */
 
-export class Player extends Entity {
+export class PlayerControl extends Player {
 	/**
-	 * Called when a new WebSocket connection is established
-	 * @param {World} world - The World instance
-	 * @param {WebSocket} socket - The WebSocket connection
-	 * @param {IncomingMessage} req - The HTTP request
+	 * Creates a new PlayerControl instance.
+	 * @param {PlayerControlProps} p - Entity properties.
 	 */
-	constructor(world, socket, req) {
-		super(0, Entity.TYPE.PLAYER, 'player'); // TODO better UUID generation
-		this.quests = []
-		this.party = null // TODO { name: "CoolParty", leader: 0, members: [0, 1, 2] }
-		this.speedMultiplier = 1
-
-		/** @type {World} */
-		this.world = world
-		this.socket = socket
-		// need to parse socket URI?
-		// this.urlFrom = req.socket?.remoteAddress ?? '127.0.0.1'
-		// this.urlTo = (req?.url ?? '').substring(1)
-		// console.log(`WS ${process.pid} new player connection`, this.urlFrom, this.urlTo, this.id);
+	constructor(p) {
+		super(p)
+		this.gid = p?.gid ?? randomBytes(4).toString('hex')
+		this.world = p?.world ?? null
+		this.socket = p?.socket ?? null
 
 		this._onClose = this.onClose.bind(this)
 		this._onError = this.onError.bind(this)
 		this._onMessage = this.onMessage.bind(this)
 
-		socket.on('close', this._onClose)
-		socket.on('error', this._onError)
-		socket.on('message', this._onMessage)
+		this.socket.on('close', this._onClose)
+		this.socket.on('error', this._onError)
+		this.socket.on('message', this._onMessage)
 	}
 
 	/**
@@ -79,20 +73,7 @@ export class Player extends Entity {
 		// const deltaTime = Date.now() - startTime
 		// console.log(`Entity ${this.name} (${startTime}/${deltaTime}) tick.`)
 		// update player data on server update tick
-		this.socket.send(JSON.stringify({
-			type: "tick",
-			x: this.x,
-			y: this.y,
-			dir: this.dir,
-			entities: Array.from(this.map.entities).map(([id, entity]) => ({
-				//id, does the client need this?
-				type: entity.type,
-				name: entity.name,
-				x: entity.x,
-				y: entity.y,
-				dir: entity.dir
-			})),
-		}));
+		this.socket.send(JSON.stringify(Packets.tick(this, this.map)));
 	}
 
 	// async onLogin(json) {
@@ -144,8 +125,8 @@ export class Player extends Entity {
 			default:
 				break
 		}
-
 	}
+
 	/**
 	 * Called when the player enters a map.
 	 * @param {WorldMap} map - The map the player is entering
@@ -153,23 +134,6 @@ export class Player extends Entity {
 	onEnterMap(map) {
 		this.map = map
 		// response joined state
-		this.socket.send(JSON.stringify({
-			type: "join",
-			name: this.name,
-			map: map.name,
-			width: map.width,
-			height: map.height,
-			x: this.x,
-			y: this.y,
-			dir: this.dir,
-			entities: Array.from(map.entities).map(([id, entity]) => ({
-				//id, does the client need this?
-				type: entity.type,
-				name: entity.name,
-				x: entity.x,
-				y: entity.y,
-				dir: entity.dir
-			})),
-		}));
+		this.socket.send(JSON.stringify(Packets.joinMap(this, map)));
 	}
 }
