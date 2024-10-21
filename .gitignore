@@ -1,3 +1,4 @@
+/dist
 /node_modules
 /test
 /tests
@@ -7,6 +8,5 @@
 .env
 .7z
 .zip
-.grf
 
 package-lock.json
