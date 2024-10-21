@@ -1,7 +1,10 @@
 // client-side application entry
+import { ENTITY_TYPE } from "../src/enum/Entity.js";
 import "./style.css";
 import van from "vanjs-core"
 const {
+    p,
+    br,
     div,
     form,
     input,
@@ -16,11 +19,11 @@ const MOVEMENT_KEYS = "KeyA,KeyD,KeyW,KeyS,ArrowLeft,ArrowRight,ArrowUp,ArrowDow
 
 const isLoggedIn = van.state(false)
 
-/** @type {import("vanjs-core").State<import("../src/data/Packets.js").TickPacket>} */
-let world = van.state(null)
+/** @type {import("vanjs-core").State<import("../src/Packets.js").TWorldMap>} */
+let worldMap = van.state(null)
 
-// /** @type {import("vanjs-core").State<any>} */
-// let player = van.state(null)
+/** @type {import("vanjs-core").State<import("../src/Packets.js").TPlayer>} */
+let player = van.state(null)
 
 /** @type {WebSocket} */
 let socket = null
@@ -28,8 +31,8 @@ let socket = null
 /** @type {HTMLCanvasElement} */
 const canvasElement = canvas({
     id: 'gameCanvas',
-    width: 600,
-    height: 400,
+    width: window.innerWidth, // 600,
+    height: window.innerHeight, //400,
 })
 
 /** @type {CanvasRenderingContext2D} */
@@ -62,18 +65,26 @@ const loginDialogElement = div({
         },
             fieldset(
                 legend('Login'),
-                label('Username:'),
+                p('Login to connect to the server using WebSocket.'),
+                p('You can move with WASD and arrow keys.'),
+                p('Note: This server is only for testing purposes'),
+                p('and any login credentials will be accepted for this demo.'),
                 input({
                     type: 'text',
                     name: 'username',
                     id: 'username',
+                    placeholder: 'Username',
+                    required: true,
                 }),
-                label('Password:'),
+                br(),
                 input({
                     type: 'password',
                     name: 'password',
                     id: 'password',
+                    placeholder: 'Password',
+                    required: true,
                 }),
+                br(),
                 input({
                     type: 'submit',
                     value: 'Submit',
@@ -147,15 +158,21 @@ function startGame(token) {
         // our authentication is already done
         isLoggedIn.val = true;
         window.addEventListener("keydown", windowKeydown);
+        // TODO how to get correct mouse position in fullscreen?
+        // canvasElement.requestFullscreen();
+        canvasElement.addEventListener("click", onCanvasClick);
+        canvasElement.addEventListener("mousemove", onCanvasMouseMove);
         console.log('Connection opened.');
     });
 
     socket.addEventListener("close", (event) => {
         console.log("Connection closed.");
         isLoggedIn.val = false;
-        world.val = null;
+        worldMap.val = null;
         // player.val = null;
         window.removeEventListener("keydown", windowKeydown);
+        canvasElement.removeEventListener("click", onCanvasClick);
+        canvasElement.removeEventListener("mousemove", onCanvasMouseMove);
         // paint the canvas with black
         fillRect(0, 0, canvasElement.width, canvasElement.height);
     })
@@ -163,9 +180,9 @@ function startGame(token) {
     socket.addEventListener("message", (event) => {
         try {
             const data = JSON.parse(event.data);
-            if (data.type === "join") {
+            if (data.type === "player") {
                 onPlayerJoin(data);
-            } else if (data.type === "tick") {
+            } else if (data.type === "map") {
                 onWorldTick(data);
             }
         } catch (error) {
@@ -178,33 +195,27 @@ function startGame(token) {
  * Called when a "join" message is received from the server.
  * Updates the player state (name, map, direction, x, y) and world state.
  * Then calls `drawUpdate` to update the game canvas.
- * @param {import("../src/data/Packets.js").TickPacket} data - The message data from the server.
+ * @param {import("../src/Packets.js").TPlayerPacket} data - The message data from the server.
  */
 function onPlayerJoin(data) {
-    console.log("Message from server:", data);
+    // console.log("Player:", data);
     // update player state
-    // const { name, map } = data;
-    // player.val = { name, map };
-    // update world state
-    world.val = data;
-    // draw the game
-    drawUpdate(data);
+    player.val = data.player;
+    // TODO update player UI
+    // ...
 }
 
 /**
  * Called when a "tick" message is received from the server.
  * Updates the player state (name, map, direction, x, y) and world state.
  * Then calls `drawUpdate` to update the game canvas.
- * @param {import("../src/data/Packets.js").TickPacket} data - The message data from the server.
+ * @param {import("../src/Packets.js").TMapPacket} data - The message data from the server.
  */
 function onWorldTick(data) {
-    // update player state
-    // const { name, map } = data;
-    // player.val = { name, map };
     // update world state
-    world.val = data;
-    // draw the game
-    drawUpdate(data);
+    worldMap.val = data.map;
+    // update the game
+    drawMapUpdate();
 }
 
 /**
@@ -220,15 +231,69 @@ function windowKeydown(event) {
     }
 }
 
+// TODO how to get correct mouse position in fullscreen
+function getMousePosition(element, event) {
+    let rect = element.getBoundingClientRect();
+    let x = event.clientX - rect.left;
+    let y = event.clientY - rect.top;
+    return { x, y };
+}
+
+function onCanvasMouseMove(e) {
+    if (worldMap.val == null) return
+    const { x, y } = getMousePosition(canvasElement, e);
+    const stack = findEntitiesInRadius(x, y, 8)
+
+    // change mouse cursor to pointer
+    if (stack.length) {
+        canvasElement.style.cursor = "pointer"
+    } else {
+        canvasElement.style.cursor = "default"
+    }
+}
+
+function onCanvasClick(e) {
+    if (worldMap.val == null) return
+    const { x, y } = getMousePosition(canvasElement, e);
+    const stack = findEntitiesInRadius(x, y, 8)
+    console.log(x, y, stack)
+
+    // send a "click" message to the server
+    socket.send(JSON.stringify({ type: "click", x, y }));
+}
+
+
+/**
+ * Finds entities in the given radius around a specific point.
+ * 
+ * @param {number} x - The x-coordinate of the center point.
+ * @param {number} y - The y-coordinate of the center point.
+ * @param {number} radius - The radius to search for entities.
+ * @returns {Array} - An array of entities within the specified radius.
+ */
+function findEntitiesInRadius(x, y, radius) {
+    const stack = [] // entities can be on top of each other
+    if (worldMap.val == null) return stack
+    const entities = worldMap.val.entities
+    let _x, _y
+    for (const entity of entities) {
+        _x = entity.x
+        _y = entity.y
+        if (Math.abs(x - _x) > radius || Math.abs(y - _y) > radius) continue
+        stack.push(entity)
+    }
+    return stack
+}
+
 /**
  * Called by the game loop to update the game canvas.
  * Updates the canvas size if the width or height have changed.
  * Paints the canvas with green.
  * Draws all entities in the game world.
- * @param {import("../src/data/Packets.js").TickPacket} data - The message data from the server.
  */
-function drawUpdate(data) {
-    // update size
+function drawMapUpdate() {
+    const data = worldMap.val
+    // update max size by server data
     if (data.width) canvasElement.width = data.width;
     if (data.height) canvasElement.height = data.height;
 
@@ -238,24 +303,31 @@ function drawUpdate(data) {
 
     // draw the NPCs
     data.entities.forEach((entity) => {
-        if (entity.type === 0) { // NPC
+        if (entity.type === ENTITY_TYPE.NPC) {
             drawRect("brown", entity.x, entity.y, 8, 8);
             // display the entity name as text in the canvas
             ctx.fillStyle = "white";
             ctx.font = "10px Arial";
             ctx.fillText(entity.name, (entity.x - (entity.name.length * 2)), (entity.y - 2));
         }
-        else if (entity.type === 1) { // PLAYER
+        else if (entity.type === ENTITY_TYPE.PLAYER) {
             drawCircle("black", entity.x, entity.y, 8);
             // display the username as text in the canvas
             ctx.fillStyle = "white";
             ctx.font = "10px Arial";
             ctx.fillText(entity.name, (entity.x - (entity.name.length * 2.5)), (entity.y - 8));
         }
-        else if (entity.type === 2) { // MONSTER
-            drawCircle("red", entity.x, entity.y, 8);
+        else if (entity.type === ENTITY_TYPE.MONSTER) {
+            drawCircle("red", entity.x, entity.y, 4);
             // display the username as text in the canvas
             ctx.fillStyle = "red";
+            ctx.font = "10px Arial";
+            ctx.fillText(entity.name, (entity.x - (entity.name.length * 2.5)), (entity.y - 8));
+        }
+        else if (entity.type === ENTITY_TYPE.WARP_PORTAL) {
+            drawCircle("blue", entity.x, entity.y, 8);
+            // display the username as text in the canvas
+            ctx.fillStyle = "blue";
             ctx.font = "10px Arial";
             ctx.fillText(entity.name, (entity.x - (entity.name.length * 2.5)), (entity.y - 8));
         }

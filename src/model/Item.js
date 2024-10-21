@@ -1,6 +1,7 @@
 /**
  * @typedef {Object} ItemProps
  * @prop {number=} id - Database id.
+ * @prop {string=} name - Visual name.
  * @prop {number=} type - Item type. default ITEM_TYPE.ETC
  * @prop {number=} aspd - Attack speed. default 100
  * @prop {number=} cspd - Cast speed. default 100
@@ -24,6 +25,7 @@ export class Item {
 	 */
 	constructor(p) {
 		this.id = p?.id ?? 0
+		this.name = p?.name ?? ""
 		this.type = p?.type ?? ITEM_TYPE.ETC
 		this.aspd = p?.aspd ?? 1.0
 		this.cspd = p?.cspd ?? 1.0
@@ -38,11 +40,11 @@ export class Item {
 
 	/**
 	 * Find a item by id.
-	 * @param {Map<number, Item>} items - Item database.
+	 * @param {Array<Item>} items - Item database.
 	 * @param {number} id - Item id.
 	 * @returns {Item|undefined} Item if found, undefined otherwise.
 	 */
 	static findById(items, id) {
-		return items.get(id)
+		return items.find(i => i.id === id)
 	}
 }

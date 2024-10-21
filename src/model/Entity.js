@@ -1,14 +1,14 @@
-import { ELEMENT } from "./enum/Element.js"
-import { ENTITY_TYPE } from "./enum/Entity.js"
+import { ELEMENT } from "../enum/Element.js"
+import { ENTITY_TYPE } from "../enum/Entity.js"
 
 /**
- * @typedef {import("../maps/WorldMap.js").WorldMap} WorldMap
+ * @typedef {import("../WorldMap.js").WorldMap} WorldMap
  * @typedef {Object} EntityProps
  * @prop {number=} id - Database id.
  * @prop {string=} gid - Game id.
- * @prop {import("../AI.js").AI=} ai - AI object.
+ * @prop {import("../AI.js").AI=} ai - AI object. default null
  * @prop {string=} name - Visual name.
- * @prop {ENTITY_TYPE=} type - Entity type. default ENTITY_TYPE.NPC
+ * @prop {number=} type - Entity type. default ENTITY_TYPE.NPC
  * @prop {WorldMap=} map - The map this entity is in.
  * @prop {number=} hp - Current health points.
  * @prop {number=} hpMax - Maximum health points.
@@ -16,9 +16,9 @@ import { ENTITY_TYPE } from "./enum/Entity.js"
  * @prop {number=} mpMax - Maximum mana points.
  * @prop {number=} x - Current X position.
  * @prop {number=} y - Current Y position.
- * @prop {{x: number, y: number}=} savePosition - The position entity was created or saved.
+ * @prop {number=} saveX - The position X entity was created or saved.
+ * @prop {number=} saveY - The position Y entity was created or saved.
  * @prop {number=} dir - Direction facing 0: Down, 1: Right, 2: Up, 3: Left. default 0
- * @prop {ELEMENT=} element - Element type. default ELEMENT.NEUTRAL
  * @prop {number=} level - Level. default 1
  * @prop {number=} jobLevel - Job level. default 0
  * @prop {number=} baseExp - Base experience. default 0
@@ -42,7 +42,7 @@ import { ENTITY_TYPE } from "./enum/Entity.js"
  * @prop {number=} int - Intelligence. default 1
  * @prop {number=} agi - Agility. default 1
  * @prop {number=} luk - Luck. default 1
- * @prop {number=} hit - Hit. default 1
+ * @prop {number=} hit - Hit change / accuracy. default 1
  * @prop {number=} speed - Speed. default 400
  * @prop {number=} speedMultiplier - Speed multiplier. default 1
  * @prop {number=} aspd - Attack speed. default 1
@@ -55,9 +55,10 @@ import { ENTITY_TYPE } from "./enum/Entity.js"
  * @prop {number=} mpRecovery - Mana recovery. default 0
  * @prop {number=} job - Job. default 0
  * @prop {number=} sex - Sex. default 0
- * @prop {number=} equipment - Equipment list. default 0
- * @prop {number=} skills - Skill list. default 0
+ * @prop {number[]=} equipment - Equipment list. default 0
+ * @prop {number[]=} skills - Skill list. default 0
  * @prop {number=} movementStart - Movement start time. default 0
+ * @prop {{id:number, name:string, x:number, y:number}=} portalTo - Warp portal destination.
  */
 
 export class Entity {
@@ -69,14 +70,14 @@ export class Entity {
 	 * 
 	 * @param {EntityProps} p 
 	 */
-	constructor(p) {
+	constructor(p = {}) {
 		/** database id */
 		this.id = p?.id ?? 0
 		/** game id to identify this entity */
 		this.gid = p?.gid ?? ''
 		this.ai = p?.ai ?? null
 		/** entity type NPC, PLAYER, MONSTER. default ENTITY_TYPE.NPC */
-		this.type = p.type ?? ENTITY_TYPE.NPC
+		this.type = p?.type ?? ENTITY_TYPE.NPC
 		/** visual name */
 		this.name = p?.name ?? ''
 		/** @type {null|WorldMap} - The map this entity is in */
@@ -90,18 +91,19 @@ export class Entity {
 		/** current Y position */
 		this.y = p?.y ?? 0
 		/** the position entity was created or saved (Player) */
-		this.savePosition = {
-			x: p?.savePosition?.x ?? 0,
-			y: p?.savePosition?.y ?? 0
-		}
+		this.saveX = p?.saveX ?? 0
+		this.saveY = p?.saveY ?? 0
 		/** @type {number} - Direction facing 0: Down, 1: Right, 2: Up, 3: Left */
 		this.dir = p?.dir ?? 0
 		this.level = p?.level ?? 1
 		this.jobLevel = p?.jobLevel ?? 1
 		this.baseExp = p?.baseExp ?? 0
 		this.jobExp = p?.jobExp ?? 0
+		this.money = p?.money ?? 0
 		this.atk = p?.atk ?? 1
 		this.atkMultiplier = p?.atkMultiplier ?? 1
+		/** Attack Element. default ELEMENT.NEUTRAL */
+		this.elementAtk = p?.elementAtk ?? ELEMENT.NEUTRAL
 		this.mAtk = p?.mAtk ?? 1
 		this.mAtkMultiplier = p?.mAtkMultiplier ?? 1
 		this.speed = p?.speed ?? 100
@@ -121,19 +123,20 @@ export class Entity {
 		this.str = p?.str ?? 1
 		this.agi = p?.agi ?? 1
 		this.vit = p?.vit ?? 1
+		this.int = p?.int ?? 1
 		this.dex = p?.dex ?? 1
 		this.luk = p?.luk ?? 1
+		this.hit = p?.hit ?? 1
 		this.hpRecovery = p?.hpRecovery ?? 0
 		this.mpRecovery = p?.mpRecovery ?? 0
 		this.job = p?.job ?? 0
 		this.sex = p?.sex ?? 0
-		/** Attack Element. default ELEMENT.NEUTRAL */
-		this.elementAtk = p?.elementAtk ?? ELEMENT.NEUTRAL
 		/** Defense Element. default ELEMENT.NEUTRAL */
 		this.elementDef = p?.elementDef ?? ELEMENT.NEUTRAL
 		this.equipment = p?.equipment ?? []
 		this.skills = p?.skills ?? []
 		/** start time of movement in ms */
 		this.movementStart = p?.movementStart ?? 0
+		this.portalTo = p?.portalTo ?? null
 	}
 }

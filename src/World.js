@@ -1,13 +1,8 @@
 import WebSocket from 'ws';
-import { WorldMap } from './maps/WorldMap.js';
+import { WorldMap } from './WorldMap.js';
 import { PlayerControl } from './control/PlayerControl.js';
-import { ENTITY_TYPE } from './data/enum/Entity.js';
-
-/**
- * @typedef {import("ws").WebSocketServer} WebSocketServer
- * @typedef {import("http").IncomingMessage} IncomingMessage
- * @typedef {import("http").ServerResponse} ServerResponse
- */
+import { ENTITY_TYPE } from './enum/Entity.js';
+import { maps } from './data/maps.js';
 
 /**
  * @module World
@@ -15,15 +10,14 @@ import { ENTITY_TYPE } from './data/enum/Entity.js';
  */
 export class World {
 	constructor(socket) {
-		/** @type {WebSocketServer} */
+		/** @type {import("ws").WebSocketServer} */
 		this.socket = socket
-		/** @type {Map<string, WorldMap>} */
-		this.maps = new Map()
-		/** total number of players, from server start */
+		/** @type {Array<WorldMap>} */
+		this.maps = []
+		/** @type {number} - total number of players, from server start */
 		this.playersCountTotal = 0
 
 		this.serverStartTime = performance.now()
-		this.serverUpdateTime = performance.now()
 		this.updateTick = setInterval(this.onTick.bind(this), 1000 / 15) // 1000 / 60
 
 		// event bindings
@@ -33,38 +27,32 @@ export class World {
 	/**
 	 * Join a map (or create it if it doesn't exist), and tell the Player to join it
 	 * @param {PlayerControl} player - The Player that wants to join the map
-	 * @param {string} name - The name of the map to join (default: "lobby")
+	 * @param {string} mapName - The name of the map to join (default: "lobby")
+	 * @param {number} x - The x coordinate of the map to join (default: -1)
+	 * @param {number} y - The y coordinate of the map to join (default: -1)
 	 * @returns {Promise<WorldMap>} - The map that was joined
 	 */
-	async joinMap(player, name = "lobby") {
-		let map = this.maps.get(name)
-		if (map === undefined) {
-			map = new WorldMap(name)
-			if (name === "lobby") {
-				// Note: lobby does not need to be loaded
-				map.isLoaded = true
-				map.width = 600
-				map.height = 400
-			}/* else { // TODO load map data
-                await map.load()
-            }*/
-			this.maps.set(name, map)
+	async joinMapByName(player, mapName = "lobby", x = -1, y = -1) {
+		// check if map exists
+		let map = this.maps.find(m => m.name === mapName)
+		if (!map) {
+			// @ts-ignore create new map from map data
+			map = new WorldMap(this, maps.find(m => m.name === mapName) || { name: mapName })
+			if (!map.isLoaded) {
+				await map.load()
+			}
+			this.maps.push(map)
 			map.onCreate()
 		}
-		// update Player data
-		player.map = map
-		player.x = Math.round(map.width / 2)
-		player.y = Math.round(map.height / 2)
-		player.dir = 0
-		// Player is also an Entity
-		map.entities.set(player.gid, player)
+		// update Player data, so the player can join the map
+		map.enterMap(player, x, y)
 		return map
 	}
 
 	/**
 	 * Called when a new WebSocket connection is established
 	 * @param {WebSocket} ws - The WebSocket connection
-	 * @param {IncomingMessage} req - The HTTP request
+	 * @param {import("http").IncomingMessage} req - The HTTP request
 	 */
 	async onConnection(ws, req) {
 		this.playersCountTotal++
@@ -78,9 +66,7 @@ export class World {
 		console.log(`Player ${player.id} connection established.`/*, token*/)
 		// TODO load user data from database
 		player.name = `player-${this.playersCountTotal}`
-		const map = await this.joinMap(player, 'lobby')
-		console.log(`Player ${player.id} joined ${map.name}`)
-		player.onEnterMap(map)
+		await this.joinMapByName(player, 'lobby')
 	}
 
 	/**
@@ -88,33 +74,38 @@ export class World {
 	 * @see PlayerControl.onTick
 	 */
 	onTick() {
-		this.maps.forEach((map) => {
-			map.entities.forEach((entity) => {
-				entity.onTick(this.serverStartTime, this.serverUpdateTime)
-			})
-		})
-		this.serverUpdateTime = performance.now()
+		const timestamp = performance.now()
+		for (const map of this.maps) {
+			for (let entity of map.entities) {
+				entity.onTick(timestamp)
+			}
+		}
 	}
 
 	broadcast(data, isBinary = false) {
-		this.maps.forEach((map) => {
-			map.entities.forEach((entity) => {
+		for (const map of this.maps) {
+			for (let entity of map.entities) {
 				// Entity with a socket is a Player
 				if (entity instanceof PlayerControl && entity.socket.readyState === WebSocket.OPEN) {
 					entity.socket.send(data, { binary: isBinary });
 				}
-			})
-		})
+			}
+		}
 	}
 
+	/**
+	 * Called when a player disconnects from the world.
+	 * Logs the disconnection of the player and broadcasts a leave message.
+	 * Removes the disconnected player from the map entities.
+	 * @param {PlayerControl} player - The player who disconnected.
+	 */
 	onClientClose(player) {
 		console.log(`World ${process.pid} player disconnected.`);
 		this.broadcast(JSON.stringify({ type: "leave", name: player.name }));
 		// remove player from map
 		this.maps.forEach((map) => {
-			if (!map.entities.delete(player.gid)) {
-				console.log(`[WARN]: unable to remove player ${player.id} from map ${map.name}`)
-			}
+			// TODO can you match entity === player?
+			map.entities = map.entities.filter((entity) => entity.gid !== player.gid)
 		})
 	}
 

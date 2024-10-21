@@ -1,12 +1,12 @@
 import { randomBytes } from 'node:crypto';
-import { Entity } from '../data/Entity.js';
+import { Entity } from '../model/Entity.js';
 
 export class EntityControl extends Entity {
 	/**
 	 * Creates a new EntityControl instance.
-	 * @param {import("../data/Entity.js").EntityProps} p - Entity properties.
+	 * @param {import("../model/Entity.js").EntityProps} p - Entity properties.
 	 */
-	constructor(p) {
+	constructor(p = {}) {
 		super(p)
 		this.gid = p?.gid ?? randomBytes(16).toString('hex')
 	}
@@ -16,12 +16,11 @@ export class EntityControl extends Entity {
 	 * It checks if the entity can move, updates its position based on speed and direction,
 	 * and ensures it stays within the map boundaries and doesn't move excessively from the original position.
 	 * 
-	 * @param {number} startTime server start time
-	 * @param {number} updateTime last update time
+	 * @param {number} timestamp `performance.now()` from the world.onTick
 	 */
-	onTick(startTime, updateTime) {
-		// const deltaTime = performance.now() - startTime // ms elapsed, since server started
-		// const deltaUpdateTime = performance.now() - updateTime // ms elapsed, since last server update
+	onTick(timestamp) {
+		// const deltaTime = timestamp - this.world.startTime // ms elapsed, since server started
+		// console.log(`Entity ${this.name} (${startTime}/${deltaTime}) tick.`)
 		// this.ai?.onUpdate(startTime, updateTime)
 	}
 

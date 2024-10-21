@@ -5,4 +5,5 @@ export const ENTITY_TYPE = {
 	NPC: 0,
 	PLAYER: 1,
 	MONSTER: 2,
+	WARP_PORTAL: 3,
 }

@@ -1,4 +1,4 @@
-import { Entity } from "../Entity.js";
+import { Entity } from "./Entity.js";
 import { ENTITY_TYPE } from "../enum/Entity.js";
 
 /**
@@ -6,7 +6,7 @@ import { ENTITY_TYPE } from "../enum/Entity.js";
  * @prop {number=} type - Entity type. default ENTITY_TYPE.MONSTER
  * @prop {number=} speed - Speed. default 400
  * @prop {number=} iddleStart - Iddle start time. default 0
- * @typedef {import("../Entity.js").EntityProps & EntityExtras} MonsterProps
+ * @typedef {import("./Entity.js").EntityProps & EntityExtras} MonsterProps
  */
 
 export class Monster extends Entity {
@@ -25,11 +25,11 @@ export class Monster extends Entity {
 
 	/**
 	 * Find a monster by id.
-	 * @param {Map<number, Monster>} mobs - Monster database.
+	 * @param {Array<Monster>} mobs - Monster database.
 	 * @param {number} id - Monster id.
 	 * @returns {Monster|undefined} Monster if found, undefined otherwise.
 	 */
 	static findById(mobs, id) {
-		return mobs.get(id)
+		return mobs.find(m => m.id === id)
 	}
 }

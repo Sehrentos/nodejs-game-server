@@ -1,11 +1,11 @@
 import { randomBytes } from 'node:crypto';
-import { Monster } from '../data/monster/Monster.js';
+import { Monster } from '../model/Monster.js';
 import { AI } from '../AI.js';
 
 export class MonsterControl extends Monster {
 	/**
 	 * Creates a new MonsterControl instance.
-	 * @param {import("../data/monster/Monster.js").MonsterProps} p - Monster properties.
+	 * @param {import("../model/Monster.js").MonsterProps} p - Monster properties.
 	 */
 	constructor(p) {
 		super(p)
@@ -18,12 +18,11 @@ export class MonsterControl extends Monster {
 	 * It checks if the entity can move, updates its position based on speed and direction,
 	 * and ensures it stays within the map boundaries and doesn't move excessively from the original position.
 	 * 
-	 * @param {number} startTime server start time
-	 * @param {number} updateTime last update time
+	 * @param {number} timestamp `performance.now()` from the world.onTick
 	 */
-	onTick(startTime, updateTime) {
-		// const deltaTime = performance.now() - startTime // ms elapsed, since server started
-		// const deltaUpdateTime = performance.now() - updateTime // ms elapsed, since last server update
-		this.ai.onUpdate(startTime, updateTime)
+	onTick(timestamp) {
+		// const deltaTime = timestamp - this.world.startTime // ms elapsed, since server started
+		// console.log(`Entity ${this.name} (${startTime}/${deltaTime}) tick.`)
+		this.ai.onUpdate(timestamp)
 	}
 }

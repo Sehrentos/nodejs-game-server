@@ -1,10 +1,10 @@
 import { randomBytes } from 'node:crypto';
-import { Player } from '../data/player/Player.js';
-import { Packets } from '../data/Packets.js';
+import { Player } from '../model/Player.js';
+import { Packets } from '../Packets.js';
 
 /**
- * @typedef {import("../maps/WorldMap.js").WorldMap} WorldMap
- * @typedef {import("../data/player/Player.js").PlayerProps} PlayerProps
+ * @typedef {import("../WorldMap.js").WorldMap} WorldMap
+ * @typedef {import("../model/Player.js").PlayerProps} PlayerProps
  * @typedef {Object} PlayerExtraProps
  * @prop {import("../World.js").World=} world - World instance.
  * @prop {import("ws").WebSocket=} socket - Websocket instance.
@@ -21,6 +21,9 @@ export class PlayerControl extends Player {
 		this.gid = p?.gid ?? randomBytes(4).toString('hex')
 		this.world = p?.world ?? null
 		this.socket = p?.socket ?? null
+
+		// DEBUG, make player move really fast
+		this.speed = 1
 
 		this._onClose = this.onClose.bind(this)
 		this._onError = this.onError.bind(this)
@@ -47,6 +50,8 @@ export class PlayerControl extends Player {
 			// } else 
 			if (json.type === 'move') {
 				await this.onMove(json)
+			} else {
+				console.log(`[TODO] ${process.pid} message:`, json)
 			}
 		} catch (e) {
 			console.log(`WS ${process.pid} message:`, data.toString(), e.message || e)
@@ -69,11 +74,27 @@ export class PlayerControl extends Player {
 		this.world.broadcast(data, isBinary)
 	}
 
-	async onTick(startTime) {
-		// const deltaTime = Date.now() - startTime
+	/**
+	 * Function to handle the movement of a monster entity on each tick.
+	 * It checks if the entity can move, updates its position based on speed and direction,
+	 * and ensures it stays within the map boundaries and doesn't move excessively from the original position.
+	 * 
+	 * @param {number} timestamp `performance.now()` from the world.onTick
+	 */
+	onTick(timestamp) {
+		// const deltaTime = timestamp - this.world.startTime // ms elapsed, since server started
 		// console.log(`Entity ${this.name} (${startTime}/${deltaTime}) tick.`)
-		// update player data on server update tick
-		this.socket.send(JSON.stringify(Packets.tick(this, this.map)));
+
+		// update client map data on server update tick,
+		// so the client can update the map with new entity positions
+		this.socket.send(JSON.stringify(Packets.updateMap(this.map)));
+
+		// send player update every 5 seconds
+		if (!this._playerUpdate || timestamp - this._playerUpdate > 5000) {
+			this._playerUpdate = timestamp
+			// send packet to client, containing player data
+			this.socket.send(JSON.stringify(Packets.updatePlayer(this)));
+		}
 	}
 
 	// async onLogin(json) {
@@ -86,13 +107,16 @@ export class PlayerControl extends Player {
 	// }
 
 	async onMove(json) {
-		// check if entity can move
+		const timestamp = performance.now()
+
+		// apply position update from player.speed and player.speedMultiplier
 		if (this.movementStart === 0) {
-			// this.movementStart = performance.now()
-		} else if (performance.now() - this.movementStart < this.speed * this.speedMultiplier) {
+			// this.movementStart = timestamp
+		} else if (timestamp - this.movementStart < this.speed * this.speedMultiplier) {
 			return
 		}
-		this.movementStart = performance.now()
+		this.movementStart = timestamp
+
 		switch (json.code) {
 			case "KeyA":
 			case "ArrowLeft":
@@ -133,7 +157,8 @@ export class PlayerControl extends Player {
 	 */
 	onEnterMap(map) {
 		this.map = map
-		// response joined state
-		this.socket.send(JSON.stringify(Packets.joinMap(this, map)));
+		// Note: this is also send in onTick
+		// send packet to client, containing player data
+		this.socket.send(JSON.stringify(Packets.updatePlayer(this)));
 	}
 }

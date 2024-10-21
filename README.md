@@ -55,5 +55,7 @@ Client library... something small and easy
    - Installed dependency: `npm install vanjs-core` in https://vanjs.org/start
 
 ## To-Do
+ - Proper map dimensions, now we only have x, y coordinates
+ - Client game library
  - Item DB split by types: Weapon, Armor, etc.
  - Database

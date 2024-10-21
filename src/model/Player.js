@@ -1,14 +1,15 @@
-import { Entity } from "../Entity.js";
+import { Entity } from "./Entity.js";
 import { ENTITY_TYPE } from "../enum/Entity.js";
 import { Party } from "./Party.js";
 
 /**
  * @typedef {Object} EntityExtras
  * @prop {number=} type - Entity type. default ENTITY_TYPE.PLAYER
+ * @prop {number=} portalUsed - Portal used timer. default 0
  * @prop {Party=} party - Party object.
  * @prop {Array<number>=} quests - Quest list.
  * @prop {Array<number>=} inventory - Inventory list.
- * @typedef {import("../Entity.js").EntityProps & EntityExtras} PlayerProps
+ * @typedef {import("./Entity.js").EntityProps & EntityExtras} PlayerProps
  */
 
 export class Player extends Entity {
@@ -19,8 +20,9 @@ export class Player extends Entity {
 	 */
 	constructor(p) {
 		super(p)
-		// player specific props
 		this.type = p?.type ?? ENTITY_TYPE.PLAYER
+		this.portalUsed = 0
+		this.speed = 100
 		this.inventory = p?.inventory ?? []
 		this.quests = p?.quests ?? []
 		this.party = new Party(p?.party?.name, p?.party?.leader, p?.party?.members)
