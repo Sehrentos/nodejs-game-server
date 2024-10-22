@@ -14,8 +14,10 @@ import { ENTITY_TYPE } from "../enum/Entity.js"
  * @prop {number=} hpMax - Maximum health points.
  * @prop {number=} mp - Current mana points.
  * @prop {number=} mpMax - Maximum mana points.
+ * @prop {string=} mapName - Current map name.
  * @prop {number=} x - Current X position.
  * @prop {number=} y - Current Y position.
+ * @prop {string=} saveMap - The map entity was created or saved.
  * @prop {number=} saveX - The position X entity was created or saved.
  * @prop {number=} saveY - The position Y entity was created or saved.
  * @prop {number=} dir - Direction facing 0: Down, 1: Right, 2: Up, 3: Left. default 0
@@ -86,11 +88,13 @@ export class Entity {
 		this.hpMax = p?.hpMax ?? 1
 		this.mp = p?.mp ?? 1
 		this.mpMax = p?.mpMax ?? 1
+		this.mapName = p?.mapName ?? ''
 		/** current X position */
 		this.x = p?.x ?? 0
 		/** current Y position */
 		this.y = p?.y ?? 0
 		/** the position entity was created or saved (Player) */
+		this.saveMap = p?.saveMap ?? ''
 		this.saveX = p?.saveX ?? 0
 		this.saveY = p?.saveY ?? 0
 		/** @type {number} - Direction facing 0: Down, 1: Right, 2: Up, 3: Left */

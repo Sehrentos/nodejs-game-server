@@ -1,23 +1,48 @@
-import WebSocket from 'ws';
+import WebSocket, { WebSocketServer } from 'ws';
 import { WorldMap } from './WorldMap.js';
 import { PlayerControl } from './control/PlayerControl.js';
 import { ENTITY_TYPE } from './enum/Entity.js';
 import { maps } from './data/maps.js';
+import { verifyToken } from './utils/jwt.js';
+import { Database } from './db/Database.js';
 
 /**
  * @module World
  * @description World class contains the world data like maps, Players, etc.
  */
 export class World {
-	constructor(socket) {
-		/** @type {import("ws").WebSocketServer} */
-		this.socket = socket
+	/**
+	 * Initializes a new instance of the World class.
+	 * Sets up the WebSocket server and binds it to the provided server instance.
+	 * Initializes properties related to maps and player tracking.
+	 * @param {import("http").Server} server - The HTTP/HTTPS server instance to bind the WebSocket server to.
+	 */
+	constructor(server) {
+		/** @type {WebSocketServer} */
+		this.socket = new WebSocketServer({
+			server, // bind to server instance.
+			// host: '127.0.0.1', // {String} The hostname where to bind the server.
+			// port: 5999, // {Number} The port number on which to listen.
+			clientTracking: false, // {Boolean} Specifies whether or not to track clients.
+			// maxPayload: 104857600, // {Number} The maximum allowed message size in bytes. Defaults to 100 MiB (104857600 bytes).
+			skipUTF8Validation: false, // {Boolean} Specifies whether or not to skip UTF-8 validation for text and close messages. Defaults to false. Set to true only if clients are trusted.
+			perMessageDeflate: false, // {Boolean|Object} Enable/disable permessage-deflate.
+		})
+
+		/** @type {Database} - database instance */
+		this.db = new Database();
+		this.dbPools = [];
+
 		/** @type {Array<WorldMap>} */
 		this.maps = []
+
 		/** @type {number} - total number of players, from server start */
 		this.playersCountTotal = 0
 
+		/** @type {number} - timestamp of server start */
 		this.serverStartTime = performance.now()
+
+		/** @type {NodeJS.Timeout} - update interval */
 		this.updateTick = setInterval(this.onTick.bind(this), 1000 / 15) // 1000 / 60
 
 		// event bindings
@@ -55,18 +80,66 @@ export class World {
 	 * @param {import("http").IncomingMessage} req - The HTTP request
 	 */
 	async onConnection(ws, req) {
-		this.playersCountTotal++
-		const player = new PlayerControl({ world: this, socket: ws })
-		// TODO load user data from database, like id etc.
-		player.id = this.playersCountTotal
-		// you can also read headers here
-		// custom way of finding the access token
-		// const authorization = req.headers['sec-websocket-protocol']; // ws, wss, Bearer.123
-		// const token = authorization.split(' ').find(part => part.startsWith('Bearer.')).split('.')[1];
-		console.log(`Player ${player.id} connection established.`/*, token*/)
-		// TODO load user data from database
-		player.name = `player-${this.playersCountTotal}`
-		await this.joinMapByName(player, 'lobby')
+		// authentication
+		// custom way of finding the access token in websocket headers
+		const protocol = req.headers['sec-websocket-protocol']; //="ws, wss, Bearer.123"
+		// const urlFrom = req.socket?.remoteAddress ?? '127.0.0.1';
+		// const urlTo = (req?.url ?? '').substring(1);
+		// console.log('Player connection established.', urlFrom, urlTo, protocol)
+		if (!protocol) {
+			ws.close(4401, 'Missing Bearer in Sec-WebSocket-Protocol header');
+			return;
+		}
+		const token = protocol.split(' ').find(part => part.startsWith('Bearer.')).split('Bearer.')[1];
+		if (!token) {
+			ws.close(4401, 'Missing Bearer in Sec-WebSocket-Protocol header');
+			return;
+		}
+		// validate token
+		let payload;
+		try {
+			payload = await verifyToken(token);
+		} catch (err) {
+			ws.close(4401, 'Invalid Bearer in Sec-WebSocket-Protocol header');
+			return;
+		}
+		const datetime = new Date().toLocaleString();
+		const tokenExpires = new Date(payload.exp * 1000).toLocaleString();
+		console.log(`[DB#world] token verified, account_id:${payload.id}, created:${datetime}, expires:${tokenExpires}`)
+
+		// token is valid, load user data from database
+		let conn, account, player;
+		try {
+			conn = await this.db.connect()
+
+			// Note: password is hashed in payload, you need to use token to login
+			// account = await this.db.account.login(payload.username, payload.password);
+			account = await this.db.account.loginToken(token);
+			if (!account) {
+				throw Error('Invalid credentials');
+			}
+
+			// Authorized, create new player
+			this.playersCountTotal++
+			// const iat = payload?.iat
+			// const exp = payload?.exp
+			// const expDiff = exp - iat
+			// TODO load player data from DB
+			player = new PlayerControl({
+				world: this,
+				socket: ws,
+				id: account.id,
+				name: `player-${this.playersCountTotal}`,
+			})
+			console.log(`[DB#world] Player (${player.id}) ${player.name} connection established.`)
+
+			this.joinMapByName(player, 'lobby')
+		} catch (err) {
+			console.log('[DB#world] Error', err.message, err.code || '')
+			ws.close(4401, 'Invalid credentials')
+		} finally {
+			if (conn) conn.end();
+		}
 	}
 
 	/**
@@ -82,6 +155,11 @@ export class World {
 		}
 	}
 
+	/**
+	 * Sends a message to all players in all maps.
+	 * @param {string|Buffer} data - The message to be sent.
+	 * @param {boolean} [isBinary=false] - Whether the data is a Buffer or a string. If true, the data is sent as a binary message.
+	 */
 	broadcast(data, isBinary = false) {
 		for (const map of this.maps) {
 			for (let entity of map.entities) {

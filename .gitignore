@@ -1,3 +1,5 @@
+certs/*
+!certs/README.md
 /dist
 /node_modules
 /test

@@ -8,16 +8,14 @@ const {
     div,
     form,
     input,
-    label,
     legend,
     canvas,
     fieldset,
 } = van.tags;
 
-const WS_ADDRESS = "ws://127.0.0.1:3000/world"
+// const WS_ADDRESS = "ws://127.0.0.1:3000/world"
+const WS_ADDRESS = "wss://127.0.0.1:3000/world"
 const MOVEMENT_KEYS = "KeyA,KeyD,KeyW,KeyS,ArrowLeft,ArrowRight,ArrowUp,ArrowDown".split(",")
-
-const isLoggedIn = van.state(false)
 
 /** @type {import("vanjs-core").State<import("../src/Packets.js").TWorldMap>} */
 let worldMap = van.state(null)
@@ -38,7 +36,13 @@ const canvasElement = canvas({
 /** @type {CanvasRenderingContext2D} */
 const ctx = canvasElement.getContext("2d")
 
-const loginDialogVisibility = van.derive(() => isLoggedIn.val ? 'dialog-backdrop' : 'dialog-backdrop show')
+const loginProp = van.state(true)
+const loginDialogVisibility = van.derive(() => loginProp.val ? 'dialog-backdrop show' : 'dialog-backdrop')
+
+const registerProp = van.state(false)
+const registerDialogVisibility = van.derive(() => registerProp.val && !loginProp.val ? 'dialog-backdrop show' : 'dialog-backdrop')
+
+const isLoggedIn = van.state(false)
 
 // Login dialog
 const loginDialogElement = div({
@@ -49,16 +53,16 @@ const loginDialogElement = div({
         class: 'dialog',
     },
         form({
-            id: 'base-form',
+            id: 'login-form',
             autocomplete: 'off',
             onsubmit: (event) => {
                 event.preventDefault();
                 // @ts-ignore
-                const username = document.getElementById("username").value;
+                const username = document.getElementById("login-username").value;
                 // @ts-ignore
-                const password = document.getElementById("password").value;
+                const password = document.getElementById("login-password").value;
                 // reset the form
-                (event.target || document.forms['base-form']).reset();
+                (event.target || document.forms['login-form']).reset();
                 // do the login and start the game
                 login(username, password);
             },
@@ -71,16 +75,16 @@ const loginDialogElement = div({
                 p('and any login credentials will be accepted for this demo.'),
                 input({
                     type: 'text',
-                    name: 'username',
-                    id: 'username',
+                    name: 'login-username',
+                    id: 'login-username',
                     placeholder: 'Username',
                     required: true,
                 }),
                 br(),
                 input({
                     type: 'password',
-                    name: 'password',
-                    id: 'password',
+                    name: 'login-password',
+                    id: 'login-password',
                     placeholder: 'Password',
                     required: true,
                 }),
@@ -88,6 +92,85 @@ const loginDialogElement = div({
                 input({
                     type: 'submit',
                     value: 'Submit',
+                }),
+                input({
+                    type: 'button',
+                    id: 'register',
+                    name: 'register',
+                    value: 'Register',
+                    onclick: (e) => {
+                        loginProp.val = false;
+                        registerProp.val = true;
+                    }
+                }),
+            )
+        )
+    )
+)
+
+// Register dialog
+const registerDialogElement = div({
+    id: 'register-dialog',
+    class: registerDialogVisibility,
+},
+    div({
+        class: 'dialog',
+    },
+        form({
+            id: 'register-form',
+            autocomplete: 'off',
+            onsubmit: (event) => {
+                event.preventDefault();
+                // @ts-ignore
+                const username = document.getElementById("register-username").value;
+                // @ts-ignore
+                const password = document.getElementById("register-password").value;
+                // @ts-ignore
+                const email = document.getElementById("register-email").value;
+                // reset the form
+                (event.target || document.forms['register-form']).reset();
+                // do the login and start the game
+                register(username, password, email);
+            },
+        },
+            fieldset(
+                legend('Register'),
+                p('Note: This server is only for testing purposes'),
+                p('email is optional.'),
+                input({
+                    type: 'text',
+                    name: 'register-username',
+                    id: 'register-username',
+                    placeholder: 'Username',
+                    required: true,
+                }),
+                br(),
+                input({
+                    type: 'password',
+                    name: 'register-password',
+                    id: 'register-password',
+                    placeholder: 'Password',
+                    required: true,
+                }),
+                br(),
+                input({
+                    type: 'email',
+                    name: 'register-email',
+                    id: 'register-email',
+                    placeholder: 'Email',
+                }),
+                br(),
+                input({
+                    type: 'submit',
+                    value: 'Submit',
+                }),
+                input({
+                    type: 'button',
+                    value: 'Cancel',
+                    onclick: (e) => {
+                        registerProp.val = false
+                        loginProp.val = true
+                    }
                 }),
             )
         )
@@ -98,7 +181,8 @@ const loginDialogElement = div({
 const App = () => {
     return div(
         canvasElement,
-        loginDialogElement
+        loginDialogElement,
+        registerDialogElement,
     )
 }
 
@@ -118,9 +202,9 @@ async function login(username = "", password = "") {
         throw new Error("Already logged in.");
     }
     // sent the POST /login request,
-    // then await for token as response {token:string,expires:number}
+    // then await for token as response {token:string,...}
     // and then start the game
-    const response = await fetch("/login", {
+    const response = await fetch("/api/login", {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
@@ -131,6 +215,29 @@ async function login(username = "", password = "") {
 
     if (!data.token) {
         throw new Error("Login failed.");
+    }
+
+    startGame(data.token);
+}
+
+async function register(username = "", password = "", email = "") {
+    if (isLoggedIn.val) {
+        throw new Error("Already logged in.");
+    }
+    // sent the POST /register request,
+    // then await for token as response {token:string,...}
+    // and then start the game
+    const response = await fetch("/api/register", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ username, password, email })
+    });
+    const data = await response.json();
+
+    if (!data.token) {
+        throw new Error("Register failed.");
     }
 
     startGame(data.token);
@@ -157,6 +264,8 @@ function startGame(token) {
     socket.addEventListener("open", (event) => {
         // our authentication is already done
         isLoggedIn.val = true;
+        loginProp.val = false;
+        registerProp.val = false;
         window.addEventListener("keydown", windowKeydown);
         // TODO how to get correct mouse position in fullscreen?
         // canvasElement.requestFullscreen();
@@ -168,6 +277,8 @@ function startGame(token) {
     socket.addEventListener("close", (event) => {
         console.log("Connection closed.");
         isLoggedIn.val = false;
+        loginProp.val = true;
+        registerProp.val = false;
         worldMap.val = null;
         // player.val = null;
         window.removeEventListener("keydown", windowKeydown);
