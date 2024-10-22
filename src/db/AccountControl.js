@@ -47,16 +47,22 @@ export class AccountControl {
      * Login attempt using the given username and password.
      * @param {string} username - The username to validate
      * @param {string} password - The password to validate
+     * @param {string=} last_ip - The last IP of the user. optional
      * @returns {Promise<import("./Account.js").Account>} - The account object if the login is valid, otherwise undefined
      */
-    async login(username, password) {
+    async login(username, password, last_ip) {
         const rows = await this.db.query(
             `SELECT * FROM account WHERE username = ? AND password = SHA2(CONCAT(?, '${SALT}'), 512)`,
             [username, password]
         )
-        if (rows.length > 0) {
-            return new Account(rows[0])
+        if (rows.length === 0) return;
+        if (last_ip) {
+            await this.db.query(
+                `UPDATE account SET logincount = logincount + 1, lastlogin = NOW(), last_ip = ? WHERE id = ?`,
+                [last_ip, rows[0].id]
+            )
         }
+        return new Account(rows[0])
     }
 
     /**

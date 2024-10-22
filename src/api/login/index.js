@@ -6,6 +6,8 @@ const loginRouter = express.Router({ caseSensitive: false });
 // route /api/login
 loginRouter.post('/', async (req, res, next) => {
     const { username, password } = req.body;
+    let last_ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    last_ip = Array.isArray(last_ip) ? last_ip[0] : last_ip;
 
     // check if username and password are provided
     if (!username || !password) {
@@ -19,7 +21,7 @@ loginRouter.post('/', async (req, res, next) => {
     try {
         conn = await WebDB.connect()
 
-        account = await WebDB.account.login(username, password);
+        account = await WebDB.account.login(username, password, last_ip);
         if (!account) {
             throw Error('Invalid credentials');
         }

@@ -7,7 +7,8 @@ const router = express.Router({ caseSensitive: false });
 // route /api/register
 router.post('/', async (req, res, next) => {
     const { username, password, email } = req.body;
-    const last_ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    let last_ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    last_ip = Array.isArray(last_ip) ? last_ip[0] : last_ip;
 
     // check if username and password are provided
     if (!username || !password) {
@@ -27,7 +28,7 @@ router.post('/', async (req, res, next) => {
             username,
             password,
             email,
-            last_ip: Array.isArray(last_ip) ? last_ip[0] : last_ip,
+            last_ip,
         }));
         if (!newAccount) {
             throw Error('Invalid register credentials');
@@ -35,7 +36,7 @@ router.post('/', async (req, res, next) => {
         console.log('[DB#register] account registered:', newAccount.insertId)
 
         // do login with the new account
-        account = await WebDB.account.login(username, password);
+        account = await WebDB.account.login(username, password, last_ip);
         if (!account) {
             throw Error('Invalid login credentials');
         }

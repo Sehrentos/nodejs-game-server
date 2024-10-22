@@ -112,7 +112,7 @@ export class World {
 		try {
 			conn = await this.db.connect()
 
-			// Note: password is hashed in payload, you need to use token to login
+			// Note: find the account with same token
 			// account = await this.db.account.login(payload.username, payload.password);
 			account = await this.db.account.loginToken(token);
 			if (!account) {
@@ -121,10 +121,6 @@ export class World {
 
 			// Authorized, create new player
 			this.playersCountTotal++
-			// const iat = payload?.iat
-			// const exp = payload?.exp
-			// const expDiff = exp - iat
-			// TODO load player data from DB
 			player = new PlayerControl({
 				world: this,
 				socket: ws,
@@ -133,6 +129,7 @@ export class World {
 			})
 			console.log(`[DB#world] Player (${player.id}) ${player.name} connection established.`)
 
+			// make the player join the lobby map
 			this.joinMapByName(player, 'lobby')
 		} catch (err) {
 			console.log('[DB#world] Error', err.message, err.code || '')
@@ -178,7 +175,7 @@ export class World {
 	 * @param {PlayerControl} player - The player who disconnected.
 	 */
 	onClientClose(player) {
-		console.log(`World ${process.pid} player disconnected.`);
+		console.log(`World player disconnected.`);
 		this.broadcast(JSON.stringify({ type: "leave", name: player.name }));
 		// remove player from map
 		this.maps.forEach((map) => {
