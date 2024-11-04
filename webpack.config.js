@@ -18,6 +18,21 @@ export default {
 				test: /\.css$/i,
 				use: ['style-loader', 'css-loader'],
 			},
+			// {
+			// 	test: /\.(png|jpg|jpeg|gif|svg|ttf)$/,
+			// 	use: [{
+			// 		loader: 'url-loader',
+			// 		options: { limit: 10000 } // Convert images < 10k to base64 strings
+			// 	}]
+			// },
+			{
+				test: /\.(png|jpg|jpeg|gif|svg|ttf)$/,
+				loader: 'file-loader'
+			},
+			{
+				test: /\.(wav|mp3)$/,
+				loader: 'file-loader'
+			},
 		],
 	},
 	output: {

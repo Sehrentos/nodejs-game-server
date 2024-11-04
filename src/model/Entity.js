@@ -17,6 +17,8 @@ import { ENTITY_TYPE } from "../enum/Entity.js"
  * @prop {string=} mapName - Current map name.
  * @prop {number=} x - Current X position.
  * @prop {number=} y - Current Y position.
+ * @prop {number=} width - The width of the entity.
+ * @prop {number=} height - The height of the entity.
  * @prop {string=} saveMap - The map entity was created or saved.
  * @prop {number=} saveX - The position X entity was created or saved.
  * @prop {number=} saveY - The position Y entity was created or saved.
@@ -84,15 +86,17 @@ export class Entity {
 		this.name = p?.name ?? ''
 		/** @type {null|WorldMap} - The map this entity is in */
 		this.map = p?.map ?? null
-		this.hp = p?.hp ?? 1
-		this.hpMax = p?.hpMax ?? 1
-		this.mp = p?.mp ?? 1
-		this.mpMax = p?.mpMax ?? 1
 		this.mapName = p?.mapName ?? ''
 		/** current X position */
 		this.x = p?.x ?? 0
 		/** current Y position */
 		this.y = p?.y ?? 0
+		this.width = p?.width ?? 0
+		this.height = p?.height ?? 0
+		this.hp = p?.hp ?? 1
+		this.hpMax = p?.hpMax ?? 1
+		this.mp = p?.mp ?? 1
+		this.mpMax = p?.mpMax ?? 1
 		/** the position entity was created or saved (Player) */
 		this.saveMap = p?.saveMap ?? ''
 		this.saveX = p?.saveX ?? 0

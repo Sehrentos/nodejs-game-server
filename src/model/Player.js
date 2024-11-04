@@ -5,7 +5,7 @@ import { Party } from "./Party.js";
 /**
  * @typedef {Object} EntityExtras
  * @prop {number=} type - Entity type. default ENTITY_TYPE.PLAYER
- * @prop {number=} portalUsed - Portal used timer. default 0
+ * @prop {boolean=} inCombat - In combat. default false
  * @prop {Party=} party - Party object.
  * @prop {Array<number>=} quests - Quest list.
  * @prop {Array<number>=} inventory - Inventory list.
@@ -21,8 +21,12 @@ export class Player extends Entity {
 	constructor(p) {
 		super(p)
 		this.type = p?.type ?? ENTITY_TYPE.PLAYER
-		this.portalUsed = 0
+		this.hp = p?.hp ?? 100
+		this.hpMax = p?.hpMax ?? 100
+		this.mp = p?.mp ?? 50
+		this.mpMax = p?.mpMax ?? 50
 		this.speed = 100
+		this.inCombat = false
 		this.inventory = p?.inventory ?? []
 		this.quests = p?.quests ?? []
 		this.party = new Party(p?.party?.name, p?.party?.leader, p?.party?.members)

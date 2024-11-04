@@ -21,31 +21,40 @@ export class PortalControl extends Portal {
      * @param {number} timestamp `performance.now()` from the world.onTick
      */
     async onTick(timestamp) {
+        // const deltaTime = timestamp - this.world.startTime // ms elapsed, since server started
+        // console.log(`Entity ${this.name} (${startTime}/${deltaTime}) tick.`)
+
+        // send players to the map in 4 tiles radius
+        this.detectNearByEntities(4, timestamp)
+    }
+
+    /**
+     * Finds entities in the given radius around the entity.
+     * @param {number} [radius=4] - The radius to search for entities.
+     * @param {number} [timestamp=performance.now()] `performance.now()` from the world.onTick
+     */
+    detectNearByEntities(radius = 4, timestamp = performance.now()) {
         try {
-            // const deltaTime = timestamp - this.world.startTime // ms elapsed, since server started
-            // console.log(`Entity ${this.name} (${startTime}/${deltaTime}) tick.`)
-
-            // send players to the map in 4 tiles radius
-            const nearbyEntities = this.map.findEntitiesInRadius(this.x, this.y, 4)
+            // find entities in 4 tiles radius
+            const nearbyEntities = this.map.findEntitiesInRadius(this.x, this.y, radius)
             if (nearbyEntities.length === 0) return
-
             for (const entity of nearbyEntities) {
                 // only players can be warped
                 if (entity.type === ENTITY_TYPE.PLAYER) {
-                    // TODO test, does this work
-                    // player use portal again 5 seconds after last portal used
-                    if (!entity.portalUsed || timestamp - entity.portalUsed > 5000) {
-                        // warp player
-                        entity.portalUsed = performance.now()
+                    // @ts-ignore player use portal again 5 seconds after last portal used
+                    if (!entity._portalUsed || timestamp - entity._portalUsed > 5000) {
+                        // @ts-ignore warp player
+                        entity._portalUsed = performance.now()
+                        // @ts-ignore entity type is player
                         this.map.world.joinMapByName(entity, this.portalTo.name, this.portalTo.x, this.portalTo.y)
                     }
                 }
             }
         } catch (error) {
-            console.error(`WarpPortal ${this.gid} error:`, error.message || error || '[no-code]');
+            console.error(`${this.constructor.name} ${this.gid} error:`, error.message || error || '[no-code]');
         }
     }
 
-    // onCreate() {}
-
+    takeDamage(attacker) { /* we don't take damage */ }
+    die() { /* we don't die */ }
 }

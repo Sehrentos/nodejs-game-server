@@ -63,42 +63,69 @@ export class WorldMap {
 	onCreate() {
 		// create map entities
 		for (const map of maps) {
-			if (map.name === this.name) {
-				// instantiate the Objects with proper controller
-				this.entities = map.entities.map((entity) => {
-					switch (entity.type) {
-						default:
-						case ENTITY_TYPE.NPC:
-							return new EntityControl({ ...entity, map: this, saveX: entity.x, saveY: entity.y })
-						case ENTITY_TYPE.MONSTER:
-							return new MonsterControl({ ...entity, map: this, saveX: entity.x, saveY: entity.y })
-						case ENTITY_TYPE.PLAYER:
-							return new PlayerControl({ ...entity, map: this, saveX: entity.x, saveY: entity.y })
-						case ENTITY_TYPE.WARP_PORTAL:
-							return new PortalControl({ ...entity, map: this, saveX: entity.x, saveY: entity.y })
-					}
-				})
+			if (map.name !== this.name) continue;
+			// instantiate the Objects with proper controllers
+			let entityStack = []
+			for (const entity of map.entities) {
+				let _entityClone = structuredClone(entity)
+				let _quantity = entity.quantity || 1;
+				let x = entity.x || getRandomInt(5, this.width - 5)
+				let y = entity.y || getRandomInt(5, this.height - 5)
+				let dir = entity.dir || Math.floor(Math.random() * 4)
+				let _entity = { ..._entityClone, map: this, x, y, dir, saveX: x, saveY: y }
+				delete _entity.quantity;
+				switch (_entity.type) {
+					default:
+					case ENTITY_TYPE.NPC:
+						entityStack.push(new EntityControl(_entity))
+						break;
+
+					case ENTITY_TYPE.MONSTER:
+						let _mob = mobs.find(e => e.id === _entity.id)
+						if (!_mob) continue
+						let _mobClone = structuredClone(_mob)
+						for (let i = 0; i < _quantity; i++) {
+							// @ts-ignore
+							_entity = { ..._mobClone, ..._entityClone, map: this, x, y, dir, saveX: x, saveY: y }
+							entityStack.push(new MonsterControl(_entity))
+							// cast new positions
+							x = entity.x || getRandomInt(5, this.width - 5)
+							y = entity.y || getRandomInt(5, this.height - 5)
+							dir = entity.dir || Math.floor(Math.random() * 4)
+						}
+						break;
+
+					case ENTITY_TYPE.PLAYER:
+						entityStack.push(new PlayerControl(_entity))
+						break;
+
+					case ENTITY_TYPE.WARP_PORTAL:
+						entityStack.push(new PortalControl(_entity))
+						break;
+				}
 			}
+			// @ts-ignore quantity is removed
+			this.entities = entityStack
 		}
 
-		// [TEST] create dummy NPC entities
-		for (let i = 0; i < 25; i++) {
-			let x = getRandomInt(5, this.width - 5)
-			let y = getRandomInt(5, this.height - 5)
-			let dir = Math.floor(Math.random() * 4)
-			// get random NPC between id 1 and MAX
-			let randomNPC = npcs[getRandomInt(0, npcs.length - 1)]
-			this.addNpc(randomNPC, x, y, dir)
-		}
-		// [TEST] create dummy MONSTER entities
-		for (let i = 0; i < 100; i++) {
-			let x = getRandomInt(5, this.width - 5)
-			let y = getRandomInt(5, this.height - 5)
-			let dir = Math.floor(Math.random() * 4)
-			// get random Mob between id 1 and MAX
-			let randomMob = mobs[getRandomInt(0, mobs.length - 1)]
-			this.addMonster(randomMob, x, y, dir)
-		}
+		// // [TEST] create dummy NPC entities
+		// for (let i = 0; i < 25; i++) {
+		// 	let x = getRandomInt(5, this.width - 5)
+		// 	let y = getRandomInt(5, this.height - 5)
+		// 	let dir = Math.floor(Math.random() * 4)
+		// 	// get random NPC between id 1 and MAX
+		// 	let randomNPC = npcs[getRandomInt(0, npcs.length - 1)]
+		// 	this.addNpc(randomNPC, x, y, dir)
+		// }
+		// // [TEST] create dummy MONSTER entities
+		// for (let i = 0; i < 100; i++) {
+		// 	let x = getRandomInt(5, this.width - 5)
+		// 	let y = getRandomInt(5, this.height - 5)
+		// 	let dir = Math.floor(Math.random() * 4)
+		// 	// get random Mob between id 1 and MAX
+		// 	let randomMob = mobs[getRandomInt(0, mobs.length - 1)]
+		// 	this.addMonster(randomMob, x, y, dir)
+		// }
 
 		console.log(`WorldMap ${this.name} created with ${this.entities.length} entities.`)
 	}
@@ -112,8 +139,7 @@ export class WorldMap {
 	 * @param {number} dir - The direction of the NPC.
 	 */
 	addNpc(entity, x, y, dir) {
-		const npc = new EntityControl({ ...entity, map: this, x, y, dir, saveX: x, saveY: y });
-		this.entities.push(npc)
+		this.entities.push(new EntityControl({ ...entity, map: this, x, y, dir, saveX: x, saveY: y }))
 	}
 
 	/**
@@ -124,8 +150,29 @@ export class WorldMap {
 	 * @param {number} dir - The direction of the monster.
 	 */
 	addMonster(monster, x, y, dir) {
-		const mob = new MonsterControl({ ...monster, map: this, x, y, dir, saveX: x, saveY: y });
-		this.entities.push(mob)
+		this.entities.push(new MonsterControl({ ...monster, map: this, x, y, dir, saveX: x, saveY: y }))
+	}
+
+	/**
+	 * Adds a player to the map at the given coordinates with the specified direction.
+	 * @param {import("./model/Player.js").PlayerProps} player - The monster to add.
+	 * @param {number} x - The x coordinate of the monster.
+	 * @param {number} y - The y coordinate of the monster.
+	 * @param {number} dir - The direction of the monster.
+	 */
+	addPlayer(player, x, y, dir) {
+		this.entities.push(new PlayerControl({ ...player, map: this, x, y, dir, saveX: x, saveY: y }))
+	}
+
+	/**
+	 * Adds a portal to the map at the given coordinates with the specified direction.
+	 * @param {import("./model/Portal.js").PortalProps} portal - The portal to add.
+	 * @param {number} x - The x coordinate of the monster.
+	 * @param {number} y - The y coordinate of the monster.
+	 * @param {number} dir - The direction of the monster.
+	 */
+	addPortal(portal, x, y, dir) {
+		this.entities.push(new PortalControl({ ...portal, map: this, x, y, dir, saveX: x, saveY: y }))
 	}
 
 	/**
@@ -168,13 +215,17 @@ export class WorldMap {
 		if (inSameMap) console.log(`Player ${player.id} leaved ${this.name} map.`)
 	}
 
+	removeEntity(entity) {
+		this.entities = this.entities.filter((e) => e.gid !== entity.gid)
+	}
+
 	/**
 	 * Finds entities in the given radius around a specific point.
 	 * 
 	 * @param {number} x - The x-coordinate of the center point.
 	 * @param {number} y - The y-coordinate of the center point.
 	 * @param {number} radius - The radius to search for entities.
-	 * @returns {Array} - An array of entities within the specified radius.
+	 * @returns {Array<EntityControl|MonsterControl|PlayerControl|PortalControl>} - An array of entities within the specified radius.
 	 */
 	findEntitiesInRadius(x, y, radius) {
 		const stack = [] // entities can be on top of each other

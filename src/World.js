@@ -52,12 +52,12 @@ export class World {
 	/**
 	 * Join a map (or create it if it doesn't exist), and tell the Player to join it
 	 * @param {PlayerControl} player - The Player that wants to join the map
-	 * @param {string} mapName - The name of the map to join (default: "lobby")
+	 * @param {string} mapName - The name of the map to join (default: "Lobby town")
 	 * @param {number} x - The x coordinate of the map to join (default: -1)
 	 * @param {number} y - The y coordinate of the map to join (default: -1)
 	 * @returns {Promise<WorldMap>} - The map that was joined
 	 */
-	async joinMapByName(player, mapName = "lobby", x = -1, y = -1) {
+	async joinMapByName(player, mapName = "Lobby town", x = -1, y = -1) {
 		// check if map exists
 		let map = this.maps.find(m => m.name === mapName)
 		if (!map) {
@@ -129,8 +129,8 @@ export class World {
 			})
 			console.log(`[DB#world] Player (${player.id}) ${player.name} connection established.`)
 
-			// make the player join the lobby map
-			this.joinMapByName(player, 'lobby')
+			// make the player join the map
+			this.joinMapByName(player, 'Lobby town')
 		} catch (err) {
 			console.log('[DB#world] Error', err.message, err.code || '')
 			ws.close(4401, 'Invalid credentials')
@@ -147,7 +147,11 @@ export class World {
 		const timestamp = performance.now()
 		for (const map of this.maps) {
 			for (let entity of map.entities) {
-				entity.onTick(timestamp)
+				try {
+					entity.onTick(timestamp)
+				} catch (err) {
+					//console.log(`[World]: ${entity.name} onTick error`, err, entity)
+				}
 			}
 		}
 	}

@@ -1,3 +1,4 @@
+// TODO make entity follow a target
 export class AI {
 	constructor(entity) {
 		/** @type {import("./control/MonsterControl.js").MonsterControl} */
@@ -37,13 +38,18 @@ export class AI {
 		// check if entity is still alive and in a map
 		// check if iddleStart is greater than 5000ms
 		if (entity.hp > 0 && entity.map != null) {
-			// make the monster stay put for 5 seconds,
-			// every 5 seconds it will move again
-			if (this.entity.iddleStart === 0) {
-				this.entity.iddleStart = timestamp
+			// check if monster is in combat, then do not iddle
+			if (entity.inCombat) {
+				entity.iddleStart = 0 // FIXME, monster does not continue to iddle after combat ends
 				return
 			}
-			if ((timestamp - this.entity.iddleStart) < 5000) {
+			// make the monster stay put for 5 seconds,
+			// every 5 seconds it will move again
+			if (entity.iddleStart === 0) {
+				entity.iddleStart = timestamp
+				return
+			}
+			if ((timestamp - entity.iddleStart) < 5000) {
 				return
 			}
 
@@ -57,7 +63,7 @@ export class AI {
 					entity.y++
 				} else {
 					entity.dir = 1//Math.floor(Math.random() * 3) + 1//Math.floor(Math.random() * 4)
-					this.entity.iddleStart = timestamp
+					entity.iddleStart = timestamp
 				}
 			}
 			if (entity.dir === 1) {
@@ -65,7 +71,7 @@ export class AI {
 					entity.x++
 				} else {
 					entity.dir = 2//Math.floor(Math.random() * 4)
-					this.entity.iddleStart = timestamp
+					entity.iddleStart = timestamp
 				}
 			}
 			if (entity.dir === 2) {
@@ -73,7 +79,7 @@ export class AI {
 					entity.y--
 				} else {
 					entity.dir = 3//Math.floor(Math.random() * 4)
-					this.entity.iddleStart = timestamp
+					entity.iddleStart = timestamp
 				}
 			}
 			if (entity.dir === 3) {
@@ -81,7 +87,7 @@ export class AI {
 					entity.x--
 				} else {
 					entity.dir = 0
-					this.entity.iddleStart = timestamp
+					entity.iddleStart = timestamp
 				}
 			}
 		}

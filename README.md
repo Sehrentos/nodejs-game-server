@@ -76,7 +76,7 @@ npm run start
 ## Open browser
 
 ```sh
-open http://127.0.0.1:3000/
+open https://127.0.0.1:3000/
 ```
 
 
@@ -117,7 +117,15 @@ The /client directory has the browser source code and it's build using webpack m
    - Installed dependency: `npm install vanjs-core` in https://vanjs.org/start
 
 ## To-Do
- - Proper map dimensions, now we only have x, y coordinates
+ - Map dimensions
+   - now we only have x, y coordinates
+   - plant to make 3D world and ad more coordinates to maps?
  - Client game library
+   - make choice choose 2D or 3D?
+   - Canvas or DOM sprites if 2D is the choice?
  - Item DB split by types: Weapon, Armor, etc.
+   - Plan the itemization?
  - Database PostreSQL or MariaDB (partially done)
+   - Plan how big DB are we needing?
+   - Small with SQLite?
+   - Large with MariaDB or PostgreSQL and how versatile it needs to be etc.
