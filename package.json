@@ -15,14 +15,10 @@
 	"license": "MIT",
 	"dependencies": {
 		"dotenv": "^16.4.5",
-		"dungeoneer": "^2.1.5",
 		"express": "^4.21.1",
 		"jsonwebtoken": "^9.0.2",
 		"mariadb": "^3.3.2",
 		"mithril": "^2.2.9",
-		"mrpas": "^2.0.0",
-		"phaser": "^3.22.0",
-		"vanjs-core": "^1.5.2",
 		"ws": "^8.18.0"
 	},
 	"engines": {

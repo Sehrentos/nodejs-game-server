@@ -112,9 +112,8 @@ The /client directory has the browser source code and it's build using webpack m
 ```
 
 ### Client library
- - [Mithril.js](https://mithril.js.org/) or [VanJS](https://vanjs.org/)
- - Let's use VanJS for now. Good opportunity to test it.
-   - Installed dependency: `npm install vanjs-core` in https://vanjs.org/start
+ - [Mithril.js](https://mithril.js.org/)
+ - TODO Phaser etc.
 
 ## To-Do
  - Map dimensions
