@@ -5,7 +5,8 @@ import { Party } from "./Party.js";
 /**
  * @typedef {Object} EntityExtras
  * @prop {number=} type - Entity type. default ENTITY_TYPE.PLAYER
- * @prop {boolean=} inCombat - In combat. default false
+ * @prop {number=} attackStart - Timestamp in milliseconds when the player last attacked 
+ * @prop {import("../control/EntityControl.js").TEntityControls=} attacking - Attacking entity
  * @prop {Party=} party - Party object.
  * @prop {Array<number>=} quests - Quest list.
  * @prop {Array<number>=} inventory - Inventory list.
@@ -26,7 +27,8 @@ export class Player extends Entity {
 		this.mp = p?.mp ?? 50
 		this.mpMax = p?.mpMax ?? 50
 		this.speed = 100
-		this.inCombat = false
+		this.attackStart = 0
+		this.attacking = null
 		this.inventory = p?.inventory ?? []
 		this.quests = p?.quests ?? []
 		this.party = new Party(p?.party?.name, p?.party?.leader, p?.party?.members)

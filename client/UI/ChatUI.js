@@ -1,4 +1,5 @@
 import m from "mithril"
+import "./ChatUI.css"
 import { State } from "../State.js"
 
 export default class ChatUI {

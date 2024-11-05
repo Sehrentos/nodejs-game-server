@@ -42,16 +42,14 @@ export class EntityControl extends Entity {
 	//  */
 	// detectNearByEntities(radius = 4, timestamp = performance.now()) {
 	// 	try {
-	// 		// find entities in 4 tiles radius
 	// 		const nearbyEntities = this.map.findEntitiesInRadius(this.x, this.y, radius)
+	// 			.filter(entity => entity.gid !== this.gid) // exclude self
 	// 		if (nearbyEntities.length === 0) return
-	// 		console.log(`${this.constructor.name} entities in close range`, nearbyEntities.length)
-	// 		// for (const entity of nearbyEntities) {
-	// 		// 	// only players can be warped
-	// 		// 	if (entity.type === ENTITY_TYPE.PLAYER) {
-	// 		// 		// ...
-	// 		// 	}
-	// 		// }
+	// 		for (const entity of nearbyEntities) {
+	// 			if (entity.type === ENTITY_TYPE.PLAYER) {
+	// 				// ...
+	// 			}
+	// 		}
 	// 	} catch (error) {
 	// 		console.error(`${this.constructor.name} ${this.gid} error:`, error.message || error || '[no-code]');
 	// 	}

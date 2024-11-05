@@ -1,0 +1,41 @@
+/* ChatUI */
+.ui-chat {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 10em;
+}
+
+.ui-chat form {
+    height: -webkit-fill-available;
+}
+
+.ui-chat fieldset {
+    margin: 0;
+    padding: 0 0.2em;
+    border-radius: 0.25em;
+    height: -webkit-fill-available;
+}
+
+.ui-chat ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    height: calc(100% - 22px);
+    overflow-y: auto;
+}
+
+.ui-chat #chat-input {
+    width: -webkit-fill-available;
+    opacity: 0.25;
+}
+
+.ui-chat #chat-input:active,
+.ui-chat #chat-input:focus {
+    opacity: 1;
+}
+
+.ui-chat #chat-submit {
+    display: none;
+}

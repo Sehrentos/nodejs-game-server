@@ -5,8 +5,9 @@ import { ENTITY_TYPE } from "../enum/Entity.js";
  * @typedef {Object} EntityExtras
  * @prop {number=} type - Entity type. default ENTITY_TYPE.MONSTER
  * @prop {number=} speed - Speed. default 400
- * @prop {boolean=} inCombat - In combat. default false
  * @prop {number=} iddleStart - Iddle start time. default 0
+ * @prop {number=} attackStart - Timestamp in milliseconds when the player last attacked 
+ * @prop {import("../control/EntityControl.js").TEntityControls=} attacking - Attacking entity
  * @typedef {import("./Entity.js").EntityProps & EntityExtras} MonsterProps
  */
 
@@ -21,8 +22,9 @@ export class Monster extends Entity {
 		// monster specific props
 		this.type = p?.type ?? ENTITY_TYPE.MONSTER
 		this.speed = p?.speed ?? 400
-		this.inCombat = false
 		this.iddleStart = p?.iddleStart ?? 0
+		this.attackStart = p?.attackStart ?? 0
+		this.attacking = p?.attacking ?? null
 	}
 
 	/**

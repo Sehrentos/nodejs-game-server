@@ -8,11 +8,10 @@ export default class Player extends PlayerModel {
 	constructor(player) {
 		super(player)
 		this.keyControl = new KeyControl(this)
-	}
-	onCreate() {
 		this.keyControl.bind()
 	}
-	onRemove() {
+
+	remove() {
 		this.keyControl.unbind()
 	}
 

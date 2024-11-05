@@ -3,7 +3,6 @@ import { Player } from '../model/Player.js';
 import * as Packets from '../Packets.js';
 import { ENTITY_TYPE } from '../enum/Entity.js';
 import { ELEMENT } from '../enum/Element.js';
-import { maps } from '../data/maps.js';
 
 /**
  * @typedef {import("../WorldMap.js").WorldMap} WorldMap
@@ -25,6 +24,11 @@ export class PlayerControl extends Player {
 		this.speed = 1 // DEBUG, make player move really fast
 		this.aspd = p?.aspd ?? 1000
 		this.aspdMultiplier = p?.aspdMultiplier ?? 1
+
+		/** @type {number} timestamp in milliseconds when the player last attacked */
+		this.attackStart = 0
+		/** @type {import("./EntityControl.js").TEntityControls|null} */
+		this.attacking = null
 
 		this.saveMap = p?.saveMap ?? 'Lobby town'
 		this.saveX = p?.saveX ?? 300
@@ -110,7 +114,7 @@ export class PlayerControl extends Player {
 		}
 
 		// find entities in nearby
-		// this.detectNearByEntities()
+		this.detectNearByEntities(10, timestamp)
 	}
 
 	// async onLogin(json) {
@@ -240,30 +244,35 @@ export class PlayerControl extends Player {
 		this.socket.send(JSON.stringify(Packets.updatePlayer(this)));
 	}
 
-	// /**
-	//  * Finds entities in the given radius around the entity.
-	//  * @param {number} [radius=4] - The radius to search for entities.
-	//  * @param {number} [timestamp=performance.now()] `performance.now()` from the world.onTick
-	//  */
-	// detectNearByEntities(radius = 4, timestamp = performance.now()) {
-	// 	try {
-	// 		// find entities in 4 tiles radius
-	// 		const nearbyEntities = this.map.findEntitiesInRadius(this.x, this.y, radius)
-	// 		if (nearbyEntities.length === 0) return
-	// 		console.log(`${this.constructor.name} entities in close range`, nearbyEntities.length)
+	/**
+	 * Finds entities in the given radius around the entity.
+	 * @param {number} [radius=4] - The radius to search for entities.
+	 * @param {number} [timestamp=performance.now()] `performance.now()` from the world.onTick
+	 */
+	detectNearByEntities(radius = 4, timestamp = performance.now()) {
+		try {
+			const nearbyEntities = this.map.findEntitiesInRadius(this.x, this.y, radius)
+				.filter(entity => entity.gid !== this.gid) // exclude self
 
-	// 		// TODO possibly add autotarget monster script here?
+			// no entities in radius
+			if (nearbyEntities.length === 0) {
+				this.attacking = null
+				return
+			}
 
-	// 		// for (const entity of nearbyEntities) {
-	// 		// 	// only players can be warped
-	// 		// 	if (entity.type === ENTITY_TYPE.PLAYER) {
-	// 		// 		// ...
-	// 		// 	}
-	// 		// }
-	// 	} catch (error) {
-	// 		console.error(`${this.constructor.name} ${this.gid} error:`, error.message || error || '[no-code]');
-	// 	}
-	// }
+			for (const entity of nearbyEntities) {
+				if (entity.type === ENTITY_TYPE.MONSTER) {
+					// has target set and still in range?
+					// then start combat
+					if (this.attacking != null) {
+						this.attack(this.attacking, timestamp)
+					}
+				}
+			}
+		} catch (error) {
+			console.error(`${this.constructor.name} ${this.gid} error:`, error.message || error || '[no-code]');
+		}
+	}
 
 	/**
 	 * Controls the attack logic of the entity.
@@ -276,6 +285,7 @@ export class PlayerControl extends Player {
 			return // can't attack yet
 		}
 		this.attackStart = timestamp
+		this.attacking = entity
 
 		// @ts-ignore null checked. perform attack
 		entity?.takeDamage(this)

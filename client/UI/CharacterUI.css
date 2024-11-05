@@ -1,0 +1,27 @@
+/* CharacterUI */
+.ui-character {
+    position: absolute;
+    right: 0;
+    top: 0;
+
+    box-sizing: border-box;
+    border: 1px solid #dddddd;
+    border-radius: 0.4em;
+    padding: 0.25em;
+}
+
+.ui-character .title {
+    font-size: 120%;
+    font-weight: bold;
+    text-align: center;
+}
+
+.ui-character .equip {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+}
+
+.ui-character .stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+}

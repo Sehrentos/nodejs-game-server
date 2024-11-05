@@ -1,4 +1,5 @@
 import m from "mithril"
+import "./CharacterUI.css"
 import { State } from "../State.js"
 
 export default class CharacterUI {
@@ -10,15 +11,15 @@ export default class CharacterUI {
 
 		this._onKeydownListener = this.onKeydownListener.bind(this)
 		// custom event to update player state on the UI
-		// this._onDOMPlayerUpdate = this.onDOMPlayerUpdate.bind(this)
+		this._onDOMPlayerUpdate = this.onDOMPlayerUpdate.bind(this)
 	}
 	oncreate(vnode) {
 		window.addEventListener("keydown", this._onKeydownListener)
-		// document.addEventListener("player", this._onDOMPlayerUpdate)
+		document.addEventListener("ui-character", this._onDOMPlayerUpdate)
 	}
 	onremove(vnode) {
 		window.removeEventListener("keydown", this._onKeydownListener)
-		// document.removeEventListener("player", this._onDOMPlayerUpdate)
+		document.removeEventListener("ui-character", this._onDOMPlayerUpdate)
 	}
 	view(vnode) {
 		return (this.isVisible && State.player)
@@ -61,8 +62,8 @@ export default class CharacterUI {
 	}
 	// bind event listener to document element
 	// to receive player updates
-	// onDOMPlayerUpdate(event) {
-	// 	// apply incomming updates
-	// 	State.player = { ...State.player, ...event.detail }
-	// }
+	onDOMPlayerUpdate(event) {
+		// apply incomming updates
+		State.player = { ...State.player, ...event.detail }
+	}
 }

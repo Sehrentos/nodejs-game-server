@@ -1,4 +1,5 @@
 import m from "mithril"
+import "./CanvasUI.css"
 import { State } from "../State.js"
 import { ENTITY_TYPE } from "../../src/enum/Entity.js"
 
@@ -50,7 +51,7 @@ export default class CanvasUI {
 		this.canvas.removeEventListener("mousemove", this._onMouseMove)
 	}
 	view(vnode) {
-		return m("canvas", { id: this.id })
+		return m("canvas.ui-canvas", { id: this.id })
 	}
 	// #endregion mithril events
 

@@ -2,7 +2,6 @@ import { randomBytes } from 'node:crypto';
 import { Monster } from '../model/Monster.js';
 import { AI } from '../AI.js';
 import { ELEMENT } from '../enum/Element.js';
-import { ENTITY_TYPE } from '../enum/Entity.js';
 
 export class MonsterControl extends Monster {
 	/**
@@ -15,8 +14,10 @@ export class MonsterControl extends Monster {
 		this.ai = new AI(this)
 		this.aspd = p?.aspd ?? 1000
 		this.aspdMultiplier = p?.aspdMultiplier ?? 1
+		/** @type {number} timestamp in milliseconds when the player last attacked */
 		this.attackStart = 0
-		this._targetEntity = null
+		/** @type {import("./EntityControl.js").TEntityControls|null} */
+		this.attacking = null
 	}
 
 	/**
@@ -34,46 +35,28 @@ export class MonsterControl extends Monster {
 		this.ai.onUpdate(timestamp)
 
 		// find entities in nearby
-		// and set the target entity
-		// then attack it
-		this.detectNearByEntities(20, timestamp)
+		// this.detectNearByEntities(4, timestamp)
 	}
 
-	/**
-	 * Finds entities in the given radius around the entity.
-	 * @param {number} radius - The radius to search for entities.
-	 * @param {number} timestamp `performance.now()` from the world.onTick
-	 */
-	detectNearByEntities(radius, timestamp) {
-		try {
-			// find entities in x tiles radius
-			const nearbyEntities = this.map.findEntitiesInRadius(this.x, this.y, radius)
-
-			// no entities in radius
-			if (nearbyEntities.length === 0) {
-				this.inCombat = false
-				this._targetEntity = null
-				return
-			}
-
-			// find Player type entity and set it as target
-			// then attack it
-			for (const entity of nearbyEntities) {
-				if (entity.type === ENTITY_TYPE.PLAYER) {
-					// has previous target and still in range
-					// then attack it
-					if (this._targetEntity != null) {
-						this.attack(this._targetEntity, timestamp)
-					} else {
-						this._targetEntity = entity
-						this.attack(entity, timestamp)
-					}
-				}
-			}
-		} catch (error) {
-			console.error(`${this.constructor.name} ${this.gid} error:`, error.message || error || '[no-code]');
-		}
-	}
+	// /**
+	//  * Finds entities in the given radius around the entity.
+	//  * @param {number} [radius=4] - The radius to search for entities.
+	//  * @param {number} [timestamp=performance.now()] `performance.now()` from the world.onTick
+	//  */
+	// detectNearByEntities(radius = 4, timestamp = performance.now()) {
+	// 	try {
+	// 		const nearbyEntities = this.map.findEntitiesInRadius(this.x, this.y, radius)
+	// 			.filter(entity => entity.gid !== this.gid) // exclude self
+	// 		if (nearbyEntities.length === 0) return
+	// 		for (const entity of nearbyEntities) {
+	// 			if (entity.type === ENTITY_TYPE.PLAYER) {
+	// 				// ...
+	// 			}
+	// 		}
+	// 	} catch (error) {
+	// 		console.error(`${this.constructor.name} ${this.gid} error:`, error.message || error || '[no-code]');
+	// 	}
+	// }
 
 	/**
 	 * Controls the attack logic of the entity.

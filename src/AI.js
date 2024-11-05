@@ -1,4 +1,6 @@
-// TODO make entity follow a target
+import { ENTITY_TYPE } from "./enum/Entity.js"
+
+// TODO make entity follow a target, when in combat
 export class AI {
 	constructor(entity) {
 		/** @type {import("./control/MonsterControl.js").MonsterControl} */
@@ -15,6 +17,11 @@ export class AI {
 		// const deltaTime = performance.now() - startTime // ms elapsed, since server started
 		// when monster is idling, make it move a bit
 		this.onIddleMovement(timestamp)
+
+		// find entities in nearby
+		// and set the target entity
+		// then attack it
+		this.detectNearByEntities(10, timestamp)
 	}
 
 	/**
@@ -29,7 +36,6 @@ export class AI {
 	 * dir = 3 it will not move straight left (x--)
 	 * it can't move out of the map max width/height
 	 * it can't mode more than 10 times from the original saveX/saveY positions
-	 * @returns 
 	 */
 	onIddleMovement(timestamp) {
 		const entity = this.entity
@@ -39,8 +45,7 @@ export class AI {
 		// check if iddleStart is greater than 5000ms
 		if (entity.hp > 0 && entity.map != null) {
 			// check if monster is in combat, then do not iddle
-			if (entity.inCombat) {
-				entity.iddleStart = 0 // FIXME, monster does not continue to iddle after combat ends
+			if (entity.attacking != null) {
 				return
 			}
 			// make the monster stay put for 5 seconds,
@@ -106,5 +111,43 @@ export class AI {
 		}
 		this.entity.movementStart = timestamp
 		return true
+	}
+
+	/**
+	 * Finds entities in the given radius around the entity.
+	 * @param {number} radius - The radius to search for entities.
+	 * @param {number} timestamp `performance.now()` from the world.onTick
+	 */
+	detectNearByEntities(radius, timestamp) {
+		try {
+			const self = this.entity
+
+			// find entities in x tiles radius
+			const nearbyEntities = self.map.findEntitiesInRadius(self.x, self.y, radius)
+				.filter(entity => entity.gid !== self.gid) // exclude self
+
+			// no entities in radius
+			if (nearbyEntities.length === 0) {
+				self.attacking = null
+				return
+			}
+
+			// find Player type entity and set it as target
+			// then attack it
+			for (const entity of nearbyEntities) {
+				if (entity.type === ENTITY_TYPE.PLAYER) {
+					// has previous target and still in range
+					// then attack it
+					if (self.attacking != null) {
+						self.attack(self.attacking, timestamp)
+					} else {
+						self.attacking = entity
+						self.attack(entity, timestamp)
+					}
+				}
+			}
+		} catch (error) {
+			console.error(`${this.constructor.name} ${this.entity.gid} error:`, error.message || error || '[no-code]');
+		}
 	}
 }

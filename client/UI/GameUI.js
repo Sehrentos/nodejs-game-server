@@ -1,4 +1,5 @@
 import m from "mithril"
+import "./GameUI.css"
 import CharacterUI from "./CharacterUI.js"
 import ChatUI from "./ChatUI.js"
 import CanvasUI from "./CanvasUI.js"
@@ -56,6 +57,8 @@ export default class GameUI {
 		State.socket = new WebSocket(State.socketUrl, [
 			"ws", "wss", `Bearer.${Auth.jwtToken}`
 		]);
+
+		// update chat UI
 		ChatUI.addChat({
 			type: "chat",
 			from: "client",
@@ -77,7 +80,9 @@ export default class GameUI {
 		}
 
 		// do unbindings etc.
-		State.player?.onRemove()
+		if (State.player) {
+			State.player.remove()
+		}
 
 		this.removeEvents()
 
@@ -104,7 +109,7 @@ export default class GameUI {
 	}
 
 	onSocketOpen(event) {
-		console.log('Socket connection opened.');
+		// console.log('Socket connection opened.');
 		ChatUI.addChat({
 			type: "chat",
 			from: "client",
@@ -114,7 +119,7 @@ export default class GameUI {
 	}
 
 	onSocketClose(event) {
-		console.log('Socket connection closed.');
+		// console.log('Socket connection closed.');
 		ChatUI.addChat({
 			type: "chat",
 			from: "client",
@@ -145,28 +150,35 @@ export default class GameUI {
 	// #region handlers
 
 	/**
-	 * 
-	 * @param {import("../../src/Packets.js").TPlayer} data 
+	 * Updates the player state with data received from the server.
+	 * If a player already exists, it merges the new data into the existing player state.
+	 * Otherwise, it creates a new player instance with the provided data.
+	 * Optionally, a custom event can be dispatched to update the player UI.
+	 *
+	 * @param {import("../../src/Packets.js").TPlayer} data - The player data from the server.
 	 */
 	onPlayerUpdate(data) {
 		// console.log("Player:", data);
-		// update player state
-		// or create new player if it doesn't exist
 		if (State.player instanceof Player) {
+			// update player state
 			State.player.update(data);
 		} else {
+			// or create new player if it doesn't exist
 			State.player = new Player(data);
-			// invoke creation method to update bindings etc.
-			State.player.onCreate()
 		}
-		// update player UI
-		document.dispatchEvent(new CustomEvent("player", { detail: data }));
+		// option 2. update player UI by dispatching a custom event
+		// document.dispatchEvent(new CustomEvent("ui-character", { detail: data }));
 		// next render cycle will update the game
 	}
 
 	/**
-	 * 
-	 * @param {import("../../src/Packets.js").TWorldMap} data 
+	 * Called when the server sends a map update.
+	 * Updates the state of the map from the server data.
+	 * If the map is already initialized, it will be updated.
+	 * If not, a new map is created.
+	 * Also updates player x,y position if the player is found in the map.
+	 * Players are also entity and map will keep track of them.
+	 * @param {import("../../src/Packets.js").TWorldMap} data - The map data from the server.
 	 */
 	onMapUpdate(data) {
 		// update map state
@@ -174,26 +186,28 @@ export default class GameUI {
 		// TODO possibly merge the changes from server
 		// and play entity death animations?
 		State.map = new WMap(data)
-		if (!State.player) return
-		// also update player x,y position
+		// if (!State.player) return
+		// also update player x,y position?
 		// TODO client side prediction
-		const player = State.map.entities.find(e => e.gid === State.player.gid)
-		if (player) {
-			State.player.x = player.x
-			State.player.y = player.y
-		}
+		// const player = State.map.entities.find(e => e.gid === State.player.gid)
+		// if (player) {
+		// 	State.player.x = player.x
+		// 	State.player.y = player.y
+		// }
 		// next render cycle will update the game
 	}
 
 	/**
-	 * 
-	 * @param {import("../../src/Packets.js").TChatPacket} data 
+	 * Handles chat updates received from the server.
+	 * Dispatches a custom "ui-chat" event with the chat data,
+	 * allowing the chat UI to update accordingly.
+	 *
+	 * @param {import("../../src/Packets.js").TChatPacket} data - The chat data from the server.
 	 */
 	onChatUpdate(data) {
 		// console.log("Chat:", data);
 		// trigger a custom chat event
 		// to be caught by the chat UI
-		// and displayed in the chat UI
 		document.dispatchEvent(new CustomEvent("ui-chat", { detail: data }));
 	}
 

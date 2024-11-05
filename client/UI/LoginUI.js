@@ -70,10 +70,16 @@ export default class LoginUI {
 	 */
 	async onSubmit(event) {
 		event.preventDefault()
-		const username = document.querySelector(".ui-login input#username").value
-		const password = document.querySelector(".ui-login input#password").value
-		const email = document.querySelector(".ui-login input#email").value
-		event.currentTarget.reset()
+		/** @type {HTMLFormElement} */
+		// @ts-ignore
+		const form = event.currentTarget
+		// @ts-ignore null checked
+		const username = form.querySelector("input#username")?.value ?? ""
+		// @ts-ignore null checked
+		const password = form.querySelector("input#password")?.value ?? ""
+		// @ts-ignore null checked
+		const email = form.querySelector("input#email")?.value ?? ""
+		form.reset()
 		if (this.isRegister) {
 			try {
 				await Auth.register(username, password, email)
@@ -95,6 +101,7 @@ export default class LoginUI {
 	 * @param {Event} event 
 	 */
 	onChange(event) {
+		// @ts-ignore
 		this.isRegister = event.target.checked
 		console.log(event.type, this.isRegister)
 		m.redraw()
