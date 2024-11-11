@@ -4,15 +4,15 @@ import { ELEMENT } from '../enum/Element.js';
 // import { ENTITY_TYPE } from '../enum/Entity.js';
 
 /**
- * @typedef {import("./MonsterControl").MonsterControl | import("./PlayerControl").PlayerControl | import("./EntityControl").EntityControl | import("./PortalControl").PortalControl} TEntityControls
+ * @typedef {import("./NPCControl").NPCControl | import("./MonsterControl").MonsterControl | import("./PlayerControl").PlayerControl | import("./EntityControl").EntityControl | import("./PortalControl").PortalControl} TEntityControls
  */
 
 export class EntityControl extends Entity {
 	/**
 	 * Creates a new EntityControl instance.
-	 * @param {import("../model/Entity.js").EntityProps} p - Entity properties.
+	 * @param {import("../model/Entity.js").TEntityProps} p - Entity properties.
 	 */
-	constructor(p = {}) {
+	constructor(p) {
 		super(p)
 		this.gid = p?.gid ?? randomBytes(16).toString('hex')
 	}
@@ -29,7 +29,7 @@ export class EntityControl extends Entity {
 		// console.log(`Entity ${this.name} (${startTime}/${deltaTime}) tick.`)
 
 		// call AI onUpdate, if it exists
-		this.ai?.onUpdate(timestamp)
+		// this.ai?.onUpdate(timestamp)
 
 		// find entities in nearby
 		// this.detectNearByEntities(4, timestamp)
@@ -37,10 +37,10 @@ export class EntityControl extends Entity {
 
 	// /**
 	//  * Finds entities in the given radius around the entity.
-	//  * @param {number} [radius=4] - The radius to search for entities.
-	//  * @param {number} [timestamp=performance.now()] `performance.now()` from the world.onTick
+	//  * @param {number} radius - The radius to search for entities.
+	//  * @param {number} timestamp `performance.now()` from the world.onTick
 	//  */
-	// detectNearByEntities(radius = 4, timestamp = performance.now()) {
+	// detectNearByEntities(radius, timestamp) {
 	// 	try {
 	// 		const nearbyEntities = this.map.findEntitiesInRadius(this.x, this.y, radius)
 	// 			.filter(entity => entity.gid !== this.gid) // exclude self
@@ -61,9 +61,9 @@ export class EntityControl extends Entity {
 	 * strength, attack power, and attack multiplier. If the entity's hp
 	 * falls to zero or below, the entity dies and is removed from the map.
 	 * 
-	 * @param {TEntityControls} attacker - The attacking entity, containing attack
-	 *                            attributes such as strength (str), attack
-	 *                            power (atk), and attack multiplier (atkMultiplier).
+	 * @param {import("./MonsterControl").MonsterControl | import("./PlayerControl").PlayerControl} attacker - The attacking entity, containing attack
+	 *        attributes such as strength (str), attack
+	 *        power (atk), and attack multiplier (atkMultiplier).
 	 */
 	takeDamage(attacker) {
 		// must be in the same map, to receive damage
@@ -73,7 +73,7 @@ export class EntityControl extends Entity {
 		if (this.hp > 0) {
 			// physical attacks are always neutral? what about weapons elements?
 			// TODO take defence into account
-			if (attacker.elementAtk === ELEMENT.NEUTRAL) {
+			if (attacker.eAtk === ELEMENT.NEUTRAL) {
 				this.hp -= (attacker.str + attacker.atk) * attacker.atkMultiplier;
 			} else {
 				this.hp -= (attacker.int + attacker.mAtk) * attacker.mAtkMultiplier;
@@ -89,5 +89,6 @@ export class EntityControl extends Entity {
 	 */
 	die() {
 		this.map.removeEntity(this)
+		// TODO don't remove entity from map, just set hp to 0
 	}
 }

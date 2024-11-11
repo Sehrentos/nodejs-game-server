@@ -2,6 +2,7 @@ import m from "mithril"
 import "./CanvasUI.css"
 import { State } from "../State.js"
 import { ENTITY_TYPE } from "../../src/enum/Entity.js"
+import * as Settings from "../Settings.js"
 
 /**
  * @class CanvasUI
@@ -39,7 +40,7 @@ export default class CanvasUI {
 		this.canvas.addEventListener("mousemove", this._onMouseMove)
 
 		this.frame = requestAnimationFrame(this._render)
-		console.log(`[DEBUG]: fpsLimit: ${State.fpsLimit}`)
+		console.log(`[DEBUG]: fpsLimit: ${Settings.FPS_LIMIT}`)
 	}
 	onremove() {
 		this.stop = true
@@ -72,7 +73,7 @@ export default class CanvasUI {
 		const elapsed = timestamp - this._lastFrameTimestamp
 
 		// Calculate target interval based on FPS limit
-		const targetInterval = 1000 / State.fpsLimit;  // ms
+		const targetInterval = 1000 / Settings.FPS_LIMIT;  // ms
 
 		// Skip frame if not enough time has passed
 		if (elapsed < targetInterval) {
@@ -94,18 +95,19 @@ export default class CanvasUI {
 			CanvasUI.drawRect(ctx, "#6F9D62", 0, 0, State.map.width, State.map.height);
 		}
 
+		// sample test
 		// draw sample info text, but only in Lobby town map
-		if (State.map != null && State.map.name === "Lobby town") {
-			ctx.beginPath()
-			ctx.font = "40px Arial"
-			ctx.lineWidth = 2
-			ctx.strokeStyle = "#00000070"
-			ctx.strokeText(`Move with WASD or Arrow keys.`, 10, 50)
-			ctx.lineWidth = 1
-			ctx.font = "40px Arial"
-			ctx.strokeText(`Press "C" to hide Character info.`, 10, 90)
-			ctx.stroke()
-		}
+		// if (State.map != null && State.map.name === "Lobby town") {
+		// 	ctx.beginPath()
+		// 	ctx.font = "40px Arial"
+		// 	ctx.lineWidth = 2
+		// 	ctx.strokeStyle = "#00000070"
+		// 	ctx.strokeText(`Move with WASD or Arrow keys.`, 10, 50)
+		// 	ctx.lineWidth = 1
+		// 	ctx.font = "40px Arial"
+		// 	ctx.strokeText(`Press "C" to hide Character info.`, 10, 90)
+		// 	ctx.stroke()
+		// }
 
 		// draw entities
 		this.drawEntities(ctx)
@@ -116,49 +118,37 @@ export default class CanvasUI {
 
 	drawEntities(ctx) {
 		if (State.map == null || State.map.entities.length == 0) return;
-		ctx.beginPath();
+
 		for (const entity of State.map.entities) {
 			let x = entity.x
 			let y = entity.y
+			let w = entity.w
+			let h = entity.h
+			let _radius = h / 2 // 2.5
 			if (entity.type === ENTITY_TYPE.NPC) {
-				CanvasUI.drawRect(ctx, "brown", x, y, 8, 8);
-				// display the entity name as text in the canvas
-				ctx.fillStyle = "white";
-				ctx.font = "10px Arial";
-				ctx.fillText(entity.name, (x - (entity.name.length * 2)), (y - 2));
+				CanvasUI.drawRect(ctx, "brown", x, y, w, h);
+				CanvasUI.drawEntityName(ctx, entity, "white", false);
 			}
 			else if (entity.type === ENTITY_TYPE.MONSTER) {
-				CanvasUI.drawCircle(ctx, "red", x, y, 4);
-				// display the username as text in the canvas
-				ctx.fillStyle = "red";
-				ctx.font = "10px Arial";
-				ctx.fillText(`${entity.name} (${entity.hp}/${entity.hpMax})`, (x - (entity.name.length * 2.5)), (y - 8));
+				CanvasUI.drawCircle(ctx, "red", x, y, _radius);
+				CanvasUI.drawEntityName(ctx, entity, "red", true);
 			}
 			else if (entity.type === ENTITY_TYPE.WARP_PORTAL) {
-				CanvasUI.drawCircle(ctx, "blue", x, y, 8);
-				// display the username as text in the canvas
-				ctx.fillStyle = "blue";
-				ctx.font = "10px Arial";
-				ctx.fillText(entity.name, (x - (entity.name.length * 2.5)), (y - 8));
+				CanvasUI.drawCircle(ctx, "blue", x, y, _radius);
+				CanvasUI.drawEntityName(ctx, entity, "blue", false);
 			}
 			else if (entity.type === ENTITY_TYPE.PLAYER) {
-				// TODO camera focus on the player
-				// if (entity.gid === player.val.gid) {
-				//     x = entity.x - (canvasElement.width / 2)
-				//     y = entity.y - (canvasElement.height / 2)
-				//     // camera.focus(canvasElement, data, player.val);
-				//     // Flip the sign b/c positive shifts the canvas to the right, negative - to the left
-				//     // ctx.translate(-camera.x, -camera.y);
-				// }
-				// draw the player
-				CanvasUI.drawCircle(ctx, "black", x, y, 8);
-				// display the username as text in the canvas
-				ctx.fillStyle = "white";
-				ctx.font = "10px Arial";
-				ctx.fillText(`${entity.name} (${entity.hp}/${entity.hpMax})`, (x - (entity.name.length * 2.5)), (y - 8));
+				// @ts-ignore
+				let player = State.player
+				if (player != null && entity.gid === player.gid) {
+					// draw player's melee attack radius
+					CanvasUI.drawCircle(ctx, "#2d2d2d57", x - ((player.range / 2) - player.w), y - ((player.range / 2) - player.h), player.range);
+				}
+				// draw player
+				CanvasUI.drawCircle(ctx, "black", x, y, _radius);
+				CanvasUI.drawEntityName(ctx, entity, "white", true);
 			}
 		}
-		ctx.stroke();
 	}
 
 	onResize() {
@@ -169,7 +159,7 @@ export default class CanvasUI {
 	onClick(event) {
 		event.preventDefault()
 		event.stopPropagation()
-		event.stopImmediatePropagation()
+
 		if (this.canvas == null || State.map == null || State.socket == null) return
 		const { x, y } = CanvasUI.getMousePosition(this.canvas, event)
 		const stack = CanvasUI.findEntitiesInRadius(State.map, x, y, 8)
@@ -275,9 +265,31 @@ export default class CanvasUI {
 	 */
 	static drawCircle(ctx, fill, x, y, radius) {
 		ctx.beginPath();
-		ctx.arc(x, y, radius, 0, 2 * Math.PI);
 		ctx.fillStyle = fill || "red";
+		ctx.arc(x, y, radius, 0, 2 * Math.PI);
 		ctx.fill();
+		ctx.stroke();
+	}
+
+	/**
+	 * Draws the name of the entity on the canvas at the given position.
+	 * @param {CanvasRenderingContext2D} ctx - The canvas rendering context.
+	 * @param {import("../../src/model/Entity").TEntityProps} entity - The entity to draw the name for.
+	 * @param {string} color - The color to draw the name. Default white.
+	 * @param {boolean} showHp - Whether to show the entity's health. Default false.
+	 */
+	static drawEntityName(ctx, entity, color = "white", showHp = false) {
+		ctx.beginPath();
+		let text = entity.name
+		if (showHp) {
+			text += ` (${entity.hp}/${entity.hpMax})`
+		}
+		// calculate the x position to center the text
+		let _x = entity.x - (text.length / 2) * (Settings.FONT_SIZE * Settings.FONT_WIDTH_RATIO)
+		let _y = entity.y - ((entity.h || 1) + 2)
+		ctx.fillStyle = color;
+		ctx.font = `${Settings.FONT_SIZE}px ${Settings.FONT_FAMILY}`;
+		ctx.fillText(text, _x, _y);
 		ctx.stroke();
 	}
 

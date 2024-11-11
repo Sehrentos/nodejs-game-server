@@ -7,6 +7,8 @@ import Player from "../entities/Player.js"
 import { Auth } from "../Auth.js"
 import WMap from "../entities/WMap.js"
 import { State } from "../State.js"
+import DialogUI from "./DialogUI.js"
+import { SOCKET_URL } from "../Settings.js"
 
 /**
  * @class GameUI
@@ -18,6 +20,9 @@ export default class GameUI {
 	 * @param {m.Vnode} vnode 
 	 */
 	constructor(vnode) {
+		// disable text select in UI
+		this._onDisableSelectStart = this.onDisableSelectStart.bind(this)
+
 		this._onSocketOpen = this.onSocketOpen.bind(this)
 		this._onSocketClose = this.onSocketClose.bind(this)
 		this._onSocketMessage = this.onSocketMessage.bind(this)
@@ -34,7 +39,8 @@ export default class GameUI {
 		return m("main.ui-game",
 			m(CanvasUI),
 			m(CharacterUI),
-			m(ChatUI)
+			m(ChatUI),
+			m(DialogUI),
 		)
 	}
 
@@ -54,19 +60,26 @@ export default class GameUI {
 
 		// initialize socket
 		if (State.socket) State.socket.close()
-		State.socket = new WebSocket(State.socketUrl, [
+		State.socket = new WebSocket(SOCKET_URL, [
 			"ws", "wss", `Bearer.${Auth.jwtToken}`
 		]);
 
 		// update chat UI
-		ChatUI.addChat({
+		ChatUI.add({
 			type: "chat",
+			channel: "log",
 			from: "client",
-			to: "user",
+			to: "any",
 			message: "Socket connecting",
 		});
 
-		this.addEvents();
+		// select event
+		vnode.dom.addEventListener("selectstart", this._onDisableSelectStart)
+
+		// WebSocket
+		State.socket.onopen = this._onSocketOpen
+		State.socket.onclose = this._onSocketClose
+		State.socket.onmessage = this._onSocketMessage
 	}
 
 	/**
@@ -74,7 +87,7 @@ export default class GameUI {
 	 * 
 	 * This removes the WebSocket connection and the events from the component.
 	 */
-	onremove() {
+	onremove(vnode) {
 		if (State.socket) {
 			State.socket.close()
 		}
@@ -84,7 +97,13 @@ export default class GameUI {
 			State.player.remove()
 		}
 
-		this.removeEvents()
+		// select event
+		vnode.dom.removeEventListener("selectstart", this._onDisableSelectStart)
+
+		// WebSocket
+		State.socket.onopen = null
+		State.socket.onclose = null
+		State.socket.onmessage = null
 
 		// this.uiCanvas = null
 		// this.uiCharacter = null
@@ -95,48 +114,51 @@ export default class GameUI {
 
 	// #region events
 
-	addEvents() {
-		State.socket.onopen = this._onSocketOpen
-		State.socket.onclose = this._onSocketClose
-		State.socket.onmessage = this._onSocketMessage
-	}
-
-	removeEvents() {
-		// WebSocket
-		State.socket.onopen = null
-		State.socket.onclose = null
-		State.socket.onmessage = null
+	/**
+	 * Disable text selection in the game UI.
+	 * 
+	 * @param {Event} event - The selectstart event.
+	 */
+	onDisableSelectStart(event) {
+		event.preventDefault()
 	}
 
 	onSocketOpen(event) {
 		// console.log('Socket connection opened.');
-		ChatUI.addChat({
+		ChatUI.add({
 			type: "chat",
+			channel: "log",
 			from: "client",
-			to: "user",
+			to: "any",
 			message: "Socket connected",
 		});
 	}
 
 	onSocketClose(event) {
 		// console.log('Socket connection closed.');
-		ChatUI.addChat({
+		ChatUI.add({
 			type: "chat",
+			channel: "log",
 			from: "client",
-			to: "user",
+			to: "any",
 			message: "Socket closed",
 		});
+		document.dispatchEvent(new CustomEvent("ui-dialog", {
+			detail: "Socket connection closed."
+		}));
 	}
 
 	onSocketMessage(event) {
 		try {
 			const data = JSON.parse(event.data);
 			if (data.type === "player") {
-				this.onPlayerUpdate(data.player);
+				this.updatePlayer(data.player);
 			} else if (data.type === "map") {
-				this.onMapUpdate(data.map);
+				this.updateMap(data.map);
 			} else if (data.type === "chat") {
-				this.onChatUpdate(data);
+				this.updateChat(data);
+			} else if (data.type === "npc-dialog") {
+				this.updateNPCDialog(data);
 			} else {
 				console.error("Unknown message:", data);
 			}
@@ -157,7 +179,7 @@ export default class GameUI {
 	 *
 	 * @param {import("../../src/Packets.js").TPlayer} data - The player data from the server.
 	 */
-	onPlayerUpdate(data) {
+	updatePlayer(data) {
 		// console.log("Player:", data);
 		if (State.player instanceof Player) {
 			// update player state
@@ -180,7 +202,7 @@ export default class GameUI {
 	 * Players are also entity and map will keep track of them.
 	 * @param {import("../../src/Packets.js").TWorldMap} data - The map data from the server.
 	 */
-	onMapUpdate(data) {
+	updateMap(data) {
 		// update map state
 		//if (this.map instanceof WMap) {
 		// TODO possibly merge the changes from server
@@ -204,11 +226,22 @@ export default class GameUI {
 	 *
 	 * @param {import("../../src/Packets.js").TChatPacket} data - The chat data from the server.
 	 */
-	onChatUpdate(data) {
+	updateChat(data) {
 		// console.log("Chat:", data);
 		// trigger a custom chat event
 		// to be caught by the chat UI
 		document.dispatchEvent(new CustomEvent("ui-chat", { detail: data }));
+	}
+
+	/**
+	 * Handles NPC dialog updates received from the server.
+	 * Prints the dialog data to the console (for now).
+	 *
+	 * @param {import("../../src/Packets.js").TDialogPacket} data - The NPC dialog data from the server.
+	 */
+	updateNPCDialog(data) {
+		console.log("NPC Dialog:", data);
+		document.dispatchEvent(new CustomEvent("ui-dialog", { detail: data.dialog }));
 	}
 
 	// #endregion handlers

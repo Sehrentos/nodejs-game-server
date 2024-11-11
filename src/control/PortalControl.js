@@ -5,12 +5,11 @@ import { ENTITY_TYPE } from '../enum/Entity.js';
 export class PortalControl extends Portal {
     /**
      * Creates a new EntityControl instance.
-     * @param {import("../model/Portal.js").PortalProps} p - Entity properties.
+     * @param {import("../model/Portal.js").TPortalProps} p - Entity properties.
      */
-    constructor(p = {}) {
+    constructor(p) {
         super(p)
         this.gid = p?.gid ?? randomBytes(16).toString('hex')
-        this.portalTo = p?.portalTo ?? null
     }
 
     /**
@@ -30,10 +29,10 @@ export class PortalControl extends Portal {
 
     /**
      * Finds entities in the given radius around the entity.
-     * @param {number} [radius=4] - The radius to search for entities.
-     * @param {number} [timestamp=performance.now()] `performance.now()` from the world.onTick
+     * @param {number} radius - The radius to search for entities.
+     * @param {number} timestamp `performance.now()` from the world.onTick
      */
-    detectNearByEntities(radius = 4, timestamp = performance.now()) {
+    detectNearByEntities(radius, timestamp) {
         try {
             // find entities in 4 tiles radius
             const nearbyEntities = this.map.findEntitiesInRadius(this.x, this.y, radius)
@@ -44,7 +43,7 @@ export class PortalControl extends Portal {
                     // @ts-ignore player use portal again 5 seconds after last portal used
                     if (!entity._portalUsed || timestamp - entity._portalUsed > 5000) {
                         // @ts-ignore warp player
-                        entity._portalUsed = performance.now()
+                        entity._portalUsed = timestamp || performance.now()
                         // @ts-ignore entity type is player
                         this.map.world.joinMapByName(entity, this.portalTo.name, this.portalTo.x, this.portalTo.y)
                     }

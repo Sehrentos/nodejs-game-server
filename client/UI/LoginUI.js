@@ -23,44 +23,42 @@ export default class LoginUI {
 			m("form#login-form[autocomplete=off]", {
 				onsubmit: this._onSubmit,
 			}, [
-				m("fieldset", [
-					m("legend", this.isRegister ? "Register" : "Login"),
-					m("p", "Note: This is only for testing purposes."),
-					m("p", "Any login credentials will be accepted for this demo."),
-					m("input", {
-						type: "text",
-						name: "username",
-						id: "username",
-						placeholder: "Username",
-						required: true,
-					}),
-					m("input", {
-						type: "password",
-						name: "password",
-						id: "password",
-						placeholder: "Password",
-						required: true,
-					}),
-					m("input", {
-						type: "email",
-						name: "email",
-						id: "email",
-						placeholder: "Email",
-						className: this.isRegister ? "" : "ui-hidden",
-						required: this.isRegister,
-					}),
-					m("input", {
-						type: "submit",
-						value: "Submit",
-					}),
-					m("label[for=register]", m("input", {
-						type: "checkbox",
-						id: "register",
-						name: "register",
-						onchange: this._onChange,
-					}),
-						"Register"),
-				]),
+				m("div.title", this.isRegister ? "Register" : "Login"),
+				m("p", "Note: This is only for testing purposes."),
+				m("p", "Any login credentials will be accepted for this demo."),
+				m("input", {
+					type: "text",
+					name: "username",
+					id: "username",
+					placeholder: "Username",
+					required: true,
+				}),
+				m("input", {
+					type: "password",
+					name: "password",
+					id: "password",
+					placeholder: "Password",
+					required: true,
+				}),
+				m("input", {
+					type: "email",
+					name: "email",
+					id: "email",
+					placeholder: "Email",
+					className: this.isRegister ? "" : "ui-hidden",
+					required: this.isRegister,
+				}),
+				m("input", {
+					type: "submit",
+					value: "Submit",
+				}),
+				m("label[for=register]", m("input", {
+					type: "checkbox",
+					id: "register",
+					name: "register",
+					onchange: this._onChange,
+				}),
+					"Register"),
 			]),
 		])
 	}

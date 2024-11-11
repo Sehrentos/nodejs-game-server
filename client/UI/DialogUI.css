@@ -1,0 +1,43 @@
+/* DialogUI */
+.ui-dialog {
+    box-sizing: border-box;
+    display: none;
+    position: fixed;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: fit-content;
+    height: fit-content;
+    max-height: calc(100% - 4em);
+    max-width: calc(100% - 2em);
+    padding: 0.5em 1em;
+    margin: 2em auto;
+    overflow: auto;
+    box-shadow: 0 0 0.6em rgba(0, 0, 0, 0.775);
+    user-select: text;
+    border: 1px solid #dddddd;
+    border-radius: 0.4em;
+    background-color: #f1f1f1;
+    color: #252525;
+}
+
+.ui-dialog.show {
+    display: block;
+}
+
+.ui-dialog-backdrop {
+    box-sizing: border-box;
+    display: none;
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background: rgba(0, 0, 0, 0.4);
+}
+
+.ui-dialog-backdrop.show,
+.ui-dialog-backdrop.show .ui-dialog {
+    display: block;
+}

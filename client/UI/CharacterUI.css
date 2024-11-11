@@ -1,13 +1,14 @@
 /* CharacterUI */
 .ui-character {
     position: absolute;
-    right: 0;
-    top: 0;
-
+    top: 0.5em;
+    left: 0.5em;
     box-sizing: border-box;
     border: 1px solid #dddddd;
     border-radius: 0.4em;
     padding: 0.25em;
+    background-color: #f1f1f1;
+    color: #252525;
 }
 
 .ui-character .title {

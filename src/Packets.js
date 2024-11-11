@@ -1,11 +1,12 @@
 /**
- * @typedef {import("./model/Entity.js").EntityProps} TEntity
- * @typedef {import("./model/Player.js").PlayerProps} TPlayer
- * @typedef {import("./model/Monster.js").MonsterProps} TMonster
+ * @typedef {import("./model/Entity.js").TEntityProps} TEntity
+ * @typedef {import("./model/Player.js").TPlayerProps} TPlayer
+ * @typedef {import("./model/Monster.js").TMonsterProps} TMonster
  * @typedef {import("./WorldMap.js").WorldMapProps} TWorldMap
  * @typedef {import("./control/EntityControl.js").EntityControl} EntityControl
  * @typedef {import("./control/PlayerControl.js").PlayerControl} PlayerControl
  * @typedef {import("./control/MonsterControl.js").MonsterControl} MonsterControl
+ * @typedef {import("./control/NPCControl.js").NPCControl} NPCControl
  * 
  * @typedef {Object} TMapPacket
  * @prop {string} type
@@ -17,10 +18,18 @@
  * 
  * @typedef {Object} TChatPacket
  * @prop {string} type
+ * @prop {string} channel
  * @prop {string} from
  * @prop {string} to
  * @prop {string} message
+ * @prop {number=} timestamp Date.now()
+ * 
+ * @typedef {Object} TDialogPacket
+ * @prop {string} type
+ * @prop {string|string[]} dialog
  */
+
+import { ENTITY_TYPE } from "./enum/Entity.js"
 
 /**
  * Creates a "packet" containing the state of map and it's entities.
@@ -34,18 +43,34 @@ export const updateMap = (map) => ({
 		width: map.width,
 		height: map.height,
 		// @ts-ignore filtered on purpose, so the client does not know everything
-		entities: map.entities.map((entity) => ({
+		entities: map.entities.map((entity) => (entity.type === ENTITY_TYPE.WARP_PORTAL ? {
 			gid: entity.gid,
 			type: entity.type,
 			name: entity.name,
 			x: entity.x,
 			y: entity.y,
+			w: entity.w,
+			h: entity.h,
 			dir: entity.dir,
 			hp: entity.hp,
 			hpMax: entity.hpMax,
 			mp: entity.mp,
 			mpMax: entity.mpMax,
-			portalTo: entity.portalTo, // portal entity
+			//@ts-ignore type WARP_PORTAL
+			portalTo: entity.portalTo,
+		} : {
+			gid: entity.gid,
+			type: entity.type,
+			name: entity.name,
+			x: entity.x,
+			y: entity.y,
+			w: entity.w,
+			h: entity.h,
+			dir: entity.dir,
+			hp: entity.hp,
+			hpMax: entity.hpMax,
+			mp: entity.mp,
+			mpMax: entity.mpMax,
 		})),
 	}
 })
@@ -57,14 +82,14 @@ export const updateMap = (map) => ({
  */
 export const updatePlayer = (player) => ({
 	type: "player",
-	// @ts-ignore filtered on purpose, so the client does not know everything
 	player: {
 		gid: player.gid,
 		name: player.name,
-		// todo missing map prop?
 		mapName: player.mapName,
 		x: player.x,
 		y: player.y,
+		w: player.w,
+		h: player.h,
 		dir: player.dir,
 		hp: player.hp,
 		hpMax: player.hpMax,
@@ -75,12 +100,13 @@ export const updatePlayer = (player) => ({
 		baseExp: player.baseExp,
 		jobExp: player.jobExp,
 		money: player.money,
+		range: player.range,
 		atk: player.atk,
 		atkMultiplier: player.atkMultiplier,
 		mAtk: player.mAtk,
 		mAtkMultiplier: player.mAtkMultiplier,
-		elementAtk: player.elementAtk,
-		elementDef: player.elementDef,
+		eAtk: player.eAtk,
+		eDef: player.eDef,
 		def: player.def,
 		defMultiplier: player.defMultiplier,
 		mDef: player.mDef,
@@ -109,14 +135,28 @@ export const updatePlayer = (player) => ({
 
 /**
  * Creates a "packet" containing the state of a chat message from the given user to the given recipient.
+ * @param {string} channel - The chat channel.
  * @param {string} from - The username of the sender.
  * @param {string} to - The username of the recipient.
  * @param {string} message - The message to send.
+ * @param {number=} timestamp - The timestamp of the message.
  * @returns {TChatPacket} A packet object containing the chat information.
  */
-export const updateChat = (from, to, message) => ({
+export const updateChat = (channel, from, to, message, timestamp) => ({
 	type: "chat",
+	timestamp: timestamp || Date.now(),
+	channel: channel || "default", // default|private|log|...
 	from: from,
 	to: to,
 	message: message
+})
+
+/**
+ * Creates a packet containing the NPC's dialog text.
+ * @param {string|string[]} dialog - The NPC's dialog text.
+ * @returns {TDialogPacket} A packet object containing the NPC's dialog text.
+ */
+export const updateNPCDialog = (dialog) => ({
+	type: "npc-dialog",
+	dialog
 })

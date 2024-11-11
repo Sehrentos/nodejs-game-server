@@ -1,5 +1,7 @@
+import { ITEM_TYPE } from "../enum/Item.js"
+
 /**
- * @typedef {Object} ItemProps
+ * @typedef {Object} TItemProps
  * @prop {number=} id - Database id.
  * @prop {string=} name - Visual name.
  * @prop {number=} type - Item type. default ITEM_TYPE.ETC
@@ -12,16 +14,13 @@
  * @prop {number=} def - Defense (shield, armor). default 0
  * @prop {number=} mDef - Magic defense. default 0
  * @prop {number=} res - Resistance to elements. default 0
- * 
  */
-
-import { ITEM_TYPE } from "../enum/Item.js"
 
 export class Item {
 	/**
 	 * Constructor for the Item class.
 	 * 
-	 * @param {ItemProps} p - Object that contains the properties to be set.
+	 * @param {TItemProps} p - Object that contains the properties to be set.
 	 */
 	constructor(p) {
 		this.id = p?.id ?? 0

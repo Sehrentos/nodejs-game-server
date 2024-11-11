@@ -4,11 +4,11 @@
  * Note: the database is used to store the data of the items,
  * that will be instantiated with the `Item` class.
  * 
- * @example const knife = new Item(items[0]);
+ * @example const knife = new Item(ITEMS[0]);
  * 
- * @type {Array<import("../model/Item.js").ItemProps>}
+ * @type {Array<import("../model/Item.js").TItemProps>}
  */
-export const items = [
+export const ITEMS = [
 	{
 		id: 1,
 		name: "Knife",

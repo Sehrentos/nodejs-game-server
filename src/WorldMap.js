@@ -1,10 +1,11 @@
 import { EntityControl } from "./control/EntityControl.js"
 import { MonsterControl } from "./control/MonsterControl.js"
+import { NPCControl } from "./control/NPCControl.js"
 import { PlayerControl } from "./control/PlayerControl.js"
 import { PortalControl } from "./control/PortalControl.js"
-import { maps } from "./data/maps.js"
-import { mobs } from "./data/mobs.js"
-import { npcs } from "./data/npcs.js"
+import { MAPS } from "./data/MAPS.js"
+import { MOBS } from "./data/MOBS.js"
+import { NPCS } from "./data/NPCS.js"
 import { ENTITY_TYPE } from "./enum/Entity.js"
 import { getRandomInt } from "./utils/getRandomInt.js"
 
@@ -15,7 +16,7 @@ import { getRandomInt } from "./utils/getRandomInt.js"
  * @prop {number=} width - The width of the map.
  * @prop {number=} height - The height of the map.
  * @prop {boolean=} isLoaded - Whether the map is loaded.
- * @prop {Array<EntityControl|MonsterControl|PlayerControl|PortalControl>=} entities - A list of entities.
+ * @prop {Array<EntityControl|NPCControl|MonsterControl|PlayerControl|PortalControl>=} entities - A list of entities.
  */
 
 /**
@@ -42,7 +43,7 @@ export class WorldMap {
 		this.height = p?.height ?? 0
 		/** @type {boolean} */
 		this.isLoaded = p?.isLoaded ?? false
-		/** @type {Array<EntityControl|MonsterControl|PlayerControl|PortalControl>} */
+		/** @type {Array<EntityControl|NPCControl|MonsterControl|PlayerControl|PortalControl>} */
 		this.entities = p?.entities ?? []
 	}
 
@@ -61,11 +62,13 @@ export class WorldMap {
 	}
 
 	onCreate() {
-		// create map entities
-		for (const map of maps) {
+		// create map entities from static data
+		for (const map of MAPS) {
 			if (map.name !== this.name) continue;
-			// instantiate the Objects with proper controllers
+
 			let entityStack = []
+
+			// instantiate the Objects with proper controllers
 			for (const entity of map.entities) {
 				let _entityClone = structuredClone(entity)
 				let _quantity = entity.quantity || 1;
@@ -73,22 +76,24 @@ export class WorldMap {
 				let y = entity.y || getRandomInt(5, this.height - 5)
 				let dir = entity.dir || Math.floor(Math.random() * 4)
 				let _entity = { ..._entityClone, map: this, x, y, dir, saveX: x, saveY: y }
-				delete _entity.quantity;
 				switch (_entity.type) {
 					default:
-					case ENTITY_TYPE.NPC:
 						entityStack.push(new EntityControl(_entity))
 						break;
 
+					case ENTITY_TYPE.NPC:
+						entityStack.push(new NPCControl(_entity))
+						break;
+
 					case ENTITY_TYPE.MONSTER:
-						let _mob = mobs.find(e => e.id === _entity.id)
+						let _mob = MOBS.find(e => e.id === _entity.id)
 						if (!_mob) continue
 						let _mobClone = structuredClone(_mob)
 						for (let i = 0; i < _quantity; i++) {
 							// @ts-ignore
 							_entity = { ..._mobClone, ..._entityClone, map: this, x, y, dir, saveX: x, saveY: y }
 							entityStack.push(new MonsterControl(_entity))
-							// cast new positions
+							// use new positions on next loop
 							x = entity.x || getRandomInt(5, this.width - 5)
 							y = entity.y || getRandomInt(5, this.height - 5)
 							dir = entity.dir || Math.floor(Math.random() * 4)
@@ -100,6 +105,7 @@ export class WorldMap {
 						break;
 
 					case ENTITY_TYPE.WARP_PORTAL:
+						// @ts-ignore portalTo exist, when type is PORTAL, else it will be created
 						entityStack.push(new PortalControl(_entity))
 						break;
 				}
@@ -114,7 +120,7 @@ export class WorldMap {
 		// 	let y = getRandomInt(5, this.height - 5)
 		// 	let dir = Math.floor(Math.random() * 4)
 		// 	// get random NPC between id 1 and MAX
-		// 	let randomNPC = npcs[getRandomInt(0, npcs.length - 1)]
+		// 	let randomNPC = NPCS[getRandomInt(0, NPCS.length - 1)]
 		// 	this.addNpc(randomNPC, x, y, dir)
 		// }
 		// // [TEST] create dummy MONSTER entities
@@ -123,7 +129,7 @@ export class WorldMap {
 		// 	let y = getRandomInt(5, this.height - 5)
 		// 	let dir = Math.floor(Math.random() * 4)
 		// 	// get random Mob between id 1 and MAX
-		// 	let randomMob = mobs[getRandomInt(0, mobs.length - 1)]
+		// 	let randomMob = MOBS[getRandomInt(0, MOBS.length - 1)]
 		// 	this.addMonster(randomMob, x, y, dir)
 		// }
 
@@ -133,21 +139,21 @@ export class WorldMap {
 	/**
 	 * Adds an NPC to the map at the specified coordinates with the given direction.
 	 * 
-	 * @param {import("./model/Entity.js").EntityProps} entity - The entity to add as an NPC.
-	 * @param {number} x - The x coordinate of the NPC.
-	 * @param {number} y - The y coordinate of the NPC.
-	 * @param {number} dir - The direction of the NPC.
+	 * @param {import("./model/NPC.js").TNPCProps} entity - The entity to add as an NPC.
+	 * @param {number} x - The x coordinate
+	 * @param {number} y - The y coordinate
+	 * @param {number} dir - The direction
 	 */
 	addNpc(entity, x, y, dir) {
-		this.entities.push(new EntityControl({ ...entity, map: this, x, y, dir, saveX: x, saveY: y }))
+		this.entities.push(new NPCControl({ ...entity, map: this, x, y, dir, saveX: x, saveY: y }))
 	}
 
 	/**
 	 * Adds a monster to the map at the given coordinates with the specified direction.
-	 * @param {import("./model/Monster.js").MonsterProps} monster - The monster to add.
-	 * @param {number} x - The x coordinate of the monster.
-	 * @param {number} y - The y coordinate of the monster.
-	 * @param {number} dir - The direction of the monster.
+	 * @param {import("./model/Monster.js").TMonsterProps} monster - The monster to add.
+	 * @param {number} x - The x coordinate
+	 * @param {number} y - The y coordinate
+	 * @param {number} dir - The direction
 	 */
 	addMonster(monster, x, y, dir) {
 		this.entities.push(new MonsterControl({ ...monster, map: this, x, y, dir, saveX: x, saveY: y }))
@@ -155,10 +161,10 @@ export class WorldMap {
 
 	/**
 	 * Adds a player to the map at the given coordinates with the specified direction.
-	 * @param {import("./model/Player.js").PlayerProps} player - The monster to add.
-	 * @param {number} x - The x coordinate of the monster.
-	 * @param {number} y - The y coordinate of the monster.
-	 * @param {number} dir - The direction of the monster.
+	 * @param {import("./model/Player.js").TPlayerProps} player - The monster to add.
+	 * @param {number} x - The x coordinate
+	 * @param {number} y - The y coordinate
+	 * @param {number} dir - The direction
 	 */
 	addPlayer(player, x, y, dir) {
 		this.entities.push(new PlayerControl({ ...player, map: this, x, y, dir, saveX: x, saveY: y }))
@@ -166,13 +172,12 @@ export class WorldMap {
 
 	/**
 	 * Adds a portal to the map at the given coordinates with the specified direction.
-	 * @param {import("./model/Portal.js").PortalProps} portal - The portal to add.
-	 * @param {number} x - The x coordinate of the monster.
-	 * @param {number} y - The y coordinate of the monster.
-	 * @param {number} dir - The direction of the monster.
+	 * @param {import("./model/Portal.js").TPortalProps} portal - The portal to add.
+	 * @param {number} x - The x coordinate
+	 * @param {number} y - The y coordinate
 	 */
-	addPortal(portal, x, y, dir) {
-		this.entities.push(new PortalControl({ ...portal, map: this, x, y, dir, saveX: x, saveY: y }))
+	addPortal(portal, x, y) {
+		this.entities.push(new PortalControl({ ...portal, map: this, x, y, saveX: x, saveY: y }))
 	}
 
 	/**
@@ -225,12 +230,17 @@ export class WorldMap {
 	 * @param {number} x - The x-coordinate of the center point.
 	 * @param {number} y - The y-coordinate of the center point.
 	 * @param {number} radius - The radius to search for entities.
-	 * @returns {Array<EntityControl|MonsterControl|PlayerControl|PortalControl>} - An array of entities within the specified radius.
+	 * @returns {Array<EntityControl|NPCControl|MonsterControl|PlayerControl|PortalControl>} - An array of entities within the specified radius.
 	 */
 	findEntitiesInRadius(x, y, radius) {
 		const stack = [] // entities can be on top of each other
 		for (const entity of this.entities) {
-			if (Math.abs(x - entity.x) > radius || Math.abs(y - entity.y) > radius) continue
+			// TODO take entity w and h into account
+			if (
+				(Math.abs((x - (radius / 2)) - entity.x) > radius || Math.abs((y - (radius / 2)) - entity.y) > radius) &&
+				(Math.abs(x - entity.x) > radius || Math.abs(y - entity.y) > radius)
+			) continue;
+
 			stack.push(entity)
 		}
 		return stack

@@ -3,8 +3,6 @@ import "./style.css"
 import LoginUI from "./UI/LoginUI.js"
 import GameUI from "./UI/GameUI.js"
 import { Auth } from "./Auth.js"
-// client-side application entry
-// import { ENTITY_TYPE } from "../src/enum/Entity.js";
 
 // start application, by routing
 m.route(document.body, "/login", {

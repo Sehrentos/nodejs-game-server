@@ -1,5 +1,5 @@
 /**
- * @typedef {import("../../src/model/Entity.js").EntityProps} EntityProps
+ * @typedef {import("../../src/model/Entity.js").TEntityProps} EntityProps
  * 
  * @typedef {Object} WMapProps
  * @prop {number=} id - Database id.

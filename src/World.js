@@ -2,7 +2,7 @@ import WebSocket, { WebSocketServer } from 'ws';
 import { WorldMap } from './WorldMap.js';
 import { PlayerControl } from './control/PlayerControl.js';
 import { ENTITY_TYPE } from './enum/Entity.js';
-import { maps } from './data/maps.js';
+import { MAPS } from './data/MAPS.js';
 import { verifyToken } from './utils/jwt.js';
 import { Database } from './db/Database.js';
 
@@ -62,7 +62,7 @@ export class World {
 		let map = this.maps.find(m => m.name === mapName)
 		if (!map) {
 			// @ts-ignore create new map from map data
-			map = new WorldMap(this, maps.find(m => m.name === mapName) || { name: mapName })
+			map = new WorldMap(this, MAPS.find(m => m.name === mapName) || { name: mapName })
 			if (!map.isLoaded) {
 				await map.load()
 			}

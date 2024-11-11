@@ -4,11 +4,11 @@
  * Note: the database is used to store the data of the monsters,
  * that will be instantiated with the `Monster` class.
  * 
- * @example const bird = new Monster(mobs[0]);
+ * @example const bird = new Monster(MOBS[0]);
  * 
- * @type {Array<import("../model/Monster.js").MonsterProps>}
+ * @type {Array<import("../model/Monster.js").TMonsterProps>}
  */
-export const mobs = [
+export const MOBS = [
 	{
 		id: 1,
 		name: "Bird",
@@ -17,9 +17,9 @@ export const mobs = [
 	},
 	{
 		id: 2,
-		name: "Snake",
-		hp: 100,
-		hpMax: 100
+		name: "Bug",
+		hp: 10,
+		hpMax: 10
 	},
 	{
 		id: 3,
@@ -29,9 +29,9 @@ export const mobs = [
 	},
 	{
 		id: 4,
-		name: "Bug",
-		hp: 10,
-		hpMax: 10
+		name: "Snake",
+		hp: 100,
+		hpMax: 100
 	},
 	{
 		id: 5,

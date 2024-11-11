@@ -3,13 +3,16 @@ import { Player } from '../model/Player.js';
 import * as Packets from '../Packets.js';
 import { ENTITY_TYPE } from '../enum/Entity.js';
 import { ELEMENT } from '../enum/Element.js';
+import { inRangeOfEntity } from '../utils/EntityUtil.js';
 
 /**
  * @typedef {import("../WorldMap.js").WorldMap} WorldMap
- * @typedef {import("../model/Player.js").PlayerProps} PlayerProps
+ * @typedef {import("../model/Player.js").TPlayerProps} PlayerProps
  * @typedef {Object} PlayerExtraProps
  * @prop {import("../World.js").World=} world - World instance.
  * @prop {import("ws").WebSocket=} socket - Websocket instance.
+ * @prop {Map<number, import("./NPCControl.js").NPCControl>=} nearByNPC - List of nearby NPCs.
+ * 
  * @typedef {PlayerProps & PlayerExtraProps} PlayerControlProps
  */
 
@@ -21,21 +24,19 @@ export class PlayerControl extends Player {
 	constructor(p) {
 		super(p)
 		this.gid = p?.gid ?? randomBytes(4).toString('hex')
+
 		this.speed = 1 // DEBUG, make player move really fast
-		this.aspd = p?.aspd ?? 1000
-		this.aspdMultiplier = p?.aspdMultiplier ?? 1
+		this.range = 10 // DEBUG, make player attack range longer
+		this._following = null
 
-		/** @type {number} timestamp in milliseconds when the player last attacked */
-		this.attackStart = 0
-		/** @type {import("./EntityControl.js").TEntityControls|null} */
-		this.attacking = null
-
+		// set default town and position
 		this.saveMap = p?.saveMap ?? 'Lobby town'
 		this.saveX = p?.saveX ?? 300
 		this.saveY = p?.saveY ?? 200
 
 		this.world = p?.world ?? null
 		this.socket = p?.socket ?? null
+		this.nearByNPC = new Map()
 
 		this._onClose = this.onClose.bind(this)
 		this._onError = this.onError.bind(this)
@@ -61,11 +62,11 @@ export class PlayerControl extends Player {
 			// 	await this.onLogin(json)
 			// } else 
 			if (json.type === 'move') {
-				await this.onMove(json)
+				this.onMove(json)
 			} else if (json.type === 'chat') {
-				await this.onChat(json)
+				this.onChat(json)
 			} else if (json.type === 'click') {
-				await this.onClickPosition(json)
+				this.onClickPosition(json)
 			}
 			else {
 				console.log(`[TODO] ${process.pid} message:`, json)
@@ -115,52 +116,88 @@ export class PlayerControl extends Player {
 
 		// find entities in nearby
 		this.detectNearByEntities(10, timestamp)
+
+		// start following target
+		if (this._following != null) {
+			this.follow(this._following)
+		}
 	}
 
-	// async onLogin(json) {
-	// 	// TODO validate username
-	// 	this.name = json.username
-	// 	const map = await this.world.joinMap(this, 'Lobby town')
-	// 	console.log(`Player ${this.id} joined ${map.name}`)
-	// 	this.onEnterMap(map)
-	// 	return true
-	// }
-
-	async onMove(json) {
+	/**
+	 * Handles the movement of the player based on WebSocket messages.
+	 * The `code` property of the message is used to determine the direction of the movement.
+	 * The player is moved if the direction is valid and the movement timer has expired.
+	 * The movement is based on the player's direction and current speed.
+	 * Updates the player's position on the map while ensuring it stays within boundaries.
+	 * The movement is constrained by a delay calculated from speed and speedMultiplier.
+	 *
+	 * @param {{code:string}} json - WebSocket message containing the movement information.
+	 */
+	onMove(json) {
 		const timestamp = performance.now()
-
-		// apply position update from player.speed and player.speedMultiplier
-		if (this.movementStart === 0) {
-			// this.movementStart = timestamp
-		} else if (timestamp - this.movementStart < this.speed * this.speedMultiplier) {
-			return
-		}
-		this.movementStart = timestamp
-
 		switch (json.code) {
 			case "KeyA":
 			case "ArrowLeft":
+				this.move(0, timestamp)
+				break
+			case "KeyD":
+			case "ArrowRight":
+				this.move(1, timestamp)
+				break
+			case "KeyW":
+			case "ArrowUp":
+				this.move(2, timestamp)
+				break
+			case "KeyS":
+			case "ArrowDown":
+				this.move(3, timestamp)
+				break
+			default:
+				break
+		}
+	}
+
+	/**
+	 * Moves the entity in the specified direction if possible.
+	 * The movement is based on the entity's direction and current speed.
+	 * Updates the entity's position on the map while ensuring it stays within boundaries.
+	 * The movement is constrained by a delay calculated from speed and speedMultiplier.
+	 *
+	 * @param {number} dir - The direction to move the entity:
+	 *   0: Left (x--), 1: Right (x++), 2: Up (y--), 3: Down (y++)
+	 * @param {number} timestamp - The current timestamp or performance.now().
+	 */
+	move(dir, timestamp) {
+		const _timestamp = timestamp || performance.now()
+
+		// check if entity can move on this tick
+		if (this.movementStart === 0) {
+			// can move
+		} else if (_timestamp - this.movementStart < this.speed * this.speedMultiplier) {
+			return
+		}
+		this.movementStart = _timestamp
+
+		switch (dir) {
+			case 0:
 				this.dir = 0
 				if (this.x > 0) {
 					this.x--
 				}
 				break
-			case "KeyD":
-			case "ArrowRight":
+			case 1:
 				this.dir = 1
 				if (this.x < this.map.width) {
 					this.x++
 				}
 				break
-			case "KeyW":
-			case "ArrowUp":
+			case 2:
 				this.dir = 2
 				if (this.y > 0) {
 					this.y--
 				}
 				break
-			case "KeyS":
-			case "ArrowDown":
+			case 3:
 				this.dir = 3
 				if (this.y < this.map.height) {
 					this.y++
@@ -172,20 +209,57 @@ export class PlayerControl extends Player {
 	}
 
 	/**
+	 * Makes the monster entity follow another entity, by moving its position on each tick
+	 * closer to the target entity. The target must be in the monster's range.
+	 * If the target moves out of range or dies, the monster will stop following.
+	 * @param {import("../model/Entity").TEntityProps} entity - The target entity to follow.
+	 * @returns {string} - Returns "out of range" if the target is out of range.
+	 */
+	follow(entity) {
+		this._following = entity
+
+		// if target dies, stop following
+		if (entity.hp <= 0) {
+			this._following = null
+			return
+		}
+
+		// stop at range
+		if (inRangeOfEntity(entity, this.x, this.y, this.range)) {
+			this._following = null
+			return
+		}
+
+		// follow target
+		if (this.x > entity.x) {
+			this.dir = 0
+			this.x--
+		} else if (this.x < entity.x) {
+			this.dir = 1
+			this.x++
+		}
+		if (this.y > entity.y) {
+			this.dir = 2
+			this.y--
+		} else if (this.y < entity.y) {
+			this.dir = 3
+			this.y++
+		}
+	}
+
+	/**
 	 * Handles the chat message received from the player.
 	 * Constructs a chat packet and sends it to the appropriate recipient.
 	 * If the recipient is specified as 'world' or empty, broadcasts the message
 	 * to all players in the world. Otherwise, attempts to find the specific player
 	 * and send the message to them directly.
 	 *
-	 * @param {Object} json - The JSON object containing chat details.
-	 * @param {string} json.to - The recipient player's name or 'world' for broadcasting.
-	 * @param {string} json.message - The chat message content.
+	 * @param {import("../Packets.js").TChatPacket} json - The JSON object containing chat details.
 	 */
 	onChat(json) {
 		if (json.message === "") return;
-		const packet = Packets.updateChat(this.name, json.to, json.message)
-		if (json.to === '' || json.to === 'world') {
+		const packet = Packets.updateChat(json.channel, this.name, json.to, json.message);
+		if (json.channel === '' || json.channel === 'default') {
 			this.world.broadcast(JSON.stringify(packet));
 		} else {
 			// find player name from world then send message to that player
@@ -222,13 +296,15 @@ export class PlayerControl extends Player {
 				// console.log(`Player ${this.name} is attacking Monster ${entity.name} (${entity.hp}/${entity.hpMax}) ${json.x},${json.y}`)
 				// this.socket.send(JSON.stringify(Packets.updateEntity(entity)))
 			}
+			else if (entity.type === ENTITY_TYPE.NPC) {
+				// @ts-ignore type NPC
+				entity.onTouch(this, timestamp)
+				// optional, move to the entity
+				this.follow(entity)
+			}
 			else if (entity.type === ENTITY_TYPE.PLAYER) {
 				// TODO
 				console.log(`Player ${this.name} is interacting with Player (${entity.name} ${json.x},${json.y})`)
-			}
-			else if (entity.type === ENTITY_TYPE.NPC) {
-				// TODO
-				console.log(`Player ${this.name} is interacting with NPC (${entity.name} ${json.x},${json.y})`)
 			}
 		})
 	}
@@ -246,11 +322,14 @@ export class PlayerControl extends Player {
 
 	/**
 	 * Finds entities in the given radius around the entity.
-	 * @param {number} [radius=4] - The radius to search for entities.
-	 * @param {number} [timestamp=performance.now()] `performance.now()` from the world.onTick
+	 * @param {number} radius - The radius to search for entities.
+	 * @param {number} timestamp `performance.now()` from the world.onTick
 	 */
-	detectNearByEntities(radius = 4, timestamp = performance.now()) {
+	detectNearByEntities(radius, timestamp) {
 		try {
+			// clear old entities
+			this.nearByNPC.clear()
+
 			const nearbyEntities = this.map.findEntitiesInRadius(this.x, this.y, radius)
 				.filter(entity => entity.gid !== this.gid) // exclude self
 
@@ -264,9 +343,12 @@ export class PlayerControl extends Player {
 				if (entity.type === ENTITY_TYPE.MONSTER) {
 					// has target set and still in range?
 					// then start combat
-					if (this.attacking != null) {
-						this.attack(this.attacking, timestamp)
+					if (this.attacking != null || this._following != null) {
+						this.attack(this.attacking || this._following, timestamp)
 					}
+				}
+				if (entity.type === ENTITY_TYPE.NPC) {
+					this.nearByNPC.set(entity.gid, entity)
 				}
 			}
 		} catch (error) {
@@ -281,14 +363,19 @@ export class PlayerControl extends Player {
 	 * @param {number} timestamp - The current timestamp in milliseconds.
 	 */
 	attack(entity, timestamp) {
+		this.attacking = entity // set target
+		this._following = entity // start to follow
+
 		if (this.attackStart !== 0 && timestamp - this.attackStart < this.aspd * this.aspdMultiplier) {
 			return // can't attack yet
 		}
+		// is in melee range
+		if (!inRangeOfEntity(entity, this.x, this.y, this.range)) {
+			return
+		}
 		this.attackStart = timestamp
-		this.attacking = entity
 
-		// @ts-ignore null checked. perform attack
-		entity?.takeDamage(this)
+		entity.takeDamage(this)
 	}
 
 	/**
@@ -297,7 +384,7 @@ export class PlayerControl extends Player {
 	 * strength, attack power, and attack multiplier. If the entity's hp
 	 * falls to zero or below, the entity dies and is removed from the map.
 	 * 
-	 * @param {import("./EntityControl.js").TEntityControls} attacker - The attacking entity, containing attack
+	 * @param {import("./MonsterControl.js").MonsterControl|import("./PlayerControl.js").PlayerControl} attacker - The attacking entity, containing attack
 	 *        attributes such as strength (str), attack
 	 *        power (atk), and attack multiplier (atkMultiplier).
 	 */
@@ -309,7 +396,7 @@ export class PlayerControl extends Player {
 		if (this.hp > 0) {
 			// physical attacks are always neutral? what about weapons elements?
 			// TODO take defence into account
-			if (attacker.elementAtk === ELEMENT.NEUTRAL) {
+			if (attacker.eAtk === ELEMENT.NEUTRAL) {
 				this.hp -= (attacker.str + attacker.atk) * attacker.atkMultiplier;
 			} else {
 				this.hp -= (attacker.int + attacker.mAtk) * attacker.mAtkMultiplier;
@@ -324,8 +411,9 @@ export class PlayerControl extends Player {
 	 * Removes the entity from the map.
 	 */
 	die() {
-		// TODO handle player removal differently, eg. send them to saved position and map
-		// this.map.removeEntity(this)
+		// handle player removal differently, eg. send them to saved position and map
+		this.attacking = null
+		this._following = null
 		this.goToSavedPosition()
 		this.revive()
 	}

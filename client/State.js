@@ -2,12 +2,6 @@
  * global game state
  */
 export const State = {
-    /** @type {number} - FPS limit */
-    fpsLimit: 60/2,
-
-    /** @type {string} - WebSocket address */
-    socketUrl: "wss://127.0.0.1:3000/world",
-
     /** @type {WebSocket|null} - WebSocket state */
     socket: null,
 
@@ -18,5 +12,11 @@ export const State = {
     map: null,
 
     /** @type {Array<import("../src/Packets.js").TChatPacket>} - chat state */
-    chat: [],
+    chat: [{
+        type: "chat",
+        channel: "default",
+        from: "info",
+        to: "world",
+        message: `Move with WASD or Arrow keys. Press "C" to toggle character info.`,
+    }],
 }

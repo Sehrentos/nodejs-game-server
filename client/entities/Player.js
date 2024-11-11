@@ -3,10 +3,11 @@ import KeyControl from "../control/KeyControl.js"
 
 export default class Player extends PlayerModel {
 	/**
-	 * @param {import("../../src/model/Player").PlayerProps} player 
+	 * @param {import("../../src/model/Player").TPlayerProps} player 
 	 */
 	constructor(player) {
 		super(player)
+		// client only properties
 		this.keyControl = new KeyControl(this)
 		this.keyControl.bind()
 	}

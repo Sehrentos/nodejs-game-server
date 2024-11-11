@@ -5,6 +5,8 @@ export class AI {
 	constructor(entity) {
 		/** @type {import("./control/MonsterControl.js").MonsterControl} */
 		this.entity = entity
+		/** @type {number} - Timestamp in milliseconds when the monster last idled */
+		this.iddleStart = 0
 	}
 
 	/**
@@ -21,7 +23,7 @@ export class AI {
 		// find entities in nearby
 		// and set the target entity
 		// then attack it
-		this.detectNearByEntities(10, timestamp)
+		this.detectNearByEntities(20, timestamp)
 	}
 
 	/**
@@ -50,11 +52,11 @@ export class AI {
 			}
 			// make the monster stay put for 5 seconds,
 			// every 5 seconds it will move again
-			if (entity.iddleStart === 0) {
-				entity.iddleStart = timestamp
+			if (this.iddleStart === 0) {
+				this.iddleStart = timestamp
 				return
 			}
-			if ((timestamp - entity.iddleStart) < 5000) {
+			if ((timestamp - this.iddleStart) < 5000) {
 				return
 			}
 
@@ -68,7 +70,7 @@ export class AI {
 					entity.y++
 				} else {
 					entity.dir = 1//Math.floor(Math.random() * 3) + 1//Math.floor(Math.random() * 4)
-					entity.iddleStart = timestamp
+					this.iddleStart = timestamp
 				}
 			}
 			if (entity.dir === 1) {
@@ -76,7 +78,7 @@ export class AI {
 					entity.x++
 				} else {
 					entity.dir = 2//Math.floor(Math.random() * 4)
-					entity.iddleStart = timestamp
+					this.iddleStart = timestamp
 				}
 			}
 			if (entity.dir === 2) {
@@ -84,7 +86,7 @@ export class AI {
 					entity.y--
 				} else {
 					entity.dir = 3//Math.floor(Math.random() * 4)
-					entity.iddleStart = timestamp
+					this.iddleStart = timestamp
 				}
 			}
 			if (entity.dir === 3) {
@@ -92,7 +94,7 @@ export class AI {
 					entity.x--
 				} else {
 					entity.dir = 0
-					entity.iddleStart = timestamp
+					this.iddleStart = timestamp
 				}
 			}
 		}
@@ -106,7 +108,7 @@ export class AI {
 	 * @returns {boolean} Returns true if the entity's move delay has not exceeded the specified time, otherwise false.
 	 */
 	iddleMoveStartTime(timestamp) {
-		if (this.entity.movementStart !== 0 && timestamp - this.entity.movementStart < this.entity.speed * this.entity.speedMultiplier) {
+		if (this.entity.movementStart !== 0 && timestamp - this.entity.movementStart < this.entity.speed) {
 			return false
 		}
 		this.entity.movementStart = timestamp
@@ -136,6 +138,8 @@ export class AI {
 			// then attack it
 			for (const entity of nearbyEntities) {
 				if (entity.type === ENTITY_TYPE.PLAYER) {
+					// start following target
+					self.follow(entity)
 					// has previous target and still in range
 					// then attack it
 					if (self.attacking != null) {
