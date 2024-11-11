@@ -114,6 +114,9 @@ export class PlayerControl extends Player {
 			this.socket.send(JSON.stringify(Packets.updatePlayer(this)));
 		}
 
+		// check if player is alive, for the rest of the function
+		if (this.hp <= 0) return
+
 		// find entities in nearby
 		this.detectNearByEntities(10, timestamp)
 
@@ -168,6 +171,7 @@ export class PlayerControl extends Player {
 	 * @param {number} timestamp - The current timestamp or performance.now().
 	 */
 	move(dir, timestamp) {
+		if (this.hp <= 0) return // must be alive
 		const _timestamp = timestamp || performance.now()
 
 		// check if entity can move on this tick
@@ -209,13 +213,15 @@ export class PlayerControl extends Player {
 	}
 
 	/**
-	 * Makes the monster entity follow another entity, by moving its position on each tick
+	 * Makes the entity follow another entity, by moving its position on each tick
 	 * closer to the target entity. The target must be in the monster's range.
 	 * If the target moves out of range or dies, the monster will stop following.
 	 * @param {import("../model/Entity").TEntityProps} entity - The target entity to follow.
 	 * @returns {string} - Returns "out of range" if the target is out of range.
 	 */
 	follow(entity) {
+		if (this.hp <= 0) return // must be alive
+
 		this._following = entity
 
 		// if target dies, stop following
@@ -286,7 +292,10 @@ export class PlayerControl extends Player {
 	 * @param {number} json.y - The y-coordinate of the click.
 	 */
 	onClickPosition(json) {
+		if (this.hp <= 0) return // must be alive
+
 		const timestamp = performance.now()
+
 		// TODO check if player is in range of entity (20-cell radius)
 		// find entities at clicked position in 4-cell radius
 		this.map.findEntitiesInRadius(json.x, json.y, 4).forEach((entity) => {
@@ -344,6 +353,7 @@ export class PlayerControl extends Player {
 					// has target set and still in range?
 					// then start combat
 					if (this.attacking != null || this._following != null) {
+						// @ts-ignore
 						this.attack(this.attacking || this._following, timestamp)
 					}
 				}
@@ -363,6 +373,8 @@ export class PlayerControl extends Player {
 	 * @param {number} timestamp - The current timestamp in milliseconds.
 	 */
 	attack(entity, timestamp) {
+		if (this.hp <= 0) return // must be alive
+
 		this.attacking = entity // set target
 		this._following = entity // start to follow
 
@@ -389,6 +401,7 @@ export class PlayerControl extends Player {
 	 *        power (atk), and attack multiplier (atkMultiplier).
 	 */
 	takeDamage(attacker) {
+		if (this.hp <= 0) return // must be alive
 		// must be in the same map, to receive damage
 		if (this.map !== attacker.map) {
 			return
@@ -408,13 +421,14 @@ export class PlayerControl extends Player {
 	}
 
 	/**
-	 * Removes the entity from the map.
+	 * When player dies, send them to saved position and map
 	 */
 	die() {
-		// handle player removal differently, eg. send them to saved position and map
+		this.hp = 0
+		this.death = performance.now() // Date.now()
 		this.attacking = null
 		this._following = null
-		this.goToSavedPosition()
+		this.toSavePosition()
 		this.revive()
 	}
 
@@ -423,7 +437,7 @@ export class PlayerControl extends Player {
 		this.mp += this.mpMax
 	}
 
-	goToSavedPosition() {
+	toSavePosition() {
 		this.map.world.joinMapByName(this, this.saveMap, this.saveX, this.saveY)
 	}
 }

@@ -88,7 +88,9 @@ export class EntityControl extends Entity {
 	 * Removes the entity from the map.
 	 */
 	die() {
-		this.map.removeEntity(this)
-		// TODO don't remove entity from map, just set hp to 0
+		this.hp = 0
+		this.death = Date.now()
+		// this.attacking = null
+		// this.map.removeEntity(this)
 	}
 }

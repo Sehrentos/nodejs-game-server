@@ -27,6 +27,18 @@ export class MonsterControl extends Monster {
 		// const deltaTime = timestamp - this.world.startTime // ms elapsed, since server started
 		// console.log(`Entity ${this.name} (${startTime}/${deltaTime}) tick.`)
 
+		// check if entity is alive
+		if (this.hp <= 0) {
+			// when entity has been dead for a 5-minutes, revive it
+			// and move it to the original position
+			if (timestamp - this.death > 5 * 60 * 1000) {
+				this.revive()
+				this.toSavePosition()
+			} else {
+				return // wait for revive
+			}
+		}
+
 		// call AI onUpdate, if it exists
 		this.ai.onUpdate(timestamp)
 
@@ -70,6 +82,7 @@ export class MonsterControl extends Monster {
 	 * @param {number} timestamp - The current timestamp or performance.now().
 	 */
 	move(dir, timestamp) {
+		if (this.hp <= 0) return // must be alive
 		const _timestamp = timestamp || performance.now()
 
 		// check if entity can move on this tick
@@ -117,6 +130,7 @@ export class MonsterControl extends Monster {
 	 * @param {number} timestamp - The current timestamp in milliseconds.
 	 */
 	attack(entity, timestamp) {
+		if (this.hp <= 0) return // can't attack if dead
 		this.inCombat = true
 		if (this.attackStart !== 0 && timestamp - this.attackStart < this.aspd * this.aspdMultiplier) {
 			return // can't attack yet
@@ -141,6 +155,8 @@ export class MonsterControl extends Monster {
 	 *        power (atk), and attack multiplier (atkMultiplier).
 	 */
 	takeDamage(attacker) {
+		// must be alive
+		if (this.hp <= 0) return
 		// must be in the same map, to receive damage
 		if (this.map !== attacker.map) {
 			return
@@ -163,21 +179,32 @@ export class MonsterControl extends Monster {
 	 * Removes the entity from the map.
 	 */
 	die() {
+		this.hp = 0
+		this.death = performance.now() // Date.now()
 		this.attacking = null
-		// this._following = null
-		this.map.removeEntity(this)
-		// TODO don't remove entity from map, just set hp to 0
+		this._following = null
+		// this.map.removeEntity(this)
+	}
+
+	revive() {
+		this.hp += this.hpMax
+		this.mp += this.mpMax
+	}
+
+	toSavePosition() {
+		this.x = this.saveX
+		this.y = this.saveY
 	}
 
 	/**
-	 * Makes the monster entity follow another entity, by moving its position on each tick
+	 * Makes the entity follow another entity, by moving its position on each tick
 	 * closer to the target entity. The target must be in the monster's range.
 	 * If the target moves out of range or dies, the monster will stop following.
 	 * @param {import("../model/Entity").TEntityProps} entity - The target entity to follow.
 	 * @returns {string} - Returns "out of range" if the target is out of range.
 	 */
 	follow(entity) {
-		this._following = null
+		this._following = entity
 
 		// if target dies, stop following
 		if (entity.hp <= 0) {
