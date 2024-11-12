@@ -2,7 +2,7 @@
  * @typedef {import("./model/Entity.js").TEntityProps} TEntity
  * @typedef {import("./model/Player.js").TPlayerProps} TPlayer
  * @typedef {import("./model/Monster.js").TMonsterProps} TMonster
- * @typedef {import("./WorldMap.js").WorldMapProps} TWorldMap
+ * @typedef {import("./maps/WorldMap.js").TWorldMapProps} TWorldMap
  * @typedef {import("./control/EntityControl.js").EntityControl} EntityControl
  * @typedef {import("./control/PlayerControl.js").PlayerControl} PlayerControl
  * @typedef {import("./control/MonsterControl.js").MonsterControl} MonsterControl

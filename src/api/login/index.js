@@ -1,6 +1,6 @@
 import express from 'express';
 import { generateToken } from '../../utils/jwt.js';
-import { WebDB } from '../web-db-connection.js';
+import { DB } from '../../db/index.js';
 const loginRouter = express.Router({ caseSensitive: false });
 
 // route /api/login
@@ -19,9 +19,9 @@ loginRouter.post('/', async (req, res, next) => {
     // load user data from database
     let conn, account;
     try {
-        conn = await WebDB.connect()
+        conn = await DB.connect()
 
-        account = await WebDB.account.login(username, password, last_ip);
+        account = await DB.account.login(username, password, last_ip);
         if (!account) {
             throw Error('Invalid credentials');
         }
@@ -38,7 +38,7 @@ loginRouter.post('/', async (req, res, next) => {
         })
 
         // update web token in database
-        await WebDB.account.updateToken(account.id, token);
+        await DB.account.updateToken(account.id, token);
         console.log('[DB#login] account login:', account.id)
 
         res.json({

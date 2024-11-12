@@ -88,19 +88,18 @@ export default class ChatUI {
 	}
 
 	onTabsClick(event) {
-		event.preventDefault()
-		event.stopPropagation()
-		console.log("[DEBUG]:", event.type)
-
 		/** @type {HTMLElement|null} */
 		const target = event.target
-		if (!target) return false
+		if (!target) return
 
 		const targetTablink = target.closest("div.tablink")
-		if (!targetTablink) return false
+		if (!targetTablink) return
 
 		const activeTab = targetTablink.getAttribute("data-active-tab")
-		if (!activeTab) return false
+		if (!activeTab) return
+
+		event.preventDefault()
+		event.stopPropagation()
 
 		// @ts-ignore
 		this.activeTab = activeTab
@@ -112,7 +111,6 @@ export default class ChatUI {
 		const tag = event.target?.tagName ?? ""
 		// pressing Enter will focus the chat, when no input is being focused
 		if (event.code === "Enter" && tag !== "INPUT") {
-			console.log("[DEBUG]:", event.type, event.code)
 			event.preventDefault()
 			// @ts-ignore
 			document.querySelector("div.ui-chat input#chat-input")?.focus()
@@ -135,7 +133,6 @@ export default class ChatUI {
 	 */
 	onSubmit(event) {
 		event.preventDefault()
-		console.log("[DEBUG]:", event.type, event.currentTarget, event.target)
 
 		// socket is ready and player state exists
 		if (State.socket == null || State.player == null) return

@@ -1,10 +1,13 @@
 import WebSocket, { WebSocketServer } from 'ws';
-import { WorldMap } from './WorldMap.js';
+import { WorldMap } from './maps/WorldMap.js';
 import { PlayerControl } from './control/PlayerControl.js';
 import { ENTITY_TYPE } from './enum/Entity.js';
-import { MAPS } from './data/MAPS.js';
+// import { MAPS } from './data/MAPS.js';
 import { verifyToken } from './utils/jwt.js';
 import { Database } from './db/Database.js';
+import MapLobbyTown from './maps/MapLobbyTown.js';
+import MapPlainFields1 from './maps/MapPlainFields1.js';
+import MapPlainFields2 from './maps/MapPlainFields2.js';
 
 /**
  * @module World
@@ -33,8 +36,12 @@ export class World {
 		this.db = new Database();
 		this.dbPools = [];
 
-		/** @type {Array<WorldMap>} */
-		this.maps = []
+		/** @type {Array<WorldMap>} - Game maps */
+		this.maps = [
+			new MapLobbyTown({ world: this }),
+			new MapPlainFields1({ world: this }),
+			new MapPlainFields2({ world: this }),
+		]
 
 		/** @type {number} - total number of players, from server start */
 		this.playersCountTotal = 0
@@ -62,20 +69,28 @@ export class World {
 		let map = this.maps.find(m => m.name === mapName)
 		if (!map) {
 			// @ts-ignore create new map from map data
-			map = new WorldMap(this, MAPS.find(m => m.name === mapName) || { name: mapName })
-			if (!map.isLoaded) {
-				await map.load()
-			}
-			this.maps.push(map)
-			map.onCreate()
+			// map = new WorldMap(this, MAPS.find(m => m.name === mapName) || { name: mapName })
+			// this.maps.push(map)
+			console.log(`[TODO] Map '${mapName}' not found.`)
+			return
+		}
+		// load assets
+		if (!map.isLoaded) {
+			await map.load()
+		}
+		// create entities
+		if (!map.isCreated) {
+			await map.create()
 		}
 		// update Player data, so the player can join the map
-		map.enterMap(player, x, y)
+		map.playerEnterMap(player, x, y)
 		return map
 	}
 
 	/**
-	 * Called when a new WebSocket connection is established
+	 * Called when a new WebSocket connection is established.
+	 * Validates the token and creates a new PlayerControl instance.
+	 * 
 	 * @param {WebSocket} ws - The WebSocket connection
 	 * @param {import("http").IncomingMessage} req - The HTTP request
 	 */
@@ -120,6 +135,7 @@ export class World {
 			}
 
 			// Authorized, create new player
+			// TODO load player data from database
 			this.playersCountTotal++
 			player = new PlayerControl({
 				world: this,

@@ -89,7 +89,8 @@ export class EntityControl extends Entity {
 	 */
 	die() {
 		this.hp = 0
-		this.death = Date.now()
+		this.mp = 0
+		this.death = performance.now() // Date.now()
 		// this.attacking = null
 		// this.map.removeEntity(this)
 	}

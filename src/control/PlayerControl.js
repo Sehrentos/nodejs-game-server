@@ -4,9 +4,10 @@ import * as Packets from '../Packets.js';
 import { ENTITY_TYPE } from '../enum/Entity.js';
 import { ELEMENT } from '../enum/Element.js';
 import { inRangeOfEntity } from '../utils/EntityUtil.js';
+import { EXP_TABLE } from '../data/EXP_TABLE.js';
 
 /**
- * @typedef {import("../WorldMap.js").WorldMap} WorldMap
+ * @typedef {import("../maps/WorldMap.js").WorldMap} WorldMap
  * @typedef {import("../model/Player.js").TPlayerProps} PlayerProps
  * @typedef {Object} PlayerExtraProps
  * @prop {import("../World.js").World=} world - World instance.
@@ -122,7 +123,7 @@ export class PlayerControl extends Player {
 
 		// start following target
 		if (this._following != null) {
-			this.follow(this._following)
+			this.follow(this._following, timestamp)
 		}
 	}
 
@@ -157,99 +158,6 @@ export class PlayerControl extends Player {
 				break
 			default:
 				break
-		}
-	}
-
-	/**
-	 * Moves the entity in the specified direction if possible.
-	 * The movement is based on the entity's direction and current speed.
-	 * Updates the entity's position on the map while ensuring it stays within boundaries.
-	 * The movement is constrained by a delay calculated from speed and speedMultiplier.
-	 *
-	 * @param {number} dir - The direction to move the entity:
-	 *   0: Left (x--), 1: Right (x++), 2: Up (y--), 3: Down (y++)
-	 * @param {number} timestamp - The current timestamp or performance.now().
-	 */
-	move(dir, timestamp) {
-		if (this.hp <= 0) return // must be alive
-		const _timestamp = timestamp || performance.now()
-
-		// check if entity can move on this tick
-		if (this.movementStart === 0) {
-			// can move
-		} else if (_timestamp - this.movementStart < this.speed * this.speedMultiplier) {
-			return
-		}
-		this.movementStart = _timestamp
-
-		switch (dir) {
-			case 0:
-				this.dir = 0
-				if (this.x > 0) {
-					this.x--
-				}
-				break
-			case 1:
-				this.dir = 1
-				if (this.x < this.map.width) {
-					this.x++
-				}
-				break
-			case 2:
-				this.dir = 2
-				if (this.y > 0) {
-					this.y--
-				}
-				break
-			case 3:
-				this.dir = 3
-				if (this.y < this.map.height) {
-					this.y++
-				}
-				break
-			default:
-				break
-		}
-	}
-
-	/**
-	 * Makes the entity follow another entity, by moving its position on each tick
-	 * closer to the target entity. The target must be in the monster's range.
-	 * If the target moves out of range or dies, the monster will stop following.
-	 * @param {import("../model/Entity").TEntityProps} entity - The target entity to follow.
-	 * @returns {string} - Returns "out of range" if the target is out of range.
-	 */
-	follow(entity) {
-		if (this.hp <= 0) return // must be alive
-
-		this._following = entity
-
-		// if target dies, stop following
-		if (entity.hp <= 0) {
-			this._following = null
-			return
-		}
-
-		// stop at range
-		if (inRangeOfEntity(entity, this.x, this.y, this.range)) {
-			this._following = null
-			return
-		}
-
-		// follow target
-		if (this.x > entity.x) {
-			this.dir = 0
-			this.x--
-		} else if (this.x < entity.x) {
-			this.dir = 1
-			this.x++
-		}
-		if (this.y > entity.y) {
-			this.dir = 2
-			this.y--
-		} else if (this.y < entity.y) {
-			this.dir = 3
-			this.y++
 		}
 	}
 
@@ -309,7 +217,7 @@ export class PlayerControl extends Player {
 				// @ts-ignore type NPC
 				entity.onTouch(this, timestamp)
 				// optional, move to the entity
-				this.follow(entity)
+				this.follow(entity, timestamp)
 			}
 			else if (entity.type === ENTITY_TYPE.PLAYER) {
 				// TODO
@@ -324,6 +232,7 @@ export class PlayerControl extends Player {
 	 */
 	onEnterMap(map) {
 		this.map = map
+		console.log(`Player ${this.id} entered ${map.name} map.`)
 		// Note: this is also send in onTick
 		// send packet to client, containing player data
 		this.socket.send(JSON.stringify(Packets.updatePlayer(this)));
@@ -367,6 +276,58 @@ export class PlayerControl extends Player {
 	}
 
 	/**
+	 * Moves the entity in the specified direction if possible.
+	 * The movement is based on the entity's direction and current speed.
+	 * Updates the entity's position on the map while ensuring it stays within boundaries.
+	 * The movement is constrained by a delay calculated from speed and speedMultiplier.
+	 * 
+	 * @param {number} dir - The direction to move the entity:
+	 *   0: Left (x--), 1: Right (x++), 2: Up (y--), 3: Down (y++)
+	 * @param {number=} timestamp - The current timestamp or performance.now().
+	 */
+	move(dir, timestamp) {
+		if (this.hp <= 0) return // must be alive
+		const _timestamp = timestamp || performance.now()
+
+		// check if entity can move on this tick
+		if (this.movementStart === 0) {
+			// can move
+		} else if (_timestamp - this.movementStart < this.speed * this.speedMultiplier) {
+			return
+		}
+		this.movementStart = _timestamp
+
+		switch (dir) {
+			case 0:
+				this.dir = 0
+				if (this.x > 0) {
+					this.x--
+				}
+				break
+			case 1:
+				this.dir = 1
+				if (this.x < this.map.width) {
+					this.x++
+				}
+				break
+			case 2:
+				this.dir = 2
+				if (this.y > 0) {
+					this.y--
+				}
+				break
+			case 3:
+				this.dir = 3
+				if (this.y < this.map.height) {
+					this.y++
+				}
+				break
+			default:
+				break
+		}
+	}
+
+	/**
 	 * Controls the attack logic of the entity.
 	 * 
 	 * @param {import("./EntityControl.js").TEntityControls} entity - The target entity to attack.
@@ -396,7 +357,7 @@ export class PlayerControl extends Player {
 	 * strength, attack power, and attack multiplier. If the entity's hp
 	 * falls to zero or below, the entity dies and is removed from the map.
 	 * 
-	 * @param {import("./MonsterControl.js").MonsterControl|import("./PlayerControl.js").PlayerControl} attacker - The attacking entity, containing attack
+	 * @param {import("./MonsterControl.js").MonsterControl|import("./PlayerControl.js").PlayerControl} attacker - The attacking entity
 	 *        attributes such as strength (str), attack
 	 *        power (atk), and attack multiplier (atkMultiplier).
 	 */
@@ -416,28 +377,135 @@ export class PlayerControl extends Player {
 			}
 		}
 		if (this.hp <= 0) {
-			this.die()
+			this.die(attacker)
 		}
 	}
 
 	/**
 	 * When player dies, send them to saved position and map
+	 * @param {import("./MonsterControl").MonsterControl | import("./PlayerControl").PlayerControl} attacker - The attacking entity
 	 */
-	die() {
+	die(attacker) {
 		this.hp = 0
+		this.mp = 0
 		this.death = performance.now() // Date.now()
 		this.attacking = null
 		this._following = null
 		this.toSavePosition()
 		this.revive()
+
+		// @ts-ignore reward the attacker with exp
+		if (attacker.onKill) attacker.onKill(this)
 	}
 
+	/**
+	 * Reward the player with exp for killing an entity.
+	 * @param {import("./MonsterControl").MonsterControl | import("./PlayerControl").PlayerControl} entity - The killed entity
+	 */
+	onKill(entity) {
+		this.baseExp += entity.baseExp
+		this.jobExp += entity.jobExp
+		const expTable = EXP_TABLE[this.level]
+		if (expTable != null) {
+			// base level up +1
+			if (this.baseExp >= expTable.base) {
+				this.level++
+				this.baseExp = 0
+				// TODO stats increment table, by level?
+				this.hpMax += 100
+				this.hp = Number(this.hpMax) // heal 100%
+				this.mpMax += 50
+				this.mp = Number(this.mpMax) // heal 100%
+				this.atk += 5
+				this.str += 5
+				this.agi += 5
+				this.int += 5
+				this.vit += 5
+				this.dex += 5
+				this.luk += 5
+				this.def += 1
+				this.mDef += 1
+				// this.atkMultiplier = this.atkMultiplier * this.level
+			}
+			// job level up +1
+			if (this.jobExp >= expTable.job) {
+				this.jobLevel++
+				this.jobExp = 0
+			}
+		}
+		// TODO money rewards?
+		// console.log(`Rewarded the "${this.name} (${this.level})" with exp: ${entity.baseExp}/${entity.jobExp}`)
+	}
+
+	/**
+	 * Revives the entity by restoring their health points (hp) and
+	 * mana points (mp) to their maximum values (hpMax and mpMax).
+	 */
 	revive() {
-		this.hp += this.hpMax
-		this.mp += this.mpMax
+		this.hp = Number(this.hpMax)
+		this.mp = Number(this.mpMax)
 	}
 
+	/**
+	 * Moves the entity to their saved map and position.
+	 */
 	toSavePosition() {
+		// same map, just set position
+		if (this.map.name === this.saveMap) {
+			this.x = this.saveX
+			this.y = this.saveY
+			return
+		}
+		// different map, join
 		this.map.world.joinMapByName(this, this.saveMap, this.saveX, this.saveY)
+	}
+
+	/**
+	 * Makes the entity follow another entity, by moving its position on each tick
+	 * closer to the target entity. The target must be in the range.
+	 * If the target moves out of range or dies, then stop following.
+	 * @param {import("../model/Entity").TEntityProps} entity - The target entity to follow.
+	 * @param {number=} timestamp - The current timestamp or performance.now().
+	 */
+	follow(entity, timestamp) {
+		if (this.hp <= 0) return
+		const _timestamp = timestamp || performance.now()
+		this._following = entity
+
+		// check if entity can move on this tick
+		if (this.movementStart === 0) {
+			// can move
+		} else if (_timestamp - this.movementStart < this.speed * this.speedMultiplier) {
+			return
+		}
+		this.movementStart = _timestamp
+
+		// if target dies, stop following
+		if (entity.hp <= 0) {
+			this._following = null
+			return
+		}
+
+		// stop at range
+		if (inRangeOfEntity(entity, this.x, this.y, this.range)) {
+			this._following = null
+			return
+		}
+
+		// follow entity
+		if (this.x > entity.x) {
+			this.dir = 0
+			this.x--
+		} else if (this.x < entity.x) {
+			this.dir = 1
+			this.x++
+		}
+		if (this.y > entity.y) {
+			this.dir = 2
+			this.y--
+		} else if (this.y < entity.y) {
+			this.dir = 3
+			this.y++
+		}
 	}
 }

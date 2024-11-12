@@ -76,10 +76,10 @@ export class MonsterControl extends Monster {
 	 * The movement is based on the entity's direction and current speed.
 	 * Updates the entity's position on the map while ensuring it stays within boundaries.
 	 * The movement is constrained by a delay calculated from speed and speedMultiplier.
-	 *
+	 * 
 	 * @param {number} dir - The direction to move the entity:
 	 *   0: Left (x--), 1: Right (x++), 2: Up (y--), 3: Down (y++)
-	 * @param {number} timestamp - The current timestamp or performance.now().
+	 * @param {number=} timestamp - The current timestamp or performance.now().
 	 */
 	move(dir, timestamp) {
 		if (this.hp <= 0) return // must be alive
@@ -150,7 +150,7 @@ export class MonsterControl extends Monster {
 	 * strength, attack power, and attack multiplier. If the entity's hp
 	 * falls to zero or below, the entity dies and is removed from the map.
 	 * 
-	 * @param {import("./MonsterControl").MonsterControl | import("./PlayerControl").PlayerControl} attacker - The attacking entity, containing attack
+	 * @param {import("./MonsterControl").MonsterControl | import("./PlayerControl").PlayerControl} attacker - The attacking entity
 	 *        attributes such as strength (str), attack
 	 *        power (atk), and attack multiplier (atkMultiplier).
 	 */
@@ -171,26 +171,46 @@ export class MonsterControl extends Monster {
 			}
 		}
 		if (this.hp <= 0) {
-			this.die()
+			this.die(attacker)
 		}
 	}
 
 	/**
 	 * Removes the entity from the map.
+	 * @param {import("./MonsterControl").MonsterControl | import("./PlayerControl").PlayerControl} attacker - The attacking entity
 	 */
-	die() {
+	die(attacker) {
 		this.hp = 0
+		this.mp = 0
 		this.death = performance.now() // Date.now()
 		this.attacking = null
 		this._following = null
 		// this.map.removeEntity(this)
+
+		// @ts-ignore reward the attacker with exp
+		if (attacker.onKill) attacker.onKill(this)
 	}
 
+	/**
+	 * Reward the monster with exp for killing an entity.
+	 * @param {import("./MonsterControl").MonsterControl | import("./PlayerControl").PlayerControl} entity - The killed entity
+	 */
+	onKill(entity) {
+		// do nothing
+	}
+
+	/**
+	 * Revives the entity by restoring their health points (hp) and
+	 * mana points (mp) to their maximum values (hpMax and mpMax).
+	 */
 	revive() {
-		this.hp += this.hpMax
-		this.mp += this.mpMax
+		this.hp = Number(this.hpMax)
+		this.mp = Number(this.mpMax)
 	}
 
+	/**
+	 * Moves the entity to their saved map and position.
+	 */
 	toSavePosition() {
 		this.x = this.saveX
 		this.y = this.saveY
@@ -201,10 +221,20 @@ export class MonsterControl extends Monster {
 	 * closer to the target entity. The target must be in the monster's range.
 	 * If the target moves out of range or dies, the monster will stop following.
 	 * @param {import("../model/Entity").TEntityProps} entity - The target entity to follow.
-	 * @returns {string} - Returns "out of range" if the target is out of range.
+	 * @param {number=} timestamp - The current timestamp or performance.now().
 	 */
-	follow(entity) {
+	follow(entity, timestamp) {
+		if (this.hp <= 0) return
+		const _timestamp = timestamp || performance.now()
 		this._following = entity
+
+		// check if entity can move on this tick
+		if (this.movementStart === 0) {
+			// can move
+		} else if (_timestamp - this.movementStart < this.speed * this.speedMultiplier) {
+			return
+		}
+		this.movementStart = _timestamp
 
 		// if target dies, stop following
 		if (entity.hp <= 0) {
@@ -218,7 +248,7 @@ export class MonsterControl extends Monster {
 			return
 		}
 
-		// follow target
+		// follow entity
 		if (this.x > entity.x) {
 			this.dir = 0
 			this.x--

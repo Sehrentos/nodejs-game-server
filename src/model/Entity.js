@@ -6,7 +6,7 @@ import { ENTITY_TYPE } from "../enum/Entity.js"
  * @prop {string=} gid - Game id.
  * @prop {string=} name - Visual name.
  * @prop {number=} type - Entity type. default ENTITY_TYPE.NPC
- * @prop {import("../WorldMap.js").WorldMap=} map - The map this entity is in.
+ * @prop {import("../maps/WorldMap.js").WorldMap=} map - The map this entity is in.
  * @prop {string=} mapName - Current map name.
  * @prop {number=} x - Current X position.
  * @prop {number=} y - Current Y position.

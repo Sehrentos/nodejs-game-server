@@ -1,6 +1,6 @@
 import express from 'express';
 import { generateToken } from '../../utils/jwt.js';
-import { WebDB } from '../web-db-connection.js';
+import { DB } from '../../db/index.js';
 import { Account } from '../../db/Account.js';
 const router = express.Router({ caseSensitive: false });
 
@@ -20,11 +20,11 @@ router.post('/', async (req, res, next) => {
     // load user data from database
     let conn, account;
     try {
-        conn = await WebDB.connect()
+        conn = await DB.connect()
 
         // register new account
         // duplicate error.code: 'ER_DUP_ENTRY', when run again
-        let newAccount = await WebDB.account.add(new Account({
+        let newAccount = await DB.account.add(new Account({
             username,
             password,
             email,
@@ -36,7 +36,7 @@ router.post('/', async (req, res, next) => {
         console.log('[DB#register] account registered:', newAccount.insertId)
 
         // do login with the new account
-        account = await WebDB.account.login(username, password, last_ip);
+        account = await DB.account.login(username, password, last_ip);
         if (!account) {
             throw Error('Invalid login credentials');
         }
@@ -54,7 +54,7 @@ router.post('/', async (req, res, next) => {
         })
 
         // update web token in database
-        await WebDB.account.updateToken(account.id, token);
+        await DB.account.updateToken(account.id, token);
         console.log('[DB#register] account register completed:', account.id)
 
         res.json({
