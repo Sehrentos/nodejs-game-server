@@ -1,3 +1,5 @@
+import { DIRECTION } from "../enum/Entity.js"
+
 /**
  * Revives the entity by restoring their health points (hp) and
  * mana points (mp) to their maximum values (hpMax and mpMax).
@@ -36,34 +38,32 @@ export function moveEntity(entity, dir, timestamp) {
 	const _timestamp = timestamp || performance.now()
 
 	// check if entity can move on this tick
-	if (entity.movementStart === 0) {
-		// can move
-	} else if (_timestamp - entity.movementStart < entity.speed * entity.speedMultiplier) {
-		return
+	if (typeof entity.movementStart === "number" && _timestamp - entity.movementStart < entity.speed * entity.speedMultiplier) {
+		return // can't move yet
 	}
 	entity.movementStart = _timestamp
 
 	switch (dir) {
-		case 0:
-			entity.dir = 0
+		case DIRECTION.LEFT:
+			entity.dir = DIRECTION.LEFT
 			if (entity.x > 0) {
 				entity.x--
 			}
 			break
-		case 1:
-			entity.dir = 1
+		case DIRECTION.RIGHT:
+			entity.dir = DIRECTION.RIGHT
 			if (entity.x < entity.map.width) {
 				entity.x++
 			}
 			break
-		case 2:
-			entity.dir = 2
+		case DIRECTION.UP:
+			entity.dir = DIRECTION.UP
 			if (entity.y > 0) {
 				entity.y--
 			}
 			break
-		case 3:
-			entity.dir = 3
+		case DIRECTION.DOWN:
+			entity.dir = DIRECTION.DOWN
 			if (entity.y < entity.map.height) {
 				entity.y++
 			}
@@ -108,17 +108,17 @@ export function followEntity(self, target, timestamp) {
 
 	// follow target
 	if (self.x > target.x) {
-		self.dir = 0
+		self.dir = DIRECTION.LEFT
 		self.x--
 	} else if (self.x < target.x) {
-		self.dir = 1
+		self.dir = DIRECTION.RIGHT
 		self.x++
 	}
 	if (self.y > target.y) {
-		self.dir = 2
+		self.dir = DIRECTION.UP
 		self.y--
 	} else if (self.y < target.y) {
-		self.dir = 3
+		self.dir = DIRECTION.DOWN
 		self.y++
 	}
 }

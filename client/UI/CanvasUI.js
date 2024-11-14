@@ -1,7 +1,7 @@
 import m from "mithril"
 import "./CanvasUI.css"
 import { State } from "../State.js"
-import { ENTITY_TYPE } from "../../src/enum/Entity.js"
+import { DIRECTION, ENTITY_TYPE } from "../../src/enum/Entity.js"
 import * as Settings from "../Settings.js"
 
 /**
@@ -107,6 +107,7 @@ export default class CanvasUI {
 		// 	ctx.font = "40px Arial"
 		// 	ctx.strokeText(`Press "C" to hide Character info.`, 10, 90)
 		// 	ctx.stroke()
+		//  ctx.strokeStyle = "black"
 		// }
 
 		// draw entities
@@ -126,11 +127,14 @@ export default class CanvasUI {
 			let h = entity.h
 			let _radius = h / 2 // 2.5
 			if (entity.type === ENTITY_TYPE.NPC) {
-				CanvasUI.drawRect(ctx, "brown", x, y, w, h);
+				// CanvasUI.drawRect(ctx, "brown", x, y, w, h);
+				CanvasUI.drawCircle(ctx, "black", x, y, _radius);
+				CanvasUI.drawEntityFacingDirection(ctx, entity, 4, "white");
 				CanvasUI.drawEntityName(ctx, entity, "white", false);
 			}
 			else if (entity.type === ENTITY_TYPE.MONSTER) {
 				CanvasUI.drawCircle(ctx, "red", x, y, _radius);
+				CanvasUI.drawEntityFacingDirection(ctx, entity, 4, "black");
 				CanvasUI.drawEntityName(ctx, entity, "red", true);
 			}
 			else if (entity.type === ENTITY_TYPE.WARP_PORTAL) {
@@ -143,8 +147,8 @@ export default class CanvasUI {
 				if (player != null && entity.gid === player.gid) {
 					// draw player's melee attack radius
 					CanvasUI.drawCircle(ctx, "#2d2d2d57", x - ((player.range / 2) - player.w), y - ((player.range / 2) - player.h), player.range);
+					CanvasUI.drawEntityFacingDirection(ctx, entity, player.range, "black");
 				}
-				// draw player
 				CanvasUI.drawCircle(ctx, "black", x, y, _radius);
 				CanvasUI.drawEntityName(ctx, entity, "white", true);
 			}
@@ -162,7 +166,7 @@ export default class CanvasUI {
 
 		if (this.canvas == null || State.map == null || State.socket == null) return
 		const { x, y } = CanvasUI.getMousePosition(this.canvas, event)
-		const stack = CanvasUI.findEntitiesInRadius(State.map, x, y, 8)
+		const stack = CanvasUI.findEntitiesInRadius(State.map, x, y, 4)
 
 		// TODO remove logs, when done testing
 		console.log(x, y, stack)
@@ -175,7 +179,7 @@ export default class CanvasUI {
 	onMouseMove(event) {
 		if (this.canvas == null || State.map == null) return
 		const { x, y } = CanvasUI.getMousePosition(this.canvas, event)
-		const stack = CanvasUI.findEntitiesInRadius(State.map, x, y, 8)
+		const stack = CanvasUI.findEntitiesInRadius(State.map, x, y, 4)
 
 		// change mouse cursor to pointer
 		if (stack.length) {
@@ -211,7 +215,11 @@ export default class CanvasUI {
 		for (const entity of entities) {
 			_x = entity.x
 			_y = entity.y
-			if (Math.abs(x - _x) > radius || Math.abs(y - _y) > radius) continue
+			// if (Math.abs(x - _x) > radius || Math.abs(y - _y) > radius) continue
+			if ((Math.abs((x - (radius / 2)) - _x) > radius || Math.abs((y - (radius / 2)) - _y) > radius) &&
+				(Math.abs(x - _x) > radius || Math.abs(y - _y) > radius)) {
+				continue;
+			}
 			stack.push(entity)
 		}
 		return stack
@@ -286,11 +294,45 @@ export default class CanvasUI {
 		}
 		// calculate the x position to center the text
 		let _x = entity.x - (text.length / 2) * (Settings.FONT_SIZE * Settings.FONT_WIDTH_RATIO)
-		let _y = entity.y - ((entity.h || 1) + 2)
+		let _y = entity.y - (entity.h || 1) + 2
 		ctx.fillStyle = color;
 		ctx.font = `${Settings.FONT_SIZE}px ${Settings.FONT_FAMILY}`;
 		ctx.fillText(text, _x, _y);
 		ctx.stroke();
+	}
+
+	/**
+	 * Draws the facing direction of the given entity as a line from the entity's position.
+	 * The line is drawn from the entity's position to the position the entity is facing.
+	 * The direction is determined by the entity's dir property, which is one of the DIRECTION constants.
+	 * @param {CanvasRenderingContext2D} ctx - The canvas rendering context.
+	 * @param {import("../../src/model/Player").TPlayerProps} entity - The entity to draw the facing direction for.
+	 * @param {number} range - The range of the line. Default 2.
+	 * @param {string} color - The color of the line. Default white.
+	 */
+	static drawEntityFacingDirection(ctx, entity, range = 2, color = "white") {
+		let x = entity.x
+		let y = entity.y
+		ctx.beginPath();
+		ctx.moveTo(x, y);
+		ctx.strokeStyle = color;
+		switch (entity.dir) {
+			case DIRECTION.UP:
+				ctx.lineTo(x, y - range);
+				break;
+			case DIRECTION.DOWN:
+				ctx.lineTo(x, y + range);
+				break;
+			case DIRECTION.LEFT:
+				ctx.lineTo(x - range, y);
+				break;
+			case DIRECTION.RIGHT:
+				ctx.lineTo(x + range, y);
+				break;
+			default: break;
+		}
+		ctx.stroke();
+		ctx.strokeStyle = "black"; // reset stroke color to default
 	}
 
 	//#endregion utilities

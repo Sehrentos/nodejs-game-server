@@ -15,7 +15,7 @@ import { ENTITY_TYPE } from "../enum/Entity.js"
  * @prop {string=} saveMap - The map entity was created or saved.
  * @prop {number=} saveX - The position X entity was created or saved.
  * @prop {number=} saveY - The position Y entity was created or saved.
- * @prop {number=} dir - Direction facing 0: Down, 1: Right, 2: Up, 3: Left. default 0
+ * @prop {number=} dir - Direction facing 0: Left (x--), 1: Right (x++), 2: Up (y--), 3: Down (y++). default 0
  * @prop {number=} hp - Current health points.
  * @prop {number=} hpMax - Maximum health points.
  * @prop {number=} mp - Current mana points.

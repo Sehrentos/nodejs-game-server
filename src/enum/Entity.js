@@ -7,3 +7,13 @@ export const ENTITY_TYPE = {
 	MONSTER: 2,
 	WARP_PORTAL: 3,
 }
+/**
+ * The entity directions.
+ * 0: Left (x--), 1: Right (x++), 2: Up (y--), 3: Down (y++)
+ */
+export const DIRECTION = {
+	LEFT: 0,
+	RIGHT: 1,
+	UP: 2,
+	DOWN: 3
+}

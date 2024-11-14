@@ -1,4 +1,4 @@
-import { ENTITY_TYPE } from "./enum/Entity.js"
+import { DIRECTION, ENTITY_TYPE } from "./enum/Entity.js"
 
 // TODO make entity follow a target, when in combat
 export class AI {
@@ -65,35 +65,35 @@ export class AI {
 				return
 			}
 
-			if (entity.dir === 0) {
+			if (entity.dir === DIRECTION.DOWN) {
 				if ((entity.y < entity.saveY + 10) && entity.y < entity.map.height) {
 					entity.y++
 				} else {
-					entity.dir = 1//Math.floor(Math.random() * 3) + 1//Math.floor(Math.random() * 4)
+					entity.dir = DIRECTION.RIGHT
 					this.iddleStart = timestamp
 				}
 			}
-			if (entity.dir === 1) {
+			if (entity.dir === DIRECTION.RIGHT) {
 				if ((entity.x < entity.saveX + 10) && entity.x < entity.map.width) {
 					entity.x++
 				} else {
-					entity.dir = 2//Math.floor(Math.random() * 4)
+					entity.dir = DIRECTION.UP
 					this.iddleStart = timestamp
 				}
 			}
-			if (entity.dir === 2) {
+			if (entity.dir === DIRECTION.UP) {
 				if ((entity.y > entity.saveY - 10) && entity.y > 0) {
 					entity.y--
 				} else {
-					entity.dir = 3//Math.floor(Math.random() * 4)
+					entity.dir = DIRECTION.LEFT
 					this.iddleStart = timestamp
 				}
 			}
-			if (entity.dir === 3) {
+			if (entity.dir === DIRECTION.LEFT) {
 				if ((entity.x > entity.saveX - 10) && entity.x > 0) {
 					entity.x--
 				} else {
-					entity.dir = 0
+					entity.dir = DIRECTION.DOWN
 					this.iddleStart = timestamp
 				}
 			}

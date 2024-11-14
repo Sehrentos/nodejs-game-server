@@ -1,6 +1,7 @@
 import { NPCControl } from '../control/NPCControl.js'
 import { PortalControl } from '../control/PortalControl.js'
 import { NPCS } from '../data/NPCS.js'
+import { DIRECTION } from '../enum/Entity.js'
 import { WorldMap } from './WorldMap.js'
 
 // create map
@@ -46,30 +47,35 @@ export default class MapLobbyTown extends WorldMap {
 				map: this,
 				x: 200,
 				y: 250,
+				dir: DIRECTION.UP,
 			}),
 			new NPCControl({
 				...NPCS[2], // Blacksmith
 				map: this,
 				x: 269,
 				y: 157,
+				dir: DIRECTION.DOWN,
 			}),
 			new NPCControl({
 				...NPCS[3], // Tool dealer
 				map: this,
 				x: 313,
 				y: 160,
+				dir: DIRECTION.DOWN,
 			}),
 			new NPCControl({
 				...NPCS[4], // Merchant
 				map: this,
 				x: 216,
 				y: 242,
+				dir: DIRECTION.LEFT,
 			}),
 			new NPCControl({
 				map: this,
 				name: "Stranger",
 				x: 584,
 				y: 233,
+				dir: DIRECTION.UP,
 				dialog: [
 					`Hmmm...
 					<button class="ui-dialog-close">X</button>`,

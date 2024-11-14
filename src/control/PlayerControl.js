@@ -1,7 +1,7 @@
 import { randomBytes } from 'node:crypto';
 import { Player } from '../model/Player.js';
 import * as Packets from '../Packets.js';
-import { ENTITY_TYPE } from '../enum/Entity.js';
+import { DIRECTION, ENTITY_TYPE } from '../enum/Entity.js';
 import { ELEMENT } from '../enum/Element.js';
 import { inRangeOfEntity } from '../utils/EntityUtil.js';
 import { EXP_TABLE } from '../data/EXP_TABLE.js';
@@ -201,8 +201,8 @@ export class PlayerControl extends Player {
 	 */
 	onClickPosition(json) {
 		if (this.hp <= 0) return // must be alive
-
 		const timestamp = performance.now()
+		this._following = null // stop following
 
 		// TODO check if player is in range of entity (20-cell radius)
 		// find entities at clicked position in 4-cell radius
@@ -216,6 +216,10 @@ export class PlayerControl extends Player {
 			else if (entity.type === ENTITY_TYPE.NPC) {
 				// @ts-ignore type NPC
 				entity.onTouch(this, timestamp)
+				// optional, move to the entity
+				this.follow(entity, timestamp)
+			}
+			else if (entity.type === ENTITY_TYPE.WARP_PORTAL) {
 				// optional, move to the entity
 				this.follow(entity, timestamp)
 			}
@@ -290,34 +294,32 @@ export class PlayerControl extends Player {
 		const _timestamp = timestamp || performance.now()
 
 		// check if entity can move on this tick
-		if (this.movementStart === 0) {
-			// can move
-		} else if (_timestamp - this.movementStart < this.speed * this.speedMultiplier) {
-			return
+		if (typeof this.movementStart === "number" && _timestamp - this.movementStart < this.speed * this.speedMultiplier) {
+			return // can't move yet
 		}
 		this.movementStart = _timestamp
 
 		switch (dir) {
-			case 0:
-				this.dir = 0
+			case DIRECTION.LEFT:
+				this.dir = DIRECTION.LEFT
 				if (this.x > 0) {
 					this.x--
 				}
 				break
-			case 1:
-				this.dir = 1
+			case DIRECTION.RIGHT:
+				this.dir = DIRECTION.RIGHT
 				if (this.x < this.map.width) {
 					this.x++
 				}
 				break
-			case 2:
-				this.dir = 2
+			case DIRECTION.UP:
+				this.dir = DIRECTION.UP
 				if (this.y > 0) {
 					this.y--
 				}
 				break
-			case 3:
-				this.dir = 3
+			case DIRECTION.DOWN:
+				this.dir = DIRECTION.DOWN
 				if (this.y < this.map.height) {
 					this.y++
 				}
@@ -473,10 +475,8 @@ export class PlayerControl extends Player {
 		this._following = entity
 
 		// check if entity can move on this tick
-		if (this.movementStart === 0) {
-			// can move
-		} else if (_timestamp - this.movementStart < this.speed * this.speedMultiplier) {
-			return
+		if (typeof this.movementStart === "number" && _timestamp - this.movementStart < this.speed * this.speedMultiplier) {
+			return // can't move yet
 		}
 		this.movementStart = _timestamp
 
@@ -494,17 +494,17 @@ export class PlayerControl extends Player {
 
 		// follow entity
 		if (this.x > entity.x) {
-			this.dir = 0
+			this.dir = DIRECTION.LEFT
 			this.x--
 		} else if (this.x < entity.x) {
-			this.dir = 1
+			this.dir = DIRECTION.RIGHT
 			this.x++
 		}
 		if (this.y > entity.y) {
-			this.dir = 2
+			this.dir = DIRECTION.UP
 			this.y--
 		} else if (this.y < entity.y) {
-			this.dir = 3
+			this.dir = DIRECTION.DOWN
 			this.y++
 		}
 	}

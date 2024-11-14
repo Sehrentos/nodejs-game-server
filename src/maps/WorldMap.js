@@ -3,6 +3,7 @@ import { MonsterControl } from "../control/MonsterControl.js"
 import { NPCControl } from "../control/NPCControl.js"
 import { PlayerControl } from "../control/PlayerControl.js"
 import { PortalControl } from "../control/PortalControl.js"
+import { DIRECTION } from "../enum/Entity.js"
 import { getRandomInt } from "../utils/getRandomInt.js"
 
 /**
@@ -106,7 +107,7 @@ export class WorldMap {
 		// x/y coords or center of map
 		player.x = x >= 0 ? x : Math.round(this.width / 2)
 		player.y = y >= 0 ? y : Math.round(this.height / 2)
-		player.dir = 0
+		player.dir = DIRECTION.DOWN
 		this.entities.push(player)
 		player.onEnterMap(this)
 	}
