@@ -204,7 +204,7 @@ export class PlayerControl extends Player {
 		const timestamp = performance.now()
 		this._following = null // stop following
 
-		// TODO check if player is in range of entity (20-cell radius)
+		// check if player is in range of entity
 		// find entities at clicked position in 4-cell radius
 		this.map.findEntitiesInRadius(json.x, json.y, 4).forEach((entity) => {
 			if (entity.type === ENTITY_TYPE.MONSTER && entity.hp > 0) {
@@ -290,6 +290,7 @@ export class PlayerControl extends Player {
 	 * @param {number=} timestamp - The current timestamp or performance.now().
 	 */
 	move(dir, timestamp) {
+		this._following = null // stop following
 		if (this.hp <= 0) return // must be alive
 		const _timestamp = timestamp || performance.now()
 
@@ -351,6 +352,10 @@ export class PlayerControl extends Player {
 		this.attackStart = timestamp
 
 		entity.takeDamage(this)
+	}
+
+	stopAttack() {
+		this.attacking = null
 	}
 
 	/**
@@ -507,5 +512,9 @@ export class PlayerControl extends Player {
 			this.dir = DIRECTION.DOWN
 			this.y++
 		}
+	}
+
+	stopFollowing() {
+		this._following = null
 	}
 }

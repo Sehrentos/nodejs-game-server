@@ -87,38 +87,87 @@ export default class CanvasUI {
 		const cvs = this.canvas
 		const ctx = cvs.getContext("2d")
 
-		// draw background
-		CanvasUI.drawRect(ctx, "#000000", 0, 0, cvs.width, cvs.height);
-
+		//#region V1
+		// always draw background
+		// CanvasUI.drawRect(ctx, "#000000", 0, 0, cvs.width, cvs.height);
 		// draw map boundaries from server
-		if (State.map != null) {
-			CanvasUI.drawRect(ctx, "#6F9D62", 0, 0, State.map.width, State.map.height);
-		}
-
-		// sample test
-		// draw sample info text, but only in Lobby town map
-		// if (State.map != null && State.map.name === "Lobby town") {
-		// 	ctx.beginPath()
-		// 	ctx.font = "40px Arial"
-		// 	ctx.lineWidth = 2
-		// 	ctx.strokeStyle = "#00000070"
-		// 	ctx.strokeText(`Move with WASD or Arrow keys.`, 10, 50)
-		// 	ctx.lineWidth = 1
-		// 	ctx.font = "40px Arial"
-		// 	ctx.strokeText(`Press "C" to hide Character info.`, 10, 90)
-		// 	ctx.stroke()
-		//  ctx.strokeStyle = "black"
+		// if (State.map != null) {
+		// 	CanvasUI.drawRect(ctx, "#6F9D62", 0, 0, State.map.width, State.map.height);
 		// }
-
 		// draw entities
-		this.drawEntities(ctx)
+		// this.drawEntities(ctx)
+		//#endregion
+
+		// #region V2 with camera
+		if (State.map != null && State.player != null) {
+			this.drawCameraAndMap(ctx)
+			this.drawEntities(ctx)
+		}
+		// #endregion
 
 		// start animation loop
 		this.frame = requestAnimationFrame(this._render)
 	}
 
+	/**
+	 * Draws the map.
+	 * @param {CanvasRenderingContext2D} ctx - The canvas rendering context.
+	 * @description
+	 * Draws the map with the player at the center.
+	 * Clamps the camera view to the world bounds.
+	 * Draws the map layout.
+	 */
+	drawCameraAndMap(ctx) {
+		const cvs = this.canvas
+		const _map = State.map
+		const _player = State.player
+
+		// World boundaries
+		// this.minX = -cvs.width
+		// this.maxX = cvs.width
+		// this.minY = -cvs.height
+		// this.maxY = cvs.height
+		// option 2
+		this.minX = _player.x - cvs.width / 2
+		this.maxX = _player.x + cvs.width / 2
+		this.minY = _player.y - cvs.height / 2
+		this.maxY = _player.y + cvs.height / 2
+
+		ctx.setTransform(1, 0, 0, 1, 0, 0)
+		ctx.clearRect(0, 0, cvs.width, cvs.height)
+
+		// center the camera around the player,
+		// but clamp the edges of the camera view to the world bounds.
+		this.camX = this.clamp(_player.x - cvs.width / 2, this.minX, this.maxX - cvs.width);
+		this.camY = this.clamp(_player.y - cvs.height / 2, this.minY, this.maxY - cvs.height);
+
+		ctx.translate(-this.camX, -this.camY);
+
+		// Next step: Draw everything else normally, using x and y's.
+		// If you want to take the camera position into account, use this:
+		// x += this.camX
+		// y += this.camY
+
+		// draw the map layout
+		CanvasUI.drawRect(ctx, "#6F9D62", 0, 0, _map.width, _map.height);
+	}
+
+	// clamp(10, 20, 30) - output: 20
+	// clamp(40, 20, 30) - output: 30
+	// clamp(25, 20, 30) - output: 25
+	clamp(value, min, max) {
+		if (value < min) return min;
+		else if (value > max) return max;
+		return value;
+	}
+
+	/**
+	 * Draws all entities on the map.
+	 * 
+	 * @param {CanvasRenderingContext2D} ctx - The canvas rendering context.
+	 */
 	drawEntities(ctx) {
-		if (State.map == null || State.map.entities.length == 0) return;
+		if (State.map.entities.length == 0) return;
 
 		for (const entity of State.map.entities) {
 			let x = entity.x
@@ -139,12 +188,11 @@ export default class CanvasUI {
 			}
 			else if (entity.type === ENTITY_TYPE.WARP_PORTAL) {
 				CanvasUI.drawCircle(ctx, "blue", x, y, _radius);
-				CanvasUI.drawEntityName(ctx, entity, "blue", false);
 			}
 			else if (entity.type === ENTITY_TYPE.PLAYER) {
-				// @ts-ignore
 				let player = State.player
-				if (player != null && entity.gid === player.gid) {
+				// indentify the current player from entities by gid
+				if (entity.gid === player.gid) {
 					// draw player's melee attack radius
 					CanvasUI.drawCircle(ctx, "#2d2d2d57", x - ((player.range / 2) - player.w), y - ((player.range / 2) - player.h), player.range);
 					CanvasUI.drawEntityFacingDirection(ctx, entity, player.range, "black");
@@ -155,17 +203,25 @@ export default class CanvasUI {
 		}
 	}
 
+	/**
+	 * Resizes the canvas to the window size.
+	 */
 	onResize() {
 		this.canvas.width = window.innerWidth
 		this.canvas.height = window.innerHeight
 	}
 
+	/**
+	 * Handles the click event on the canvas.
+	 * 
+	 * @param {MouseEvent} event - The mouse event.
+	 */
 	onClick(event) {
 		event.preventDefault()
 		event.stopPropagation()
 
 		if (this.canvas == null || State.map == null || State.socket == null) return
-		const { x, y } = CanvasUI.getMousePosition(this.canvas, event)
+		const { x, y } = this.getMousePosition(this.canvas, event)
 		const stack = CanvasUI.findEntitiesInRadius(State.map, x, y, 4)
 
 		// TODO remove logs, when done testing
@@ -173,12 +229,21 @@ export default class CanvasUI {
 
 		// send a "click" message to the server
 		State.socket.send(JSON.stringify({ type: "click", x, y }))
-		return false
 	}
 
+	/**
+	 * Handles the mouse move event on the canvas.
+	 * 
+	 * Updates the mouse cursor style based on the presence of entities
+	 * within a 4-cell radius at the current mouse position. If entities
+	 * are found, the cursor changes to a pointer, otherwise it defaults
+	 * to the standard cursor.
+	 * 
+	 * @param {MouseEvent} event - The mouse move event.
+	 */
 	onMouseMove(event) {
 		if (this.canvas == null || State.map == null) return
-		const { x, y } = CanvasUI.getMousePosition(this.canvas, event)
+		const { x, y } = this.getMousePosition(this.canvas, event)
 		const stack = CanvasUI.findEntitiesInRadius(State.map, x, y, 4)
 
 		// change mouse cursor to pointer
@@ -191,10 +256,20 @@ export default class CanvasUI {
 
 	//#region utilities
 
-	static getMousePosition(element, event) {
+	/**
+	 * Gets the mouse position relative to the given element.
+	 * 
+	 * @param {HTMLElement} element - The element to get the mouse position from.
+	 * @param {MouseEvent} event - The mouse event.
+	 * @returns {{x: number, y: number}} - The mouse position relative to the element.
+	 */
+	getMousePosition(element, event) {
 		let rect = element.getBoundingClientRect();
 		let x = event.clientX - rect.left;
 		let y = event.clientY - rect.top;
+		// V2 take the camera position into account
+		x += this.camX
+		y += this.camY
 		return { x, y };
 	}
 
@@ -288,13 +363,13 @@ export default class CanvasUI {
 	 */
 	static drawEntityName(ctx, entity, color = "white", showHp = false) {
 		ctx.beginPath();
-		let text = entity.name
+		let text = entity.name || "Unknown";
 		if (showHp) {
 			text += ` (${entity.hp}/${entity.hpMax})`
 		}
 		// calculate the x position to center the text
 		let _x = entity.x - (text.length / 2) * (Settings.FONT_SIZE * Settings.FONT_WIDTH_RATIO)
-		let _y = entity.y - (entity.h || 1) + 2
+		let _y = entity.y - (entity.h || 1)
 		ctx.fillStyle = color;
 		ctx.font = `${Settings.FONT_SIZE}px ${Settings.FONT_FAMILY}`;
 		ctx.fillText(text, _x, _y);
