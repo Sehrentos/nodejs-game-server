@@ -188,6 +188,7 @@ export default class ChatUI {
 	// to receive chat messages from any where in the app
 	onDOMChat(event) {
 		State.chat.push(event.detail)
+		m.redraw()
 	}
 
 	/**

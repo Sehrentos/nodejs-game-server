@@ -2,7 +2,7 @@ import WebSocket, { WebSocketServer } from 'ws';
 import { WorldMap } from './maps/WorldMap.js';
 import { PlayerControl } from './control/PlayerControl.js';
 import { ENTITY_TYPE } from './enum/Entity.js';
-// import { MAPS } from './data/MAPS.js';
+import * as Packets from './Packets.js';
 import { verifyToken } from './utils/jwt.js';
 import { Database } from './db/Database.js';
 import MapLobbyTown from './maps/MapLobbyTown.js';
@@ -197,7 +197,8 @@ export class World {
 	 */
 	onClientClose(player) {
 		console.log(`World player disconnected.`);
-		this.broadcast(JSON.stringify({ type: "leave", name: player.name }));
+
+		this.broadcast(JSON.stringify(Packets.playerLeave(player.name)));
 		// remove player from map
 		this.maps.forEach((map) => {
 			// TODO can you match entity === player?

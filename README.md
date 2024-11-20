@@ -15,6 +15,10 @@ Game view 2 (Monsters):
 
 ![Monsters](./docs/game_02.jpg)
 
+Game view 3 (other players):
+
+![Players](./docs/game_03.jpg)
+
 ## Prerequisites
  - NodeJS & NPM
  - MariaDB or other database

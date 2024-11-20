@@ -159,6 +159,9 @@ export default class GameUI {
 				this.updateChat(data);
 			} else if (data.type === "npc-dialog") {
 				this.updateNPCDialog(data);
+			} else if (data.type === "player-leave") { // optional
+				console.log(`Player "${data.name}" left the game.`);
+				// TODO: update player list, etc?
 			} else {
 				console.error("Unknown message:", data);
 			}

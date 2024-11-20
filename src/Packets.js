@@ -1,3 +1,5 @@
+import { ENTITY_TYPE } from "./enum/Entity.js"
+
 /**
  * @typedef {import("./model/Entity.js").TEntityProps} TEntity
  * @typedef {import("./model/Player.js").TPlayerProps} TPlayer
@@ -7,6 +9,10 @@
  * @typedef {import("./control/PlayerControl.js").PlayerControl} PlayerControl
  * @typedef {import("./control/MonsterControl.js").MonsterControl} MonsterControl
  * @typedef {import("./control/NPCControl.js").NPCControl} NPCControl
+ * 
+ * @typedef {Object} TPlayerLeavePacket
+ * @prop {string} type
+ * @prop {string} name
  * 
  * @typedef {Object} TMapPacket
  * @prop {string} type
@@ -29,7 +35,16 @@
  * @prop {string|string[]} dialog
  */
 
-import { ENTITY_TYPE } from "./enum/Entity.js"
+/**
+ * Creates a "player-leave" packet with the given player's name.
+ * 
+ * @param {string} name - The name of the player leaving.
+ * @returns {TPlayerLeavePacket} A packet object indicating the player has left.
+ */
+export const playerLeave = (name) => ({
+	type: "player-leave",
+	name
+})
 
 /**
  * Creates a "packet" containing the state of map and it's entities.
