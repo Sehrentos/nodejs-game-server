@@ -3,10 +3,22 @@ NodeJS Game Server
 
 This is a test project, for simple game server with WebSocket.
 
+Login view:
+
+![Login](./docs/login_01.jpg)
+
+Game view 1 (NPC's):
+
+![NPCs](./docs/game_01.jpg)
+
+Game view 2 (Monsters):
+
+![Monsters](./docs/game_02.jpg)
+
 ## Prerequisites
  - NodeJS & NPM
  - MariaDB or other database
- - Certificates for SSL (see [./certs/README.md](./certs/README.md) for self-signed certs notes for development)
+ - Certificates for SSL (for development, see [./certs/README.md](./certs/README.md) for self-signed certs)
 
 ## Install
 
@@ -75,8 +87,13 @@ npm run start
 
 ## Open browser
 
+On Windows:
 ```sh
-open https://127.0.0.1:3000/
+explorer "https://127.0.0.1:3000/"
+```
+On MacOS:
+```sh
+open "https://127.0.0.1:3000/"
 ```
 
 
@@ -128,3 +145,4 @@ The /client directory has the browser source code and it's build using webpack m
    - Plan how big DB are we needing?
    - Small with SQLite?
    - Large with MariaDB or PostgreSQL and how versatile it needs to be etc.
+ - Etc.

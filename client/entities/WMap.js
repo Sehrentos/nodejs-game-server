@@ -26,4 +26,15 @@ export default class WMap {
 		/** @type {Array<EntityProps>} */
 		this.entities = p?.entities ?? []
 	}
+
+	/**
+	 * handle the map state update
+	 * 
+	 * @param {import("../../src/Packets.js").TWorldMap} data
+	 */
+	update(data) {
+		// merge the server data to the current state
+		// TODO merge needs to be deep?
+		Object.assign(this, data) // naive approach
+	}
 }

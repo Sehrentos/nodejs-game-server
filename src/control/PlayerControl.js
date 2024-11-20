@@ -94,9 +94,7 @@ export class PlayerControl extends Player {
 	}
 
 	/**
-	 * Function to handle the movement of a monster entity on each tick.
-	 * It checks if the entity can move, updates its position based on speed and direction,
-	 * and ensures it stays within the map boundaries and doesn't move excessively from the original position.
+	 * Server update tick callback. Used to send updates to the client.
 	 * 
 	 * @param {number} timestamp `performance.now()` from the world.onTick
 	 */
@@ -108,12 +106,15 @@ export class PlayerControl extends Player {
 		// so the client can update the map with new entity positions
 		this.socket.send(JSON.stringify(Packets.updateMap(this.map)));
 
-		// send player update every 5 seconds
+		// send full player state update every 5 seconds
 		if (!this._playerUpdate || timestamp - this._playerUpdate > 5000) {
 			this._playerUpdate = timestamp
 			// send packet to client, containing player data
 			this.socket.send(JSON.stringify(Packets.updatePlayer(this)));
 		}
+
+		// TODO implement other player updates, like stats that needs to be more frequent?
+		// skills, equipment, inventory, quests for example, does not need to be updated so frequently.
 
 		// check if player is alive, for the rest of the function
 		if (this.hp <= 0) return

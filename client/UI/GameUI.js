@@ -172,6 +172,8 @@ export default class GameUI {
 	// #region handlers
 
 	/**
+	 * Called when the server sends a player update.
+	 * 
 	 * Updates the player state with data received from the server.
 	 * If a player already exists, it merges the new data into the existing player state.
 	 * Otherwise, it creates a new player instance with the provided data.
@@ -193,29 +195,41 @@ export default class GameUI {
 		// next render cycle will update the game
 	}
 
+	// TODO does the updatePlayer handler need to be splitted into multiple handlers?
+	//   whould it be better?
+	//   skills, equipment, inventory, quests for example, does not need to be updated so frequently.
+	// TODO implement player stats update handler, for more frequent updates
+
 	/**
 	 * Called when the server sends a map update.
+	 * 
 	 * Updates the state of the map from the server data.
 	 * If the map is already initialized, it will be updated.
 	 * If not, a new map is created.
 	 * Also updates player x,y position if the player is found in the map.
-	 * Players are also entity and map will keep track of them.
+	 * 
 	 * @param {import("../../src/Packets.js").TWorldMap} data - The map data from the server.
 	 */
 	updateMap(data) {
-		// update map state
-		//if (this.map instanceof WMap) {
-		// TODO possibly merge the changes from server
-		// and play entity death animations?
-		State.map = new WMap(data)
-		// if (!State.player) return
-		// also update player x,y position?
-		// TODO client side prediction
-		// const player = State.map.entities.find(e => e.gid === State.player.gid)
-		// if (player) {
-		// 	State.player.x = player.x
-		// 	State.player.y = player.y
-		// }
+		// update map state or create new map
+		if (State.map instanceof WMap) {
+			State.map.update(data)
+		} else {
+			State.map = new WMap(data)
+		}
+
+		// also update some player properties
+		// TODO move these into player stats update handler, when/if it's implemented?
+		const _player = State.player
+		if (_player == null) return
+
+		const _entity = State.map.entities.find(e => e.gid === _player.gid)
+		if (_entity) {
+			// note: updating these will help with camera and map bounds,
+			// since map update is more frequent, than player update (for now).
+			_player.x = _entity.x
+			_player.y = _entity.y
+		}
 		// next render cycle will update the game
 	}
 

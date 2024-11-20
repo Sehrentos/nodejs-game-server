@@ -17,7 +17,8 @@ export default class Player extends PlayerModel {
 	}
 
 	/**
-	 * Server sent player update
+	 * handle the player state update
+	 * 
 	 * @param {import("../../src/Packets.js").TPlayer} data
 	 */
 	update(data) {

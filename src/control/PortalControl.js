@@ -13,13 +13,11 @@ export class PortalControl extends Portal {
     }
 
     /**
-     * Function to handle the movement of a monster entity on each tick.
-     * It checks if the entity can move, updates its position based on speed and direction,
-     * and ensures it stays within the map boundaries and doesn't move excessively from the original position.
+     * Server update tick callback. Used to do animations etc.
      * 
      * @param {number} timestamp `performance.now()` from the world.onTick
      */
-    async onTick(timestamp) {
+    onTick(timestamp) {
         // const deltaTime = timestamp - this.world.startTime // ms elapsed, since server started
         // console.log(`Entity ${this.name} (${startTime}/${deltaTime}) tick.`)
 

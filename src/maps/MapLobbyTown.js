@@ -77,8 +77,11 @@ export default class MapLobbyTown extends WorldMap {
 				y: 233,
 				dir: DIRECTION.UP,
 				dialog: [
-					`Hmmm...
-					<button class="ui-dialog-close">X</button>`,
+					`<article>
+						<header>Stranger (NPC)</header>
+						<p>Hmmm...?</p>
+						<button class="ui-dialog-close">X</button>
+					</article>`,
 				],
 			}),
 		]

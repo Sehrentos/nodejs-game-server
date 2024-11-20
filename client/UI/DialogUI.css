@@ -41,3 +41,10 @@
 .ui-dialog-backdrop.show .ui-dialog {
     display: block;
 }
+
+.ui-dialog header {
+    border-bottom: 1px solid #cccccc;
+    text-align: center;
+    font-weight: bold;
+    font-size: 120%;
+}

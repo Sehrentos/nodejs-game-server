@@ -128,6 +128,7 @@ export class World {
 			conn = await this.db.connect()
 
 			// Note: find the account with same token
+			// TODO disable multiple logins on the same account
 			// account = await this.db.account.login(payload.username, payload.password);
 			account = await this.db.account.loginToken(token);
 			if (!account) {

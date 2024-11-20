@@ -25,7 +25,7 @@ export default class LoginUI {
 			}, [
 				m("div.title", this.isRegister ? "Register" : "Login"),
 				m("p", "Note: This is only for testing purposes."),
-				m("p", "Any login credentials will be accepted for this demo."),
+				m("p", "Register an account to play the game."),
 				m("input", {
 					type: "text",
 					name: "username",

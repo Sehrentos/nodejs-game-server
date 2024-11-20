@@ -33,6 +33,9 @@ import { ENTITY_TYPE } from "./enum/Entity.js"
 
 /**
  * Creates a "packet" containing the state of map and it's entities.
+ * 
+ * TODO should entities with hp <= 0 be filtered out? or left for the client to handle death animations ?
+ * 
  * @param {TWorldMap} map - A map object.
  * @returns {TMapPacket}
  */

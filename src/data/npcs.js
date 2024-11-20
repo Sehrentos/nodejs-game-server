@@ -16,8 +16,11 @@ export const NPCS = [
 		type: ENTITY_TYPE.NPC,
 		name: "NPC",
 		dialog: [
-			`Hey there! I'm the NPC!
-			<button class="ui-dialog-close">X</button>`,
+			`<article>
+				<header>NPC</header>
+				<p>Hey there! I'm the NPC!</p>
+				<button class="ui-dialog-close">X</button>
+			</article>`,
 		],
 	},
 	{
@@ -25,8 +28,11 @@ export const NPCS = [
 		type: ENTITY_TYPE.NPC,
 		name: "Townsfolk",
 		dialog: [
-			`Hey there! I'm the Townsfolk!
-			<button class="ui-dialog-close">X</button>`,
+			`<article>
+				<header>Townsfolk</header>
+				<p>Hey there! I'm the Townsfolk!</p>
+				<button class="ui-dialog-close">X</button>
+			</article>`,
 		],
 	},
 	{
@@ -34,8 +40,11 @@ export const NPCS = [
 		type: ENTITY_TYPE.NPC,
 		name: "Blacksmith",
 		dialog: [
-			`Hey there! I'm the Blacksmith!
-			<button class="ui-dialog-close">X</button>`,
+			`<article>
+				<header>Blacksmith</header>
+				<p>Hey there! I'm the Blacksmith!</p>
+				<button class="ui-dialog-close">X</button>
+			</article>`,
 		],
 	},
 	{
@@ -43,8 +52,11 @@ export const NPCS = [
 		type: ENTITY_TYPE.NPC,
 		name: "Tool dealer",
 		dialog: [
-			`Hey there! I'm the Tool dealer!
-			<button class="ui-dialog-close">X</button>`
+			`<article>
+				<header>Tool dealer</header>
+				<p>Hey there! I'm the Tool dealer!</p>
+				<button class="ui-dialog-close">X</button>
+			</article>`
 		],
 	},
 	{
@@ -52,8 +64,11 @@ export const NPCS = [
 		type: ENTITY_TYPE.NPC,
 		name: "Merchant",
 		dialog: [
-			`Hey there! I'm the Merchant!
-			<button class="ui-dialog-close">X</button>`
+			`<article>
+				<header>Merchant</header>
+				<p>Hey there! I'm the Merchant!</p>
+				<button class="ui-dialog-close">X</button>
+			</article>`
 		],
 	},
 ];

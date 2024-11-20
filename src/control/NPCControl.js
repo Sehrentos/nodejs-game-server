@@ -20,7 +20,7 @@ export class NPCControl extends NPC {
      * 
      * @param {number} timestamp `performance.now()` from the world.onTick
      */
-    async onTick(timestamp) {
+    onTick(timestamp) {
         // const deltaTime = timestamp - this.world.startTime // ms elapsed, since server started
         // console.log(`Entity ${this.name} (${startTime}/${deltaTime}) tick.`)
 
