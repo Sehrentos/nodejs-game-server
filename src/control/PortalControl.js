@@ -18,10 +18,7 @@ export class PortalControl extends Portal {
      * @param {number} timestamp `performance.now()` from the world.onTick
      */
     onTick(timestamp) {
-        // const deltaTime = timestamp - this.world.startTime // ms elapsed, since server started
-        // console.log(`Entity ${this.name} (${startTime}/${deltaTime}) tick.`)
-
-        // send players to the map in 4 tiles radius
+        // send nearby players to the next map
         this.detectNearByEntities(4, timestamp)
     }
 
@@ -32,9 +29,10 @@ export class PortalControl extends Portal {
      */
     detectNearByEntities(radius, timestamp) {
         try {
-            // find entities in 4 tiles radius
             const nearbyEntities = this.map.findEntitiesInRadius(this.x, this.y, radius)
+
             if (nearbyEntities.length === 0) return
+
             for (const entity of nearbyEntities) {
                 // only players can be warped
                 if (entity.type === ENTITY_TYPE.PLAYER) {

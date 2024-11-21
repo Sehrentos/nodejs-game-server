@@ -1,5 +1,4 @@
 import { Player as PlayerModel } from "../../src/model/Player.js"
-import KeyControl from "../control/KeyControl.js"
 
 export default class Player extends PlayerModel {
 	/**
@@ -8,12 +7,6 @@ export default class Player extends PlayerModel {
 	constructor(player) {
 		super(player)
 		// client only properties
-		this.keyControl = new KeyControl(this)
-		this.keyControl.bind()
-	}
-
-	remove() {
-		this.keyControl.unbind()
 	}
 
 	/**
@@ -26,5 +19,4 @@ export default class Player extends PlayerModel {
 		// TODO merge needs to be deep?
 		Object.assign(this, data) // naive approach
 	}
-
 }

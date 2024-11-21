@@ -11,7 +11,7 @@ export class NPCControl extends NPC {
         super(p)
         this.gid = p?.gid ?? randomBytes(16).toString('hex')
 
-        /** @type {string|string[]} - Dialog text. */
+        /** @type {string} - Dialog text */
         this.dialog = p?.dialog ?? ""
     }
 
@@ -34,15 +34,28 @@ export class NPCControl extends NPC {
     /**
      * when player touches the NPC send the dialog to the player in socket as message
      * and make sure the player is near by the NPC, when interacting with the NPC.
+     * Player can't move while interacting with the NPC
      * 
      * @param {import("./PlayerControl").PlayerControl} player 
-     * @param {number} timestamp `performance.now()` when the player interacts
+     * @param {number} timestamp `performance.now()` when the player starts interacting
      */
     onTouch(player, timestamp) {
-        console.log(`Player ${player.name} is interacting with NPC (${this.name} ${this.x},${this.y})`)
         if (player.nearByNPC.has(this.gid)) {
-            player.socket.send(JSON.stringify(updateNPCDialog(this.dialog)))
+            console.log(`Player ${player.name} started interacting with NPC (${this.name} ${this.x},${this.y})`)
+            player.canMove = false
+            player.socket.send(JSON.stringify(updateNPCDialog(this.gid, this.dialog)))
         }
+    }
+
+    /**
+     * Player stopped interacting with the NPC
+     * 
+     * @param {import("./PlayerControl").PlayerControl} player 
+     * @param {number} timestamp `performance.now()` when the player stops interacting
+     */
+    onCloseDialog(player, timestamp) {
+        console.log(`Player ${player.name} stopped interacting with NPC (${this.name} ${this.x},${this.y})`)
+        player.canMove = true
     }
 
     // /**

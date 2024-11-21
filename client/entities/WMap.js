@@ -37,4 +37,31 @@ export default class WMap {
 		// TODO merge needs to be deep?
 		Object.assign(this, data) // naive approach
 	}
+
+	/**
+	 * Finds entities in the given radius around a specific point.
+	 * 
+	 * @param {WMapProps} map - The map to search.
+	 * @param {number} x - The x-coordinate of the center point.
+	 * @param {number} y - The y-coordinate of the center point.
+	 * @param {number} radius - The radius to search for entities.
+	 * @returns {Array} - An array of entities within the specified radius.
+	 */
+	static findEntitiesInRadius(map, x, y, radius) {
+		const stack = [] // entities can be on top of each other
+		if (map == null) return stack
+		const entities = map.entities
+		let _x, _y
+		for (const entity of entities) {
+			_x = entity.x
+			_y = entity.y
+			// if (Math.abs(x - _x) > radius || Math.abs(y - _y) > radius) continue
+			if ((Math.abs((x - (radius / 2)) - _x) > radius || Math.abs((y - (radius / 2)) - _y) > radius) &&
+				(Math.abs(x - _x) > radius || Math.abs(y - _y) > radius)) {
+				continue;
+			}
+			stack.push(entity)
+		}
+		return stack
+	}
 }

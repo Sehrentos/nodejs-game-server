@@ -187,16 +187,23 @@ export default class ChatUI {
 	// bind chat event listener to document element
 	// to receive chat messages from any where in the app
 	onDOMChat(event) {
-		State.chat.push(event.detail)
+		/** @type {import("../../src/Packets.js").TChatPacket} */
+		const data = event.detail
+
+		State.chat.push({
+			timestamp: Date.now(),
+			...data,
+		})
+
 		m.redraw()
 	}
 
 	/**
 	 * Adds a chat message to the chat UI.
 	 * 
-	 * @param {import("../../src/Packets.js").TChatPacket} data - The chat message data.
-	 * @example
-	 * ChatUI.add({
+	 * @param {import("../../src/Packets.js").TChatPacket} params - The chat message data.
+	 * 
+	 * @example ChatUI.add({
 	 * 	type: "chat",
 	 *  channel: "default",
 	 * 	from: "player",
@@ -204,12 +211,7 @@ export default class ChatUI {
 	 * 	message: "Hello World",
 	 * });
 	 */
-	static add(data) {
-		// document.dispatchEvent(new CustomEvent("ui-chat", { detail: data }));
-		State.chat.push({
-			timestamp: Date.now(),
-			...data,
-		})
-		m.redraw()
+	static dispatch(params) {
+		return document.dispatchEvent(new CustomEvent("ui-chat", { detail: params }));
 	}
 }

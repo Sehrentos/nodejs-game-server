@@ -32,7 +32,8 @@ import { ENTITY_TYPE } from "./enum/Entity.js"
  * 
  * @typedef {Object} TDialogPacket
  * @prop {string} type
- * @prop {string|string[]} dialog
+ * @prop {string} gid
+ * @prop {string} dialog
  */
 
 /**
@@ -172,10 +173,12 @@ export const updateChat = (channel, from, to, message, timestamp) => ({
 
 /**
  * Creates a packet containing the NPC's dialog text.
- * @param {string|string[]} dialog - The NPC's dialog text.
+ * @param {string} gid - The NPC's gid.
+ * @param {string} dialog - The NPC's dialog text.
  * @returns {TDialogPacket} A packet object containing the NPC's dialog text.
  */
-export const updateNPCDialog = (dialog) => ({
+export const updateNPCDialog = (gid, dialog) => ({
 	type: "npc-dialog",
+	gid,
 	dialog
 })

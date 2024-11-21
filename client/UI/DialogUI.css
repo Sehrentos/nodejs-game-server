@@ -48,3 +48,11 @@
     font-weight: bold;
     font-size: 120%;
 }
+
+.ui-dialog article {
+    display: none;
+}
+
+.ui-dialog article:first-child {
+    display: block;
+}

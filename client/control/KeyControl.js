@@ -5,26 +5,40 @@ import { State } from "../State.js"
  * @description Handles player key controls
  */
 export default class KeyControl {
-	constructor(entity) {
-		this.entity = entity
+	constructor() {
+		// binds the `onKeydown` method to the `this` context
 		this._onKeydown = this.onKeydown.bind(this)
-	}
-	bind() {
+
+		// add event listener
 		window.addEventListener("keydown", this._onKeydown)
 	}
-	unbind() {
+
+	remove() {
 		window.removeEventListener("keydown", this._onKeydown)
 	}
+
 	onKeydown(e) {
-		if (this.entity == null || State.map == null) return
+		if (State.player == null || State.map == null) return
 		// handle movement, by sending a message to the server
 		// the server will handle the movement
 		// and update entity position
 		// then it will send an update to the client
 		// and next render cycle will update the player position
-		if (!KeyControl.KEYS.includes(e.code)) return;
-		State.socket?.send(JSON.stringify({ type: "move", code: e.code }));
-		// TODO client side prediction for moving
+		if (KeyControl.KEYS_MOVE.includes(e.code)) {
+			this.handleMovement(e.code)
+			return true;
+		}
+	}
+
+	/**
+	 * Handles the movement of the player based on the key code input.
+	 * TODO: Updates the player's direction and position on the client side for immediate feedback.
+	 * Sends a WebSocket message to the server to update the player's movement state.
+	 *
+	 * @param {string} keyCode - The code of the key pressed, indicating the movement direction.
+	 */
+	handleMovement(keyCode) {
+		// TODO client side prediction for moving (immediate feedback)
 		// switch (e.code) {
 		// 	case "KeyA":
 		// 	case "ArrowLeft":
@@ -57,6 +71,12 @@ export default class KeyControl {
 		// 	default:
 		// 		break
 		// }
+
+		// send websocket if it's open
+		if (State.socket != null && State.socket.readyState === WebSocket.OPEN) {
+			State.socket.send(JSON.stringify({ type: "move", code: keyCode }));
+		}
 	}
-	static KEYS = ["KeyA", "KeyD", "KeyW", "KeyS", "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"]
+
+	static KEYS_MOVE = ["KeyA", "KeyD", "KeyW", "KeyS", "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"]
 }

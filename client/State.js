@@ -2,7 +2,7 @@
  * global game state
  */
 export const State = {
-    /** @type {WebSocket|null} - WebSocket state */
+    /** @type {import("./control/SocketControl.js").default|null} - WebSocket state */
     socket: null,
 
     /** @type {import("./entities/Player.js").default|null} - player state*/

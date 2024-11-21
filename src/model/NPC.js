@@ -3,7 +3,7 @@ import { ENTITY_TYPE } from "../enum/Entity.js";
 
 /**
  * @typedef {Object} TEntityNPCExtras
- * @prop {string|string[]=} dialog - Dialog texts.
+ * @prop {string=} dialog - Dialog text
  * 
  * @typedef {import("./Entity.js").TEntityProps & TEntityNPCExtras} TNPCProps
  */
@@ -20,10 +20,10 @@ export class NPC extends Entity {
         // #region entity overrides
         this.type = ENTITY_TYPE.NPC
         this.w = p?.w ?? 5
-		this.h = p?.h ?? 5
+        this.h = p?.h ?? 5
         // #endregion
 
-        /** @type {string|string[]} - Dialog text. */
+        /** @type {string} - Dialog text */
         this.dialog = p?.dialog ?? ""
     }
 }

@@ -2,14 +2,22 @@ import m from "mithril"
 import "./DialogUI.css"
 
 /**
+ * @typedef {Object} TDialogUIProps
+ * @prop {string=} content
+ * @prop {boolean=} isVisible
+ * @prop {boolean=} isBackdropVisible
+ * @prop {boolean=} isBackdropClose
+ */
+
+/**
  * @class DialogUI
- * @description Dialog UI component
+ * @description The Dialog UI component
  * @exports DialogUI
  */
 export default class DialogUI {
-    /** @param {m.Vnode<{content:string|string[], isVisible?:boolean, isBackdropVisible?:boolean, isBackdropClose?:boolean}>} vnode */
+    /** @param {m.Vnode<TDialogUIProps>} vnode */
     constructor(vnode) {
-        /** @type {string|string[]} - dialog content */
+        /** @type {string} - dialog content */
         this.content = vnode.attrs.content || ""
         /** @type {boolean} - whether the dialog should be visible */
         this.isVisible = vnode.attrs.isVisible || false
@@ -19,7 +27,6 @@ export default class DialogUI {
         this.isBackdropClose = vnode.attrs.isBackdropClose || false
 
         this._onClick = this.onClick.bind(this)
-        this._onDOMDialogUpdate = this.onDOMDialogUpdate.bind(this)
     }
 
     onClick(event) {
@@ -55,42 +62,18 @@ export default class DialogUI {
         event.redraw = false
     }
 
-    oncreate(vnode) {
-        document.addEventListener("ui-dialog", this._onDOMDialogUpdate)
-    }
-
-    onremove(vnode) {
-        document.removeEventListener("ui-dialog", this._onDOMDialogUpdate)
-    }
-
     view(vnode) {
         if (this.isBackdropVisible) {
             return m("div.ui-dialog-backdrop", {
                 class: this.isVisible ? "show" : "",
                 onclick: this._onClick
             },
-                m("div.ui-dialog", {
-                    innerHTML: this.content,
-                })
+                m("div.ui-dialog", m.trust(this.content))
             )
         }
         return m("div.ui-dialog", {
             class: this.isVisible ? "show" : "",
-            innerHTML: this.content,
             onclick: this._onClick
-        })
-    }
-
-    /**
-     * Updates the dialog content and displays the dialog UI.
-     * 
-     * @param {CustomEvent} event - The custom event containing dialog content details. 
-     * 
-     * @example document.dispatchEvent(new CustomEvent("ui-dialog", { detail: "Hello World" }));
-     */
-    onDOMDialogUpdate(event) {
-        this.isVisible = true
-        this.content = event.detail
-        m.redraw()
+        }, m.trust(this.content))
     }
 }

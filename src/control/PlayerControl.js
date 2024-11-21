@@ -56,22 +56,28 @@ export class PlayerControl extends Player {
 	async onMessage(data, isBinary) {
 		try {
 			const json = JSON.parse(data.toString());
-			// console.log(`WS ${process.pid} message:`, json);
-			// we changed the login into Bearer header
-			// don't login here
-			// if (json.type === 'login') {
-			// 	await this.onLogin(json)
-			// } else 
+
 			if (json.type === 'move') {
 				this.onMove(json)
-			} else if (json.type === 'chat') {
+				return
+			}
+
+			if (json.type === 'chat') {
 				this.onChat(json)
-			} else if (json.type === 'click') {
+				return
+			}
+
+			if (json.type === 'click') {
 				this.onClickPosition(json)
+				return
 			}
-			else {
-				console.log(`[TODO] ${process.pid} message:`, json)
+
+			if (json.type === 'npc-dialog-close') {
+				this.onNPCDialogClose(json)
+				return
 			}
+
+			console.log(`[TODO] ${process.pid} message:`, json)
 		} catch (e) {
 			console.log(`WS ${process.pid} message:`, data.toString(), e.message || e)
 		}
@@ -99,9 +105,6 @@ export class PlayerControl extends Player {
 	 * @param {number} timestamp `performance.now()` from the world.onTick
 	 */
 	onTick(timestamp) {
-		// const deltaTime = timestamp - this.world.startTime // ms elapsed, since server started
-		// console.log(`Entity ${this.name} (${startTime}/${deltaTime}) tick.`)
-
 		// update client map data on server update tick,
 		// so the client can update the map with new entity positions
 		this.socket.send(JSON.stringify(Packets.updateMap(this.map)));
@@ -232,6 +235,17 @@ export class PlayerControl extends Player {
 	}
 
 	/**
+	 * Handles the close event on the NPC dialog from the player.
+	 * @param {{type:string,gid:string}} data
+	 */
+	onNPCDialogClose(data) {
+		/** @type {import("./NPCControl").NPCControl} */
+		const npc = this.nearByNPC.get(data.gid)
+		if (!npc) return console.log(`NPCDialogClose: NPC (${data.gid}) not found. player: "${this.name}" is not near the NPC.`)
+		npc.onCloseDialog(this, performance.now())
+	}
+
+	/**
 	 * Called when the player enters a map.
 	 * @param {WorldMap} map - The map the player is entering
 	 */
@@ -263,6 +277,7 @@ export class PlayerControl extends Player {
 			}
 
 			for (const entity of nearbyEntities) {
+				// Monster interaction, player needs to be in range
 				if (entity.type === ENTITY_TYPE.MONSTER) {
 					// has target set and still in range?
 					// then start combat
@@ -271,6 +286,7 @@ export class PlayerControl extends Player {
 						this.attack(this.attacking || this._following, timestamp)
 					}
 				}
+				// NPC interaction, player needs to be in range
 				if (entity.type === ENTITY_TYPE.NPC) {
 					this.nearByNPC.set(entity.gid, entity)
 				}
@@ -292,6 +308,7 @@ export class PlayerControl extends Player {
 	 */
 	move(dir, timestamp) {
 		this._following = null // stop following
+		if (!this.canMove) return // can't move
 		if (this.hp <= 0) return // must be alive
 		const _timestamp = timestamp || performance.now()
 
@@ -476,7 +493,8 @@ export class PlayerControl extends Player {
 	 * @param {number=} timestamp - The current timestamp or performance.now().
 	 */
 	follow(entity, timestamp) {
-		if (this.hp <= 0) return
+		if (!this.canMove) return // can't move
+		if (this.hp <= 0) return // must be alive
 		const _timestamp = timestamp || performance.now()
 		this._following = entity
 
