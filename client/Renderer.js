@@ -121,18 +121,18 @@ export default class Renderer {
         // this.minY = -cvs.height
         // this.maxY = cvs.height
         // option 2
-        this.minX = player.x - cvs.width / 2
-        this.maxX = player.x + cvs.width / 2
-        this.minY = player.y - cvs.height / 2
-        this.maxY = player.y + cvs.height / 2
+        this.minX = player.lastX - cvs.width / 2
+        this.maxX = player.lastX + cvs.width / 2
+        this.minY = player.lastY - cvs.height / 2
+        this.maxY = player.lastY + cvs.height / 2
 
         ctx.setTransform(1, 0, 0, 1, 0, 0)
         ctx.clearRect(0, 0, cvs.width, cvs.height)
 
         // center the camera around the player,
         // but clamp the edges of the camera view to the world bounds.
-        this.camX = Renderer.clamp(player.x - cvs.width / 2, this.minX, this.maxX - cvs.width);
-        this.camY = Renderer.clamp(player.y - cvs.height / 2, this.minY, this.maxY - cvs.height);
+        this.camX = Renderer.clamp(player.lastX - cvs.width / 2, this.minX, this.maxX - cvs.width);
+        this.camY = Renderer.clamp(player.lastY - cvs.height / 2, this.minY, this.maxY - cvs.height);
 
         ctx.translate(-this.camX, -this.camY);
 
@@ -182,7 +182,7 @@ export default class Renderer {
      * @param {import("../src/model/NPC.js").TNPCProps} entity - The NPC entity to draw.
      */
     drawEntityNPC(entity) {
-        Renderer.drawCircle(this.ctx, "black", entity.x, entity.y, entity.h / 2);
+        Renderer.drawCircle(this.ctx, "black", entity.lastX, entity.lastY, entity.h / 2);
         Renderer.drawEntityFacingDirection(this.ctx, entity, 4, "white");
         Renderer.drawEntityName(this.ctx, entity, "white", false);
     }
@@ -194,8 +194,8 @@ export default class Renderer {
     drawEntityPortal(entity) {
         // Portal range is 4, check PortalControl
         const range = 4
-        Renderer.drawCircle(this.ctx, "#0000ff91", entity.x, entity.y, range);
-        Renderer.drawCircle(this.ctx, "blue", entity.x, entity.y, entity.h / 2);
+        Renderer.drawCircle(this.ctx, "#0000ff91", entity.lastX, entity.lastY, range);
+        Renderer.drawCircle(this.ctx, "blue", entity.lastX, entity.lastY, entity.h / 2);
     }
 
     /**
@@ -203,7 +203,7 @@ export default class Renderer {
      * @param {import("../src/model/Monster.js").TMonsterProps} entity - The monster entity to draw.
      */
     drawEntityMonster(entity) {
-        Renderer.drawCircle(this.ctx, "red", entity.x, entity.y, entity.h / 2);
+        Renderer.drawCircle(this.ctx, "red", entity.lastX, entity.lastY, entity.h / 2);
         Renderer.drawEntityFacingDirection(this.ctx, entity, 4, "black");
         Renderer.drawEntityName(this.ctx, entity, "red", true);
     }
@@ -217,10 +217,10 @@ export default class Renderer {
         // indentify the current player from entities by gid
         if (entity.gid === player.gid) {
             // draw current player's melee attack radius
-            Renderer.drawCircle(this.ctx, "#2d2d2d57", entity.x - ((player.range / 2) - player.w), entity.y - ((player.range / 2) - player.h), player.range);
+            Renderer.drawCircle(this.ctx, "#2d2d2d57", entity.lastX - ((player.range / 2) - player.w), entity.lastY - ((player.range / 2) - player.h), player.range);
             Renderer.drawEntityFacingDirection(this.ctx, entity, player.range, "black");
         }
-        Renderer.drawCircle(this.ctx, "black", entity.x, entity.y, entity.h / 2);
+        Renderer.drawCircle(this.ctx, "black", entity.lastX, entity.lastY, entity.h / 2);
         Renderer.drawEntityName(this.ctx, entity, "white", true);
     }
 
@@ -309,8 +309,8 @@ export default class Renderer {
             text += ` (${entity.hp}/${entity.hpMax})`
         }
         // calculate the x position to center the text
-        let _x = entity.x - (text.length / 2) * (Settings.FONT_SIZE * Settings.FONT_WIDTH_RATIO)
-        let _y = entity.y - (entity.h || 1)
+        let _x = entity.lastX - (text.length / 2) * (Settings.FONT_SIZE * Settings.FONT_WIDTH_RATIO)
+        let _y = entity.lastY - (entity.h || 1)
         ctx.fillStyle = color;
         ctx.font = `${Settings.FONT_SIZE}px ${Settings.FONT_FAMILY}`;
         ctx.fillText(text, _x, _y);
@@ -327,8 +327,8 @@ export default class Renderer {
      * @param {string} color - The color of the line. default: "white"
      */
     static drawEntityFacingDirection(ctx, entity, range = 2, color = "white") {
-        let x = entity.x
-        let y = entity.y
+        let x = entity.lastX
+        let y = entity.lastY
         ctx.save();
         ctx.beginPath();
         ctx.moveTo(x, y);

@@ -24,7 +24,7 @@ export class PlayerControl extends Player {
 	 */
 	constructor(p) {
 		super(p)
-		this.gid = p?.gid ?? randomBytes(4).toString('hex')
+		this.gid = p?.gid ?? randomBytes(16).toString('hex')
 
 		this.speed = 1 // DEBUG, make player move really fast
 		this.range = 10 // DEBUG, make player attack range longer
@@ -267,7 +267,7 @@ export class PlayerControl extends Player {
 			// clear old entities
 			this.nearByNPC.clear()
 
-			const nearbyEntities = this.map.findEntitiesInRadius(this.x, this.y, radius)
+			const nearbyEntities = this.map.findEntitiesInRadius(this.lastX, this.lastY, radius)
 				.filter(entity => entity.gid !== this.gid) // exclude self
 
 			// no entities in radius
@@ -321,26 +321,26 @@ export class PlayerControl extends Player {
 		switch (dir) {
 			case DIRECTION.LEFT:
 				this.dir = DIRECTION.LEFT
-				if (this.x > 0) {
-					this.x--
+				if (this.lastX > 0) {
+					this.lastX--
 				}
 				break
 			case DIRECTION.RIGHT:
 				this.dir = DIRECTION.RIGHT
-				if (this.x < this.map.width) {
-					this.x++
+				if (this.lastX < this.map.width) {
+					this.lastX++
 				}
 				break
 			case DIRECTION.UP:
 				this.dir = DIRECTION.UP
-				if (this.y > 0) {
-					this.y--
+				if (this.lastY > 0) {
+					this.lastY--
 				}
 				break
 			case DIRECTION.DOWN:
 				this.dir = DIRECTION.DOWN
-				if (this.y < this.map.height) {
-					this.y++
+				if (this.lastY < this.map.height) {
+					this.lastY++
 				}
 				break
 			default:
@@ -364,7 +364,7 @@ export class PlayerControl extends Player {
 			return // can't attack yet
 		}
 		// is in melee range
-		if (!inRangeOfEntity(entity, this.x, this.y, this.range)) {
+		if (!inRangeOfEntity(entity, this.lastX, this.lastY, this.range)) {
 			return
 		}
 		this.attackStart = timestamp
@@ -477,8 +477,8 @@ export class PlayerControl extends Player {
 	toSavePosition() {
 		// same map, just set position
 		if (this.map.name === this.saveMap) {
-			this.x = this.saveX
-			this.y = this.saveY
+			this.lastX = this.saveX
+			this.lastY = this.saveY
 			return
 		}
 		// different map, join
@@ -511,25 +511,25 @@ export class PlayerControl extends Player {
 		}
 
 		// stop at range
-		if (inRangeOfEntity(entity, this.x, this.y, this.range)) {
+		if (inRangeOfEntity(entity, this.lastX, this.lastY, this.range)) {
 			this._following = null
 			return
 		}
 
 		// follow entity
-		if (this.x > entity.x) {
+		if (this.lastX > entity.lastX) {
 			this.dir = DIRECTION.LEFT
-			this.x--
-		} else if (this.x < entity.x) {
+			this.lastX--
+		} else if (this.lastX < entity.lastX) {
 			this.dir = DIRECTION.RIGHT
-			this.x++
+			this.lastX++
 		}
-		if (this.y > entity.y) {
+		if (this.lastY > entity.lastY) {
 			this.dir = DIRECTION.UP
-			this.y--
-		} else if (this.y < entity.y) {
+			this.lastY--
+		} else if (this.lastY < entity.lastY) {
 			this.dir = DIRECTION.DOWN
-			this.y++
+			this.lastY++
 		}
 	}
 

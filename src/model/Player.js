@@ -5,6 +5,7 @@ import { ELEMENT } from "../enum/Element.js";
 
 /**
  * @typedef {Object} TEntityPlayerExtras
+ * @prop {number=} accountId - Account ID. default 0
  * @prop {number=} level - Level. default 1
  * @prop {number=} jobLevel - Job level. default 0
  * @prop {number=} baseExp - Base experience. default 0
@@ -47,6 +48,7 @@ import { ELEMENT } from "../enum/Element.js";
  * @prop {number[]=} equipment - Equipment list.
  * @prop {number[]=} inventory - Inventory list.
  * @prop {number[]=} quests - Quest list.
+ * @prop {number=} partyId - Party ID.
  * @prop {Party=} party - Party object.
  * @prop {number=} attackStart - CONTROL: Timestamp in milliseconds when the player last attacked 
  * @prop {import("../control/EntityControl.js").TEntityControls=} attacking - CONTROL: Attacking entity
@@ -74,6 +76,7 @@ export class Player extends Entity {
 		this.mpMax = p?.mpMax ?? 50
 		// #endregion
 
+		this.accountId = p?.accountId ?? 0
 		this.level = p?.level ?? 1
 		this.jobLevel = p?.jobLevel ?? 1
 		this.baseExp = p?.baseExp ?? 0
@@ -117,6 +120,7 @@ export class Player extends Entity {
 		this.equipment = p?.equipment ?? []
 		this.inventory = p?.inventory ?? []
 		this.quests = p?.quests ?? []
+		this.partyId = p?.partyId ?? 0
 		this.party = new Party(p?.party?.name, p?.party?.leader, p?.party?.members)
 
 		// #region control

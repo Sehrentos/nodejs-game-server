@@ -95,6 +95,7 @@ export class World {
 	 * @param {import("http").IncomingMessage} req - The HTTP request
 	 */
 	async onConnection(ws, req) {
+		// TODO rate limitter for the WS connection
 		// authentication
 		// custom way of finding the access token in websocket headers
 		const protocol = req.headers['sec-websocket-protocol']; //="ws, wss, Bearer.123"
@@ -135,19 +136,38 @@ export class World {
 				throw Error('Invalid credentials');
 			}
 
-			// Authorized, create new player
-			// TODO load player data from database
+			// Authorized, create new player or load existing player
 			this.playersCountTotal++
 			player = new PlayerControl({
 				world: this,
 				socket: ws,
 				id: account.id,
+				accountId: account.id,
 				name: `player-${this.playersCountTotal}`,
 			})
-			console.log(`[DB#world] Player (${player.id}) ${player.name} connection established.`)
+
+			// load players data from database
+			let players = await this.db.player.getByAccountId(account.id)
+			console.log(`[DB#world] ${players.length} players found`)
+
+			// create new player if not found
+			if (players.length === 0) {
+				let { insertId } = await this.db.player.add(player)
+				player.id = insertId // update player id
+			} else {
+				// assign existing player data
+				Object.assign(player, players[0])
+			}
+
+			console.log(`[DB#world] Player "${player.name}" (id:${player.id} aid:${player.accountId} gid:${player.gid}) connection established.`)
 
 			// make the player join the map
-			this.joinMapByName(player, 'Lobby town')
+			this.joinMapByName(
+				player,
+				player.lastMap || 'Lobby town',
+				player.lastX || -1,
+				player.lastY || -1
+			)
 		} catch (err) {
 			console.log('[DB#world] Error', err.message, err.code || '')
 			ws.close(4401, 'Invalid credentials')
@@ -195,10 +215,16 @@ export class World {
 	 * Removes the disconnected player from the map entities.
 	 * @param {PlayerControl} player - The player who disconnected.
 	 */
-	onClientClose(player) {
+	async onClientClose(player) {
 		console.log(`World player disconnected.`);
 
 		this.broadcast(JSON.stringify(Packets.playerLeave(player.name)));
+
+		// save player data
+		const {affectedRows} = await this.db.player.update(player)
+		const state = affectedRows > 0 ? 'saved' : 'not saved'
+		console.log(`[DB#world] Player ${player.name} ${state} (id:${player.id}) disconnected.`)
+
 		// remove player from map
 		this.maps.forEach((map) => {
 			// TODO can you match entity === player?

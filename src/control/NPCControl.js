@@ -41,7 +41,7 @@ export class NPCControl extends NPC {
      */
     onTouch(player, timestamp) {
         if (player.nearByNPC.has(this.gid)) {
-            console.log(`Player ${player.name} started interacting with NPC (${this.name} ${this.x},${this.y})`)
+            console.log(`Player ${player.name} started interacting with NPC (${this.name} ${this.lastX},${this.lastY})`)
             player.canMove = false
             player.socket.send(JSON.stringify(updateNPCDialog(this.gid, this.dialog)))
         }
@@ -54,7 +54,7 @@ export class NPCControl extends NPC {
      * @param {number} timestamp `performance.now()` when the player stops interacting
      */
     onCloseDialog(player, timestamp) {
-        console.log(`Player ${player.name} stopped interacting with NPC (${this.name} ${this.x},${this.y})`)
+        console.log(`Player ${player.name} stopped interacting with NPC (${this.name} ${this.lastX},${this.lastY})`)
         player.canMove = true
     }
 
@@ -67,7 +67,7 @@ export class NPCControl extends NPC {
     //     try {
     //         /** @type {import("./PlayerControl").PlayerControl[]} - The list of entities, but target only players and exclude itself  */
     //         // @ts-ignore filter by type = player
-    //         const playersInRadius = this.map.findEntitiesInRadius(this.x, this.y, radius)
+    //         const playersInRadius = this.map.findEntitiesInRadius(this.lastX, this.lastY, radius)
     //             .filter(entity => entity.gid !== this.gid && entity.type === ENTITY_TYPE.PLAYER)
     //         // none in radius
     //         if (playersInRadius.length === 0) {

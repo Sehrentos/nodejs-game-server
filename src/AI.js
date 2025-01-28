@@ -66,32 +66,32 @@ export class AI {
 			}
 
 			if (entity.dir === DIRECTION.DOWN) {
-				if ((entity.y < entity.saveY + 10) && entity.y < entity.map.height) {
-					entity.y++
+				if ((entity.lastY < entity.saveY + 10) && entity.lastY < entity.map.height) {
+					entity.lastY++
 				} else {
 					entity.dir = DIRECTION.RIGHT
 					this.iddleStart = timestamp
 				}
 			}
 			if (entity.dir === DIRECTION.RIGHT) {
-				if ((entity.x < entity.saveX + 10) && entity.x < entity.map.width) {
-					entity.x++
+				if ((entity.lastX < entity.saveX + 10) && entity.lastX < entity.map.width) {
+					entity.lastX++
 				} else {
 					entity.dir = DIRECTION.UP
 					this.iddleStart = timestamp
 				}
 			}
 			if (entity.dir === DIRECTION.UP) {
-				if ((entity.y > entity.saveY - 10) && entity.y > 0) {
-					entity.y--
+				if ((entity.lastY > entity.saveY - 10) && entity.lastY > 0) {
+					entity.lastY--
 				} else {
 					entity.dir = DIRECTION.LEFT
 					this.iddleStart = timestamp
 				}
 			}
 			if (entity.dir === DIRECTION.LEFT) {
-				if ((entity.x > entity.saveX - 10) && entity.x > 0) {
-					entity.x--
+				if ((entity.lastX > entity.saveX - 10) && entity.lastX > 0) {
+					entity.lastX--
 				} else {
 					entity.dir = DIRECTION.DOWN
 					this.iddleStart = timestamp
@@ -125,7 +125,7 @@ export class AI {
 			const self = this.entity
 
 			// find entities in x tiles radius
-			const nearbyEntities = self.map.findEntitiesInRadius(self.x, self.y, radius)
+			const nearbyEntities = self.map.findEntitiesInRadius(self.lastX, self.lastY, radius)
 				.filter(entity => entity.gid !== self.gid) // exclude self
 
 			// no entities in radius

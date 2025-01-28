@@ -43,29 +43,29 @@ export default class KeyControl {
 		// 	case "KeyA":
 		// 	case "ArrowLeft":
 		// 		this.entity.dir = 0
-		// 		if (this.entity.x > 0) {
-		// 			this.entity.x--
+		// 		if (this.entity.lastX > 0) {
+		// 			this.entity.lastX--
 		// 		}
 		// 		break
 		// 	case "KeyD":
 		// 	case "ArrowRight":
 		// 		this.entity.dir = 1
-		// 		if (this.entity.x < State.map.width) {
-		// 			this.entity.x++
+		// 		if (this.entity.lastX < State.map.width) {
+		// 			this.entity.lastX++
 		// 		}
 		// 		break
 		// 	case "KeyW":
 		// 	case "ArrowUp":
 		// 		this.entity.dir = 2
-		// 		if (this.entity.y > 0) {
-		// 			this.entity.y--
+		// 		if (this.entity.lastY > 0) {
+		// 			this.entity.lastY--
 		// 		}
 		// 		break
 		// 	case "KeyS":
 		// 	case "ArrowDown":
 		// 		this.entity.dir = 3
-		// 		if (this.entity.y < State.map.height) {
-		// 			this.entity.y++
+		// 		if (this.entity.lastY < State.map.height) {
+		// 			this.entity.lastY++
 		// 		}
 		// 		break
 		// 	default:

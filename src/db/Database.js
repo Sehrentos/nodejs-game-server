@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import mariadb from 'mariadb';
 import { AccountControl } from './AccountControl.js';
+import { PlayerControl } from './PlayerControl.js';
 
 /**
  * @module Database
@@ -26,6 +27,7 @@ export class Database {
 
     //#region database models
     this.account = new AccountControl(this);
+    this.player = new PlayerControl(this);
     //#endregion
   }
 

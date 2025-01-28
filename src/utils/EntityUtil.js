@@ -20,7 +20,7 @@ export function reviveEntity(entity) {
  * @returns {boolean} True if the coordinates are within the range of the entity, otherwise false.
  */
 export function inRangeOfEntity(entity, x, y, range) {
-	return Math.abs(entity.x - x) <= range && Math.abs(entity.y - y) <= range
+	return Math.abs(entity.lastX - x) <= range && Math.abs(entity.lastY - y) <= range
 }
 
 /**
@@ -46,26 +46,26 @@ export function moveEntity(entity, dir, timestamp) {
 	switch (dir) {
 		case DIRECTION.LEFT:
 			entity.dir = DIRECTION.LEFT
-			if (entity.x > 0) {
-				entity.x--
+			if (entity.lastX > 0) {
+				entity.lastX--
 			}
 			break
 		case DIRECTION.RIGHT:
 			entity.dir = DIRECTION.RIGHT
-			if (entity.x < entity.map.width) {
-				entity.x++
+			if (entity.lastX < entity.map.width) {
+				entity.lastX++
 			}
 			break
 		case DIRECTION.UP:
 			entity.dir = DIRECTION.UP
-			if (entity.y > 0) {
-				entity.y--
+			if (entity.lastY > 0) {
+				entity.lastY--
 			}
 			break
 		case DIRECTION.DOWN:
 			entity.dir = DIRECTION.DOWN
-			if (entity.y < entity.map.height) {
-				entity.y++
+			if (entity.lastY < entity.map.height) {
+				entity.lastY++
 			}
 			break
 		default:
@@ -101,24 +101,24 @@ export function followEntity(self, target, timestamp) {
 	}
 
 	// stop at range
-	if (inRangeOfEntity(target, self.x, self.y, self.range)) {
+	if (inRangeOfEntity(target, self.lastX, self.lastY, self.range)) {
 		self._following = null
 		return
 	}
 
 	// follow target
-	if (self.x > target.x) {
+	if (self.lastX > target.lastX) {
 		self.dir = DIRECTION.LEFT
-		self.x--
-	} else if (self.x < target.x) {
+		self.lastX--
+	} else if (self.lastX < target.lastX) {
 		self.dir = DIRECTION.RIGHT
-		self.x++
+		self.lastX++
 	}
-	if (self.y > target.y) {
+	if (self.lastY > target.lastY) {
 		self.dir = DIRECTION.UP
-		self.y--
-	} else if (self.y < target.y) {
+		self.lastY--
+	} else if (self.lastY < target.lastY) {
 		self.dir = DIRECTION.DOWN
-		self.y++
+		self.lastY++
 	}
 }

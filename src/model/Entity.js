@@ -1,3 +1,4 @@
+import { randomBytes } from 'node:crypto'
 import { ENTITY_TYPE } from "../enum/Entity.js"
 
 /**
@@ -7,9 +8,9 @@ import { ENTITY_TYPE } from "../enum/Entity.js"
  * @prop {string=} name - Visual name.
  * @prop {number=} type - Entity type. default ENTITY_TYPE.NPC
  * @prop {import("../maps/WorldMap.js").WorldMap=} map - The map this entity is in.
- * @prop {string=} mapName - Current map name.
- * @prop {number=} x - Current X position.
- * @prop {number=} y - Current Y position.
+ * @prop {string=} lastMap - Current map name.
+ * @prop {number=} lastX - Current X position.
+ * @prop {number=} lastY - Current Y position.
  * @prop {number=} w - The width of the entity.
  * @prop {number=} h - The height of the entity.
  * @prop {string=} saveMap - The map entity was created or saved.
@@ -36,13 +37,13 @@ export class Entity {
 	 */
 	constructor(p) {
 		this.id = p?.id ?? 0
-		this.gid = p?.gid ?? ''
+		this.gid = p?.gid ?? randomBytes(16).toString('hex')
 		this.type = p?.type ?? ENTITY_TYPE.NPC
 		this.name = p?.name ?? ''
 		this.map = p?.map ?? null
-		this.mapName = p?.mapName ?? ''
-		this.x = p?.x ?? 0
-		this.y = p?.y ?? 0
+		this.lastMap = p?.lastMap ?? ''
+		this.lastX = p?.lastX ?? 0
+		this.lastY = p?.lastY ?? 0
 		// #endregion
 		this.w = p?.w ?? 1
 		this.h = p?.h ?? 1

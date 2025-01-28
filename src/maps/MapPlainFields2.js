@@ -36,8 +36,8 @@ export default class MapPlainFields1 extends WorldMap {
 		this.entities = [
 			new PortalControl({
 				map: this,
-				x: 8,
-				y: 800 / 2,
+				lastX: 8,
+				lastY: 800 / 2,
 				portalTo: { id: 2, name: "Plain fields 1", x: 1200 - 8 - 16, y: 800 / 2 },
 			}),
 			// to create single monsters:

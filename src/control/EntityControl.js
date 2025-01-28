@@ -40,7 +40,7 @@ export class EntityControl extends Entity {
 	//  */
 	// detectNearByEntities(radius, timestamp) {
 	// 	try {
-	// 		const nearbyEntities = this.map.findEntitiesInRadius(this.x, this.y, radius)
+	// 		const nearbyEntities = this.map.findEntitiesInRadius(this.lastX, this.lastY, radius)
 	// 			.filter(entity => entity.gid !== this.gid) // exclude self
 	// 		if (nearbyEntities.length === 0) return
 	// 		for (const entity of nearbyEntities) {

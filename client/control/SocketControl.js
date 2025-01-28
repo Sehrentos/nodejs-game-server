@@ -229,8 +229,8 @@ export default class SocketControl {
         if (_entity) {
             // note: updating these will help with camera and map bounds,
             // since map update is more frequent, than player update (for now).
-            _player.x = _entity.x
-            _player.y = _entity.y
+            _player.lastX = _entity.lastX
+            _player.lastY = _entity.lastY
         }
         // next render cycle will update the game
     }

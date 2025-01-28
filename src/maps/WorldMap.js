@@ -79,10 +79,10 @@ export class WorldMap {
 		let i, x, y, dir
 		const stack = []
 		for (i = 0; i < quantity; i++) {
-			x = monster.x || getRandomInt(5, this.width - 5)
-			y = monster.y || getRandomInt(5, this.height - 5)
+			x = monster.lastX || getRandomInt(5, this.width - 5)
+			y = monster.lastY || getRandomInt(5, this.height - 5)
 			dir = monster.dir || Math.floor(Math.random() * 4)
-			stack.push(new MonsterControl({ ...monster, map: this, x, y, dir, saveX: x, saveY: y }))
+			stack.push(new MonsterControl({ ...monster, map: this, lastX: x, lastY: y, dir, saveX: x, saveY: y }))
 		}
 		return stack
 	}
@@ -105,8 +105,9 @@ export class WorldMap {
 		}
 		player.map = this
 		// x/y coords or center of map
-		player.x = x >= 0 ? x : Math.round(this.width / 2)
-		player.y = y >= 0 ? y : Math.round(this.height / 2)
+		player.lastMap = this.name
+		player.lastX = x >= 0 ? x : Math.round(this.width / 2)
+		player.lastY = y >= 0 ? y : Math.round(this.height / 2)
 		player.dir = DIRECTION.DOWN
 		this.entities.push(player)
 		player.onEnterMap(this)
@@ -139,8 +140,8 @@ export class WorldMap {
 		for (const entity of this.entities) {
 			// TODO take entity w and h into account
 			if (
-				(Math.abs((x - (radius / 2)) - entity.x) > radius || Math.abs((y - (radius / 2)) - entity.y) > radius) &&
-				(Math.abs(x - entity.x) > radius || Math.abs(y - entity.y) > radius)
+				(Math.abs((x - (radius / 2)) - entity.lastX) > radius || Math.abs((y - (radius / 2)) - entity.lastY) > radius) &&
+				(Math.abs(x - entity.lastX) > radius || Math.abs(y - entity.lastY) > radius)
 			) continue;
 
 			stack.push(entity)

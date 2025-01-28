@@ -53,8 +53,8 @@ export default class WMap {
 		const entities = map.entities
 		let _x, _y
 		for (const entity of entities) {
-			_x = entity.x
-			_y = entity.y
+			_x = entity.lastX
+			_y = entity.lastY
 			// if (Math.abs(x - _x) > radius || Math.abs(y - _y) > radius) continue
 			if ((Math.abs((x - (radius / 2)) - _x) > radius || Math.abs((y - (radius / 2)) - _y) > radius) &&
 				(Math.abs(x - _x) > radius || Math.abs(y - _y) > radius)) {

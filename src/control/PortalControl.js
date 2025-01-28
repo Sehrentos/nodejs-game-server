@@ -29,7 +29,7 @@ export class PortalControl extends Portal {
      */
     detectNearByEntities(radius, timestamp) {
         try {
-            const nearbyEntities = this.map.findEntitiesInRadius(this.x, this.y, radius)
+            const nearbyEntities = this.map.findEntitiesInRadius(this.lastX, this.lastY, radius)
 
             if (nearbyEntities.length === 0) return
 
