@@ -1,4 +1,3 @@
-import { randomBytes } from 'node:crypto'
 import { ENTITY_TYPE } from "../enum/Entity.js"
 
 /**
@@ -37,7 +36,7 @@ export class Entity {
 	 */
 	constructor(p) {
 		this.id = p?.id ?? 0
-		this.gid = p?.gid ?? randomBytes(16).toString('hex')
+		this.gid = p?.gid ?? ''
 		this.type = p?.type ?? ENTITY_TYPE.NPC
 		this.name = p?.name ?? ''
 		this.map = p?.map ?? null

@@ -1,7 +1,5 @@
-import { Player } from "../model/Player.js"
-
 // database class for controlling players
-export class PlayerControl {
+export class TablePlayer {
     /**
      * @constructor
      * @param {import("./Database.js").Database} db - The database object to use for queries

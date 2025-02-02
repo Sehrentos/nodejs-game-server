@@ -1,7 +1,7 @@
 import express from 'express';
 import { generateToken } from '../../utils/jwt.js';
 import { DB } from '../../db/index.js';
-import { Account } from '../../db/Account.js';
+import { Account } from '../../model/Account.js';
 const router = express.Router({ caseSensitive: false });
 
 // route /api/register

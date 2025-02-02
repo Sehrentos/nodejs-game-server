@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import mariadb from 'mariadb';
-import { AccountControl } from './AccountControl.js';
-import { PlayerControl } from './PlayerControl.js';
+import { TableAccount } from './TableAccount.js';
+import { TablePlayer } from './TablePlayer.js';
 
 /**
  * @module Database
@@ -25,10 +25,10 @@ export class Database {
       connectionLimit: Number(process.env.DB_CONNECTION_LIMIT) || 5
     });
 
-    //#region database models
-    this.account = new AccountControl(this);
-    this.player = new PlayerControl(this);
-    //#endregion
+    // #region tables
+    this.account = new TableAccount(this);
+    this.player = new TablePlayer(this);
+    // #endregion
   }
 
   /**

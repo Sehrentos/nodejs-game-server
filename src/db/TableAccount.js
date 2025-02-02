@@ -1,9 +1,9 @@
-import { Account } from "./Account.js";
+import { Account } from "../model/Account.js";
 
 const SALT = process.env.DB_SALT || 'your_unique_salt';
 
 // database class for controlling accounts
-export class AccountControl {
+export class TableAccount {
     /**
      * @constructor
      * @param {import("./Database.js").Database} db - The database object to use for queries
@@ -15,7 +15,7 @@ export class AccountControl {
 
     /**
      * Note: on duplicate username, it will throw `Error.code='ER_DUP_ENTRY'`
-     * @param {import("./Account.js").TAccount=} account - The account object
+     * @param {import("../model/Account.js").TAccount=} account - The account object
      * @returns {Promise<{ affectedRows:number, insertId:number, warningStatus:number }>}
      */
     add(account) {
@@ -48,7 +48,7 @@ export class AccountControl {
      * @param {string} username - The username to validate
      * @param {string} password - The password to validate
      * @param {string=} last_ip - The last IP of the user. optional
-     * @returns {Promise<import("./Account.js").Account>} - The account object if the login is valid, otherwise undefined
+     * @returns {Promise<import("../model/Account.js").Account>} - The account object if the login is valid, otherwise undefined
      */
     async login(username, password, last_ip) {
         const rows = await this.db.query(
@@ -68,7 +68,7 @@ export class AccountControl {
     /**
      * Login attempt using the given token.
      * @param {string} token - The token to validate
-     * @returns {Promise<import("./Account.js").Account>} - The account object if the login is valid, otherwise undefined
+     * @returns {Promise<import("../model/Account.js").Account>} - The account object if the login is valid, otherwise undefined
      */
     async loginToken(token) {
         const rows = await this.db.query(
