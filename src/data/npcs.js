@@ -8,7 +8,7 @@ import { ENTITY_TYPE } from "../enum/Entity.js";
  * 
  * @example const npc1 = new Entity(NPCS[0]);
  * 
- * @type {Array<import("../model/NPC.js").TNPCProps>}
+ * @type {Array<import("../model/Entity.js").TEntityProps>}
  */
 export const NPCS = [
 	{

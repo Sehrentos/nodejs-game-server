@@ -1,7 +1,9 @@
-import { MonsterControl } from '../control/MonsterControl.js'
-import { PortalControl } from '../control/PortalControl.js'
+import { Entity } from '../model/Entity.js'
 import { MOBS } from '../data/MOBS.js'
 import { WorldMap } from './WorldMap.js'
+import { EntityControl } from '../control/EntityControl.js'
+import { ENTITY_TYPE } from '../enum/Entity.js'
+import { createGameId, createMonster } from '../utils/EntityUtil.js'
 
 // create map
 export default class MapPlainFields1 extends WorldMap {
@@ -34,21 +36,29 @@ export default class MapPlainFields1 extends WorldMap {
 		super.create()
 		// create map entities
 		this.entities = [
-			new PortalControl({
-				map: this,
+			new Entity({
+				type: ENTITY_TYPE.PORTAL,
 				lastX: 8,
 				lastY: 800 / 2,
-				portalTo: { id: 2, name: "Plain fields 1", x: 1200 - 8 - 16, y: 800 / 2 },
+				portalId: 2,
+				portalName: "Plain fields 1",
+				portalX: 1200 - 8 - 16,
+				portalY: 800 / 2,
 			}),
 			// to create single monsters:
-			// new MonsterControl({ ...MOBS[3], map: this }), // Scorpio
-			// new MonsterControl({ ...MOBS[4], map: this }), // Snake
-			// new MonsterControl({ ...MOBS[4], map: this }), // Wolf
+			// new MonsterControl({ ...MOBS[3] }), // Scorpio
+			// new MonsterControl({ ...MOBS[4] }), // Snake
+			// new MonsterControl({ ...MOBS[4] }), // Wolf
 			// multiple monsters:
-			...this.createMonster(50, { ...MOBS[3], map: this }), // Scorpio
-			...this.createMonster(50, { ...MOBS[4], map: this }), // Snake
-			...this.createMonster(25, { ...MOBS[5], map: this }), // Wolf
+			...createMonster(this, 50, { ...MOBS[3] }), // Scorpio
+			...createMonster(this, 50, { ...MOBS[4] }), // Snake
+			...createMonster(this, 25, { ...MOBS[5] }), // Wolf
 		]
+		// add controllers and game ids
+		this.entities.forEach((entity) => {
+			entity.gid = createGameId()
+			entity.control = new EntityControl(entity, this.world, null, this)
+		})
 
 		console.log(`Map ${this.name} created with ${this.entities.length} entities.`)
 	}

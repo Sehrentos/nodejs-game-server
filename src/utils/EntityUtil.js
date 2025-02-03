@@ -1,9 +1,19 @@
-import { DIRECTION } from "../enum/Entity.js"
+import { randomBytes } from 'node:crypto';
+import { Entity } from '../model/Entity.js';
+import { getRandomInt } from './getRandomInt.js';
+
+/**
+ * Creates a new game ID `(gid)`
+ * @returns {string}
+ */
+export function createGameId() {
+	return randomBytes(16).toString('hex')
+}
 
 /**
  * Revives the entity by restoring their health points (hp) and
  * mana points (mp) to their maximum values (hpMax and mpMax).
- * @param {import("../model/Entity").TEntityProps} entity - The entity.
+ * @param {Entity} entity - The entity.
  */
 export function reviveEntity(entity) {
 	entity.hp = Number(entity.hpMax)
@@ -13,10 +23,10 @@ export function reviveEntity(entity) {
 /**
  * Checks if the given coordinates (x, y) are within the range of the given entity.
  * The range is defined as the absolute difference between the entity's position and the given coordinates.
- * @param {import("../model/Entity").TEntityProps} entity - The entity.
- * @param {number} x - The x-coordinate of the point to check.
- * @param {number} y - The y-coordinate of the point to check.
- * @param {number} range - The range to check against.
+ * @param {Entity} entity - The first entity
+ * @param {number} x - The x coordinate
+ * @param {number} y - The y coordinate
+ * @param {number} range - The range
  * @returns {boolean} True if the coordinates are within the range of the entity, otherwise false.
  */
 export function inRangeOfEntity(entity, x, y, range) {
@@ -24,101 +34,76 @@ export function inRangeOfEntity(entity, x, y, range) {
 }
 
 /**
- * Moves the entity in the specified direction if possible.
- * The movement is based on the entity's direction and current speed.
- * Updates the entity's position on the map while ensuring it stays within boundaries.
- * The movement is constrained by a delay calculated from speed and speedMultiplier.
- * @param {import("../control/PlayerControl").PlayerControl|import("../control/MonsterControl").MonsterControl} entity - The entity.
- * @param {number} dir - The direction to move the entity:
- *   0: Left (x--), 1: Right (x++), 2: Up (y--), 3: Down (y++)
- * @param {number=} timestamp - The current timestamp or performance.now().
+ * Checks if the entities are within the range of each other.
+ * @param {Entity} entity1 - The first entity
+ * @param {Entity} entity2 - The second entity
+ * @returns {boolean} True if the coordinates are within the range of the first entity, otherwise false.
  */
-export function moveEntity(entity, dir, timestamp) {
-	if (entity.hp <= 0) return // must be alive
-	const _timestamp = timestamp || performance.now()
-
-	// check if entity can move on this tick
-	if (typeof entity.movementStart === "number" && _timestamp - entity.movementStart < entity.speed * entity.speedMultiplier) {
-		return // can't move yet
-	}
-	entity.movementStart = _timestamp
-
-	switch (dir) {
-		case DIRECTION.LEFT:
-			entity.dir = DIRECTION.LEFT
-			if (entity.lastX > 0) {
-				entity.lastX--
-			}
-			break
-		case DIRECTION.RIGHT:
-			entity.dir = DIRECTION.RIGHT
-			if (entity.lastX < entity.map.width) {
-				entity.lastX++
-			}
-			break
-		case DIRECTION.UP:
-			entity.dir = DIRECTION.UP
-			if (entity.lastY > 0) {
-				entity.lastY--
-			}
-			break
-		case DIRECTION.DOWN:
-			entity.dir = DIRECTION.DOWN
-			if (entity.lastY < entity.map.height) {
-				entity.lastY++
-			}
-			break
-		default:
-			break
-	}
+export function entityInRangeOfEntity(entity1, entity2) {
+	return Math.abs(entity1.lastX - entity2.lastX) <= entity1.range && Math.abs(entity1.lastY - entity2.lastY) <= entity1.range
 }
 
 /**
- * Makes the entity follow another entity, by moving its position on each tick
- * closer to the target entity. The target must be in the monster's range.
- * If the target moves out of range or dies, the monster will stop following.
- * @param {import("../control/PlayerControl").PlayerControl|import("../control/MonsterControl").MonsterControl} self - Who is following.
- * @param {import("../model/Entity").TEntityProps} target - The target entity to follow.
- * @param {number=} timestamp - The current timestamp or performance.now().
+ * Finds entities in the given radius around a specific point.
+ * @param {import("../maps/WorldMap").WorldMap} map - The map to search for entities.
+ * @param {number} x - The x-coordinate of the center point.
+ * @param {number} y - The y-coordinate of the center point.
+ * @param {number} radius - The radius to search for entities.
+ * @returns {Array<Entity>} - An array of entities within the specified radius.
  */
-export function followEntity(self, target, timestamp) {
-	if (self.hp <= 0) return
-	const _timestamp = timestamp || performance.now()
-	self._following = target
+export function findMapEntitiesInRadius(map, x, y, radius) {
+	const stack = [] // entities can be on top of each other
+	for (const entity of map.entities) {
+		// TODO take entity w and h into account
+		if (
+			(Math.abs((x - (radius / 2)) - entity.lastX) > radius || Math.abs((y - (radius / 2)) - entity.lastY) > radius) &&
+			(Math.abs(x - entity.lastX) > radius || Math.abs(y - entity.lastY) > radius)
+		) continue;
 
-	// check if entity can move on this tick
-	if (self.movementStart === 0) {
-		// can move
-	} else if (_timestamp - self.movementStart < self.speed * self.speedMultiplier) {
-		return
+		stack.push(entity)
 	}
-	self.movementStart = _timestamp
+	return stack
+}
 
-	// if target dies, stop following
-	if (target.hp <= 0) {
-		self._following = null
-		return
-	}
+/**
+ * Find an entity by its ID.
+ * @param {import("../maps/WorldMap").WorldMap} map - The map to search for entities.
+ * @param {number} id - The entity ID to search for.
+ * @returns {Entity} - The entity with the given ID, or `undefined` if not found.
+ */
+export function findMapEntityById(map, id) {
+	return map.entities.find((entity) => entity.id === id)
+}
 
-	// stop at range
-	if (inRangeOfEntity(target, self.lastX, self.lastY, self.range)) {
-		self._following = null
-		return
-	}
+/**
+ * Find an entity by its GID.
+ * @param {import("../maps/WorldMap").WorldMap} map - The map to search for entities.
+ * @param {string} gid - The entity Game ID to search for.
+ * @returns {Entity} - The entity with the given ID, or `undefined` if not found.
+ */
+export function findMapEntityByGid(map, gid) {
+	return map.entities.find((entity) => entity.gid === gid)
+}
 
-	// follow target
-	if (self.lastX > target.lastX) {
-		self.dir = DIRECTION.LEFT
-		self.lastX--
-	} else if (self.lastX < target.lastX) {
-		self.dir = DIRECTION.RIGHT
-		self.lastX++
+/**
+ * Helper to creates monsters.
+ * @param {import("../maps/WorldMap").WorldMap} map - The map to use as reference.
+ * @param {number} quantity - The quantity of monsters to create
+ * @param {import("../model/Entity.js").TEntityProps} monster - The monster to add.
+ * @returns {Array<Entity>}
+ */
+export function createMonster(map, quantity, monster) {
+	let i, x, y, dir, mob
+	const stack = []
+	for (i = 0; i < quantity; i++) {
+		x = monster.lastX || getRandomInt(5, map.width - 5)
+		y = monster.lastY || getRandomInt(5, map.height - 5)
+		dir = monster.dir || Math.floor(Math.random() * 4)
+		//gid = createGameId()
+		mob = new Entity({ ...monster, lastX: x, lastY: y, dir, saveX: x, saveY: y })
+		// Note: this is already set in the maps, where the entities are created
+		//mob.control = new EntityControl(mob, this.world, null, this)
+		stack.push(mob)
 	}
-	if (self.lastY > target.lastY) {
-		self.dir = DIRECTION.UP
-		self.lastY--
-	} else if (self.lastY < target.lastY) {
-		self.dir = DIRECTION.DOWN
-		self.lastY++
-	}
+	return stack
 }

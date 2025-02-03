@@ -12,13 +12,13 @@ export class TablePlayer {
     /**
      * Add a new player to the database.
      * 
-     * @param {import("../model/Player.js").TPlayerProps=} player
+     * @param {import("../model/Entity.js").TEntityProps=} player
      * @returns {Promise<{ affectedRows:number, insertId:number, warningStatus:number }>}
      */
     add(player) {
         // map player object to database columns
         const params = {
-            account_id: player.accountId,
+            account_id: player.aid,
             name: player.name,
             base_level: player.level,
             job_level: player.jobLevel,
@@ -56,7 +56,7 @@ export class TablePlayer {
     /**
      * Update a player in the database.
      * 
-     * @param {import("../model/Player.js").TPlayerProps=} player
+     * @param {import("../model/Entity.js").TEntityProps=} player
      */
     update(player) {
         // map player object to database columns
@@ -98,18 +98,18 @@ export class TablePlayer {
 
     /**
      * Get players by their Account ID.
-     * @param {number} accountId 
-     * @returns {Promise<import("../model/Player.js").TPlayerProps[]>}
+     * @param {number} aid 
+     * @returns {Promise<import("../model/Entity.js").TEntityProps[]>}
      */
-    async getByAccountId(accountId) {
+    async getByAccountId(aid) {
         const rows = await this.db.query(
             `SELECT * FROM player WHERE account_id = ?`,
-            [accountId]
+            [aid]
         )
         // map rows to Player objects
         return rows.map(player => ({
             id: player.id,
-            accountId: player.account_id,
+            aid: player.account_id,
             name: player.name,
             level: player.base_level,
             jobLevel: player.job_level,

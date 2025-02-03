@@ -1,9 +1,13 @@
 import { DIRECTION, ENTITY_TYPE } from "./enum/Entity.js"
+import { findMapEntitiesInRadius } from "./utils/EntityUtil.js"
 
-// TODO make entity follow a target, when in combat
+/**
+ * @module AI
+ * @description AI class for handling AI logic for entities.
+ */
 export class AI {
 	constructor(entity) {
-		/** @type {import("./control/MonsterControl.js").MonsterControl} */
+		/** @type {import("./model/Entity.js").Entity} */
 		this.entity = entity
 		/** @type {number} - Timestamp in milliseconds when the monster last idled */
 		this.iddleStart = 0
@@ -23,7 +27,7 @@ export class AI {
 		// find entities in nearby
 		// and set the target entity
 		// then attack it
-		this.detectNearByEntities(20, timestamp)
+		this.detectNearby(20, timestamp)
 	}
 
 	/**
@@ -45,9 +49,9 @@ export class AI {
 		// check if entity can move
 		// check if entity is still alive and in a map
 		// check if iddleStart is greater than 5000ms
-		if (entity.hp > 0 && entity.map != null) {
+		if (entity.hp > 0 && entity.control.map != null) {
 			// check if monster is in combat, then do not iddle
-			if (entity.attacking != null) {
+			if (entity.control._attacking != null) {
 				return
 			}
 			// make the monster stay put for 5 seconds,
@@ -66,7 +70,7 @@ export class AI {
 			}
 
 			if (entity.dir === DIRECTION.DOWN) {
-				if ((entity.lastY < entity.saveY + 10) && entity.lastY < entity.map.height) {
+				if ((entity.lastY < entity.saveY + 10) && entity.lastY < entity.control.map.height) {
 					entity.lastY++
 				} else {
 					entity.dir = DIRECTION.RIGHT
@@ -74,7 +78,7 @@ export class AI {
 				}
 			}
 			if (entity.dir === DIRECTION.RIGHT) {
-				if ((entity.lastX < entity.saveX + 10) && entity.lastX < entity.map.width) {
+				if ((entity.lastX < entity.saveX + 10) && entity.lastX < entity.control.map.width) {
 					entity.lastX++
 				} else {
 					entity.dir = DIRECTION.UP
@@ -108,10 +112,10 @@ export class AI {
 	 * @returns {boolean} Returns true if the entity's move delay has not exceeded the specified time, otherwise false.
 	 */
 	iddleMoveStartTime(timestamp) {
-		if (this.entity.movementStart !== 0 && timestamp - this.entity.movementStart < this.entity.speed) {
+		if (this.entity.control._moveCd !== 0 && timestamp - this.entity.control._moveCd < this.entity.speed) {
 			return false
 		}
-		this.entity.movementStart = timestamp
+		this.entity.control._moveCd = timestamp
 		return true
 	}
 
@@ -120,17 +124,17 @@ export class AI {
 	 * @param {number} radius - The radius to search for entities.
 	 * @param {number} timestamp `performance.now()` from the world.onTick
 	 */
-	detectNearByEntities(radius, timestamp) {
+	detectNearby(radius, timestamp) {
 		try {
 			const self = this.entity
 
 			// find entities in x tiles radius
-			const nearbyEntities = self.map.findEntitiesInRadius(self.lastX, self.lastY, radius)
+			const nearbyEntities = findMapEntitiesInRadius(self.control.map, self.lastX, self.lastY, radius)
 				.filter(entity => entity.gid !== self.gid) // exclude self
 
 			// no entities in radius
 			if (nearbyEntities.length === 0) {
-				self.attacking = null
+				self.control._attacking = null
 				return
 			}
 
@@ -139,14 +143,14 @@ export class AI {
 			for (const entity of nearbyEntities) {
 				if (entity.type === ENTITY_TYPE.PLAYER) {
 					// start following target
-					self.follow(entity)
+					self.control.follow(entity, timestamp)
 					// has previous target and still in range
 					// then attack it
-					if (self.attacking != null) {
-						self.attack(self.attacking, timestamp)
+					if (self.control._attacking != null) {
+						self.control.attack(self.control._attacking, timestamp)
 					} else {
-						self.attacking = entity
-						self.attack(entity, timestamp)
+						self.control._attacking = entity
+						self.control.attack(entity, timestamp)
 					}
 				}
 			}

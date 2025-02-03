@@ -1,6 +1,6 @@
 import WebSocket, { WebSocketServer } from 'ws';
 import { WorldMap } from './maps/WorldMap.js';
-import { PlayerControl } from './control/PlayerControl.js';
+import { Entity } from './model/Entity.js';
 import { ENTITY_TYPE } from './enum/Entity.js';
 import * as Packets from './Packets.js';
 import { verifyToken } from './utils/jwt.js';
@@ -8,6 +8,8 @@ import { Database } from './db/Database.js';
 import MapLobbyTown from './maps/MapLobbyTown.js';
 import MapPlainFields1 from './maps/MapPlainFields1.js';
 import MapPlainFields2 from './maps/MapPlainFields2.js';
+import { EntityControl } from './control/EntityControl.js';
+import { createGameId } from './utils/EntityUtil.js';
 
 /**
  * @module World
@@ -54,11 +56,23 @@ export class World {
 
 		// event bindings
 		this.socket.on('connection', this.onConnection.bind(this))
+
+		// graceful shutdown
+		process.on('SIGINT', this.onExit.bind(this))
+	}
+
+	onExit() {
+		console.log('World SIGINT signal received. Close all connections and exit.')
+		clearInterval(this.updateTick)
+		this.socket.close()
+		this.dbPools.forEach(pool => pool.end())
+		this.db.close()
+		process.exit(0)
 	}
 
 	/**
 	 * Join a map (or create it if it doesn't exist), and tell the Player to join it
-	 * @param {PlayerControl} player - The Player that wants to join the map
+	 * @param {Entity} player - The Player that wants to join the map
 	 * @param {string} mapName - The name of the map to join (default: "Lobby town")
 	 * @param {number} x - The x coordinate of the map to join (default: -1)
 	 * @param {number} y - The y coordinate of the map to join (default: -1)
@@ -89,7 +103,7 @@ export class World {
 
 	/**
 	 * Called when a new WebSocket connection is established.
-	 * Validates the token and creates a new PlayerControl instance.
+	 * Validates the token and creates a new EntityControl instance.
 	 * 
 	 * @param {WebSocket} ws - The WebSocket connection
 	 * @param {import("http").IncomingMessage} req - The HTTP request
@@ -138,12 +152,17 @@ export class World {
 
 			// Authorized, create new player or load existing player
 			this.playersCountTotal++
-			player = new PlayerControl({
-				world: this,
-				socket: ws,
+			player = new Entity({
+				type: ENTITY_TYPE.PLAYER,
 				id: account.id,
-				accountId: account.id,
+				aid: account.id,
+				gid: createGameId(), // generate unique id for player
 				name: `player-${this.playersCountTotal}`,
+				saveMap: 'Lobby town',
+				saveX: 300,
+				saveY: 200,
+				speed: 1, // DEBUG, make player move really fast
+				range: 10, // DEBUG, make player attack range longer
 			})
 
 			// load players data from database
@@ -159,9 +178,12 @@ export class World {
 				Object.assign(player, players[0])
 			}
 
-			console.log(`[DB#world] Player "${player.name}" (id:${player.id} aid:${player.accountId} gid:${player.gid}) connection established.`)
+			// set player controller
+			player.control = new EntityControl(player, this, ws/*, map */)
 
-			// make the player join the map
+			console.log(`[DB#world] Player "${player.name}" (id:${player.id} aid:${player.aid} gid:${player.gid}) connection established.`)
+
+			// make the player join map and update entity map property
 			this.joinMapByName(
 				player,
 				player.lastMap || 'Lobby town',
@@ -178,16 +200,15 @@ export class World {
 
 	/**
 	 * Called every tick, runs the onTick function of all clients in all maps
-	 * @see PlayerControl.onTick
 	 */
 	onTick() {
 		const timestamp = performance.now()
 		for (const map of this.maps) {
 			for (let entity of map.entities) {
 				try {
-					entity.onTick(timestamp)
+					entity.control.onTick(timestamp)
 				} catch (err) {
-					//console.log(`[World]: ${entity.name} onTick error`, err, entity)
+					console.log(`[World]: ${entity.name} onTick error`, err, entity)
 				}
 			}
 		}
@@ -201,9 +222,9 @@ export class World {
 	broadcast(data, isBinary = false) {
 		for (const map of this.maps) {
 			for (let entity of map.entities) {
-				// Entity with a socket is a Player
-				if (entity instanceof PlayerControl && entity.socket.readyState === WebSocket.OPEN) {
-					entity.socket.send(data, { binary: isBinary });
+				// Entity with a socket is also Player
+				if (entity.type === ENTITY_TYPE.PLAYER && entity.control.socket.readyState === WebSocket.OPEN) {
+					entity.control.socket.send(data, { binary: isBinary });
 				}
 			}
 		}
@@ -213,7 +234,7 @@ export class World {
 	 * Called when a player disconnects from the world.
 	 * Logs the disconnection of the player and broadcasts a leave message.
 	 * Removes the disconnected player from the map entities.
-	 * @param {PlayerControl} player - The player who disconnected.
+	 * @param {Entity} player - The player who disconnected.
 	 */
 	async onClientClose(player) {
 		console.log(`World player disconnected.`);
@@ -221,7 +242,7 @@ export class World {
 		this.broadcast(JSON.stringify(Packets.playerLeave(player.name)));
 
 		// save player data
-		const {affectedRows} = await this.db.player.update(player)
+		const { affectedRows } = await this.db.player.update(player)
 		const state = affectedRows > 0 ? 'saved' : 'not saved'
 		console.log(`[DB#world] Player ${player.name} ${state} (id:${player.id}) disconnected.`)
 

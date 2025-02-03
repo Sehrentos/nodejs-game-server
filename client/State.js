@@ -5,7 +5,7 @@ export const State = {
     /** @type {import("./control/SocketControl.js").default|null} - WebSocket state */
     socket: null,
 
-    /** @type {import("./entities/Player.js").default|null} - player state*/
+    /** @type {import("./entities/Entity.js").default|null} - player entity state */
     player: null,
 
     /** @type {import("./entities/WMap.js").default} - world map state */

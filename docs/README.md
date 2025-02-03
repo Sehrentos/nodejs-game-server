@@ -26,10 +26,8 @@ classDiagram
       +Array entities
       +load()
       +create()
-      +createMonster()
       +playerEnterMap()
       +removeEntity()
-      +findEntitiesInRadius()
       +onLeaveMap()
     }
     WorldMap <|-- MapLobbyTown
@@ -55,21 +53,19 @@ classDiagram
     World <|-- EntityControl
     class EntityControl {
         +int id
-        +int gid
-        +World world
-        +WebSocket socket
-        +Map nearByNPC
-        +Entity _following
+        +string gid
+        +int aid
+        +Entity _follow
         +move()
         +attack()
         +stopAttack()
-        +takeDamage()
+        +takeDamageFrom()
         +die()
         +revive()
         +follow()
         +stopFollow()
         +toSavePosition()
-        +detectNearByEntities()
+        +nearbyAutoAttack()
         +onTick()
         +onError()
         +onMessage()

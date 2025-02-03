@@ -1,7 +1,9 @@
-import { MonsterControl } from '../control/MonsterControl.js'
-import { PortalControl } from '../control/PortalControl.js'
+import { Entity } from '../model/Entity.js'
 import { MOBS } from '../data/MOBS.js'
 import { WorldMap } from './WorldMap.js'
+import { EntityControl } from '../control/EntityControl.js'
+import { ENTITY_TYPE } from '../enum/Entity.js'
+import { createGameId, createMonster } from '../utils/EntityUtil.js'
 
 // create map
 export default class MapPlainFields1 extends WorldMap {
@@ -34,26 +36,37 @@ export default class MapPlainFields1 extends WorldMap {
 		super.create()
 		// create map entities
 		this.entities = [
-			new PortalControl({
-				map: this,
+			new Entity({
+				type: ENTITY_TYPE.PORTAL,
 				lastX: 8,
 				lastY: 800 / 2,
-				portalTo: { id: 1, name: "Lobby town", x: 600 - 8 - 16, y: 400 / 2 },
+				portalId: 1,
+				portalName: "Lobby town",
+				portalX: 600 - 8 - 16,
+				portalY: 400 / 2,
 			}),
-			new PortalControl({
-				map: this,
+			new Entity({
+				type: ENTITY_TYPE.PORTAL,
 				lastX: 1200 - 8,
 				lastY: 800 / 2,
-				portalTo: { id: 3, name: "Plain fields 2", x: 16, y: 800 / 2 },
+				portalId: 3,
+				portalName: "Plain fields 2",
+				portalX: 16,
+				portalY: 800 / 2,
 			}),
 			// to create single monsters:
 			// new MonsterControl({ ...MOBS[1], map: this }), // Bird
 			// new MonsterControl({ ...MOBS[2], map: this }), // Bug
 			// multiple monsters:
-			...this.createMonster(50, { ...MOBS[0], map: this }), // Worm
-			...this.createMonster(50, { ...MOBS[1], map: this }), // Bird
-			...this.createMonster(50, { ...MOBS[2], map: this }), // Bug
+			...createMonster(this, 50, { ...MOBS[0] }), // Worm
+			...createMonster(this, 50, { ...MOBS[1] }), // Bird
+			...createMonster(this, 50, { ...MOBS[2] }), // Bug
 		]
+		// add controllers and game ids
+		this.entities.forEach((entity) => {
+			entity.gid = createGameId()
+			entity.control = new EntityControl(entity, this.world, null, this)
+		})
 
 		console.log(`Map ${this.name} created with ${this.entities.length} entities.`)
 	}

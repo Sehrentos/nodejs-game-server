@@ -2,13 +2,7 @@ import { ENTITY_TYPE } from "./enum/Entity.js"
 
 /**
  * @typedef {import("./model/Entity.js").TEntityProps} TEntity
- * @typedef {import("./model/Player.js").TPlayerProps} TPlayer
- * @typedef {import("./model/Monster.js").TMonsterProps} TMonster
  * @typedef {import("./maps/WorldMap.js").TWorldMapProps} TWorldMap
- * @typedef {import("./control/EntityControl.js").EntityControl} EntityControl
- * @typedef {import("./control/PlayerControl.js").PlayerControl} PlayerControl
- * @typedef {import("./control/MonsterControl.js").MonsterControl} MonsterControl
- * @typedef {import("./control/NPCControl.js").NPCControl} NPCControl
  * 
  * @typedef {Object} TPlayerLeavePacket
  * @prop {string} type
@@ -20,7 +14,7 @@ import { ENTITY_TYPE } from "./enum/Entity.js"
  * 
  * @typedef {Object} TPlayerPacket
  * @prop {string} type
- * @prop {TPlayer} player
+ * @prop {TEntity} player
  * 
  * @typedef {Object} TChatPacket
  * @prop {string} type
@@ -63,7 +57,7 @@ export const updateMap = (map) => ({
 		height: map.height,
 		// @ts-ignore filtered on purpose, so the client does not know everything
 		entities: map.entities.filter((entity) => entity.hp > 0)
-			.map((entity) => (entity.type === ENTITY_TYPE.WARP_PORTAL ? {
+			.map((entity) => (entity.type === ENTITY_TYPE.PORTAL ? {
 				gid: entity.gid,
 				type: entity.type,
 				name: entity.name,
@@ -76,7 +70,7 @@ export const updateMap = (map) => ({
 				hpMax: entity.hpMax,
 				mp: entity.mp,
 				mpMax: entity.mpMax,
-				//@ts-ignore type WARP_PORTAL
+				//@ts-ignore type PORTAL
 				portalTo: entity.portalTo,
 			} : {
 				gid: entity.gid,
@@ -97,7 +91,7 @@ export const updateMap = (map) => ({
 
 /**
  * Creates a "packet" containing the state of Player.
- * @param {PlayerControl} player - A player object.
+ * @param {TEntity} player - A player object.
  * @returns {TPlayerPacket}
  */
 export const updatePlayer = (player) => ({
@@ -149,7 +143,7 @@ export const updatePlayer = (player) => ({
 		equipment: player.equipment,
 		inventory: player.inventory,
 		quests: player.quests,
-		party: player.party,
+		partyId: player.partyId,
 	}
 })
 

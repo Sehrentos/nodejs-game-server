@@ -1,8 +1,9 @@
-import { NPCControl } from '../control/NPCControl.js'
-import { PortalControl } from '../control/PortalControl.js'
+import { Entity } from '../model/Entity.js'
 import { NPCS } from '../data/NPCS.js'
-import { DIRECTION } from '../enum/Entity.js'
+import { DIRECTION, ENTITY_TYPE } from '../enum/Entity.js'
 import { WorldMap } from './WorldMap.js'
+import { EntityControl } from '../control/EntityControl.js'
+import { createGameId } from '../utils/EntityUtil.js'
 
 // create map
 export default class MapLobbyTown extends WorldMap {
@@ -36,42 +37,41 @@ export default class MapLobbyTown extends WorldMap {
 		super.create()
 		// create map entities
 		this.entities = [
-			new PortalControl({
-				map: this,
+			new Entity({
+				type: ENTITY_TYPE.PORTAL,
 				lastX: 600 - 8,
 				lastY: 400 / 2,
-				portalTo: { id: 2, name: "Plain fields 1", x: 16, y: 800 / 2 },
+				portalId: 2,
+				portalName: "Plain fields 1",
+				portalX: 16,
+				portalY: 800 / 2,
 			}),
-			new NPCControl({
+			new Entity({
 				...NPCS[1], // Townsfolk
-				map: this,
 				lastX: 200,
 				lastY: 250,
 				dir: DIRECTION.UP,
 			}),
-			new NPCControl({
+			new Entity({
 				...NPCS[2], // Blacksmith
-				map: this,
 				lastX: 269,
 				lastY: 157,
 				dir: DIRECTION.DOWN,
 			}),
-			new NPCControl({
+			new Entity({
 				...NPCS[3], // Tool dealer
-				map: this,
 				lastX: 313,
 				lastY: 160,
 				dir: DIRECTION.DOWN,
 			}),
-			new NPCControl({
+			new Entity({
 				...NPCS[4], // Merchant
-				map: this,
 				lastX: 216,
 				lastY: 242,
 				dir: DIRECTION.LEFT,
 			}),
-			new NPCControl({
-				map: this,
+			new Entity({
+				type: ENTITY_TYPE.NPC,
 				name: "Stranger",
 				lastX: 584,
 				lastY: 233,
@@ -93,6 +93,11 @@ export default class MapLobbyTown extends WorldMap {
 				</article>`,
 			}),
 		]
+		// add controllers and game ids
+		this.entities.forEach((entity) => {
+			entity.gid = createGameId()
+			entity.control = new EntityControl(entity, this.world, null, this)
+		})
 
 		console.log(`Map ${this.name} created with ${this.entities.length} entities.`)
 	}

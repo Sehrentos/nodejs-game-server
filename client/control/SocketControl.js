@@ -1,5 +1,5 @@
 import { Auth } from "../Auth.js";
-import Player from "../entities/Player.js";
+import Entity from "../entities/Entity.js";
 import WMap from "../entities/WMap.js";
 import { SOCKET_URL } from "../Settings.js";
 import { State } from "../State.js"
@@ -181,16 +181,16 @@ export default class SocketControl {
      * Otherwise, it creates a new player instance with the provided data.
      * Optionally, a custom event can be dispatched to update the player UI.
      *
-     * @param {import("../../src/Packets.js").TPlayer} data - The player data from the server.
+     * @param {import("../../src/Packets.js").TEntity} data - The player data from the server.
      */
     updatePlayer(data) {
         // console.log("Player:", data);
-        if (State.player instanceof Player) {
+        if (State.player instanceof Entity) {
             // update player state
-            State.player.update(data);
+            Object.assign(State.player, data) // naive approach
         } else {
             // or create new player if it doesn't exist
-            State.player = new Player(data);
+            State.player = new Entity(data);
         }
         // option 2. update player state and UI by dispatching a custom event
         // document.dispatchEvent(new CustomEvent("ui-character", { detail: data }));
@@ -243,7 +243,7 @@ export default class SocketControl {
      * @param {import("../../src/Packets.js").TChatPacket} data - The chat data from the server.
      */
     updateChat(data) {
-        // console.log("Chat:", data);
+        console.log("Chat:", data);
         ChatUI.dispatch(data);
     }
 

@@ -109,7 +109,7 @@ export default class Renderer {
     /**
      * Draws the camera view to the world bounds.
      * 
-     * @param {import("../src/model/Player").TPlayerProps} player - The player entity.
+     * @param {import("../src/model/Entity").TEntityProps} player - The player entity.
      */
     drawCamera(player) {
         const cvs = this.canvas
@@ -155,7 +155,7 @@ export default class Renderer {
      * Draws all entities on the map.
      * 
      * @param {import("./entities/WMap.js").WMapProps} map - The map to draw.
-     * @param {import("../src/model/Player").TPlayerProps} player - The player entity.
+     * @param {import("../src/model/Entity").TEntityProps} player - The player entity.
      */
     drawMapEntities(map, player) {
         if (map.entities.length == 0) return;
@@ -167,7 +167,7 @@ export default class Renderer {
             else if (entity.type === ENTITY_TYPE.MONSTER) {
                 this.drawEntityMonster(entity);
             }
-            else if (entity.type === ENTITY_TYPE.WARP_PORTAL) {
+            else if (entity.type === ENTITY_TYPE.PORTAL) {
                 this.drawEntityPortal(entity);
             }
             else if (entity.type === ENTITY_TYPE.PLAYER) {
@@ -179,7 +179,7 @@ export default class Renderer {
 
     /**
      * Draws an NPC entity on the canvas.
-     * @param {import("../src/model/NPC.js").TNPCProps} entity - The NPC entity to draw.
+     * @param {import("../src/model/Entity").TEntityProps} entity - The NPC entity to draw.
      */
     drawEntityNPC(entity) {
         Renderer.drawCircle(this.ctx, "black", entity.lastX, entity.lastY, entity.h / 2);
@@ -189,7 +189,7 @@ export default class Renderer {
 
     /**
      * Draws a warp portal entity on the canvas.
-     * @param {import("../src/model/Portal.js").TPortalProps} entity - The warp portal entity to draw.
+     * @param {import("../src/model/Entity").TEntityProps} entity - The warp portal entity to draw.
      */
     drawEntityPortal(entity) {
         // Portal range is 4, check PortalControl
@@ -200,7 +200,7 @@ export default class Renderer {
 
     /**
      * Draws a monster entity on the canvas.
-     * @param {import("../src/model/Monster.js").TMonsterProps} entity - The monster entity to draw.
+     * @param {import("../src/model/Entity").TEntityProps} entity - The monster entity to draw.
      */
     drawEntityMonster(entity) {
         Renderer.drawCircle(this.ctx, "red", entity.lastX, entity.lastY, entity.h / 2);
@@ -210,8 +210,8 @@ export default class Renderer {
 
     /**
      * Draws a player entity on the canvas.
-     * @param {import("../src/model/Player.js").TPlayerProps} entity - The player entity to draw.
-     * @param {import("../src/model/Player.js").TPlayerProps} player - The player entity from state.
+     * @param {import("../src/model/Entity").TEntityProps} entity - The player entity to draw.
+     * @param {import("../src/model/Entity").TEntityProps} player - The player entity from state.
      */
     drawEntityPlayer(entity, player) {
         // indentify the current player from entities by gid
@@ -322,7 +322,7 @@ export default class Renderer {
      * The line is drawn from the entity's position to the position the entity is facing.
      * The direction is determined by the entity's dir property, which is one of the DIRECTION constants.
      * @param {CanvasRenderingContext2D} ctx - The canvas rendering context.
-     * @param {import("../src/model/Player").TPlayerProps} entity - The entity to draw the facing direction for.
+     * @param {import("../src/model/Entity").TEntityProps} entity - The entity to draw the facing direction for.
      * @param {number} range - The range of the line. Default 2.
      * @param {string} color - The color of the line. default: "white"
      */
