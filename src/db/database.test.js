@@ -1,4 +1,4 @@
-import { Account } from "../model/Account.js";
+import { Account } from "../models/Account.js";
 import { Database } from "./Database.js";
 
 // test Database class

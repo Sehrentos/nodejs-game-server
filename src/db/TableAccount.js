@@ -1,4 +1,4 @@
-import { Account } from "../model/Account.js";
+import { Account } from "../models/Account.js";
 
 const SALT = process.env.DB_SALT || 'your_unique_salt';
 
@@ -15,7 +15,7 @@ export class TableAccount {
 
     /**
      * Note: on duplicate username, it will throw `Error.code='ER_DUP_ENTRY'`
-     * @param {import("../model/Account.js").TAccount=} account - The account object
+     * @param {import("../models/Account.js").TAccount=} account - The account object
      * @returns {Promise<{ affectedRows:number, insertId:number, warningStatus:number }>}
      */
     add(account) {
@@ -48,7 +48,7 @@ export class TableAccount {
      * @param {string} username - The username to validate
      * @param {string} password - The password to validate
      * @param {string=} last_ip - The last IP of the user. optional
-     * @returns {Promise<import("../model/Account.js").Account>} - The account object if the login is valid, otherwise undefined
+     * @returns {Promise<import("../models/Account.js").Account>} - The account object if the login is valid, otherwise undefined
      */
     async login(username, password, last_ip) {
         const rows = await this.db.query(
@@ -68,7 +68,7 @@ export class TableAccount {
     /**
      * Login attempt using the given token.
      * @param {string} token - The token to validate
-     * @returns {Promise<import("../model/Account.js").Account>} - The account object if the login is valid, otherwise undefined
+     * @returns {Promise<import("../models/Account.js").Account>} - The account object if the login is valid, otherwise undefined
      */
     async loginToken(token) {
         const rows = await this.db.query(
@@ -79,4 +79,21 @@ export class TableAccount {
             return new Account(rows[0])
         }
     }
+
+    static CREATE_TABLE = `CREATE TABLE IF NOT EXISTS \`account\` (
+  \`id\` int(11) unsigned NOT NULL auto_increment,
+  \`username\` varchar(30) NOT NULL default '',
+  \`password\` varchar(130) NOT NULL default '',
+  \`email\` varchar(40) NOT NULL default '',
+  \`state\` int(11) unsigned NOT NULL default '0',
+  \`expires\` int(11) unsigned NOT NULL default '0',
+  \`logincount\` mediumint(9) unsigned NOT NULL default '0',
+  \`lastlogin\` datetime,
+  \`last_ip\` varchar(100) NOT NULL default '',
+  \`auth_token\` varchar(2048) DEFAULT NULL,
+  PRIMARY KEY  (\`id\`),
+  UNIQUE KEY \`username\` (\`username\`),
+  UNIQUE KEY \`auth_token\` (\`auth_token\`),
+  KEY \`name\` (\`username\`)
+)`
 }

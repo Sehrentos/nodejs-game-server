@@ -1,5 +1,7 @@
+import 'dotenv/config';
 import path from 'path';
 import url from 'url';
+import webpack from 'webpack';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
@@ -8,6 +10,24 @@ export default {
 	mode: 'development',
 	entry: './client/index.js',
 	plugins: [
+		new webpack.DefinePlugin({
+			'process': {
+				'env': {
+					// [SECURITY WARNING]: Exposing sensitive information directly in
+					// client-side code is a significant security risk. Do NOT include
+					// API keys, secrets, passwords, or other credentials here. These
+					// values will be visible in the browser's source code.
+
+					// non-sensitive config:
+					'HOST': JSON.stringify(process.env.HOST),
+					'PORT': JSON.stringify(process.env.PORT),
+					'SSL_ENABLED': JSON.stringify(process.env.SSL_ENABLED),
+
+					// INSECURE EXAMPLE (DO NOT DO THIS):
+					// 'API_KEY': JSON.stringify(process.env.API_KEY), // VERY BAD - Never expose API keys!
+				}
+			},
+		}),
 		new HtmlWebpackPlugin({
 			title: 'NodeJS Game Server',
 		}),

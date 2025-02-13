@@ -1,4 +1,5 @@
-import WMap from "../entities/WMap.js"
+import { WorldMap } from "../../src/models/WorldMap.js"
+import { TOUCH_AREA_SIZE } from "../Settings.js"
 import { State } from "../State.js"
 
 /**
@@ -46,13 +47,14 @@ export default class TouchControl {
 
         if (this.canvas == null || State.map == null || State.socket == null) return
         const { x, y } = this.getMousePosition(event)
-        const stack = WMap.findEntitiesInRadius(State.map, x, y, 4)
+        const stack = WorldMap.findEntitiesInRadius(State.map, x, y, TOUCH_AREA_SIZE)
 
         // TODO remove logs, when done testing
         console.log(x, y, stack)
 
         // send a "click" message to the server if it's open
         if (State.socket != null && State.socket.readyState === WebSocket.OPEN) {
+            // server EntityControl.onClickPosition
             State.socket.send(JSON.stringify({ type: "click", x, y }))
         }
     }
@@ -70,7 +72,7 @@ export default class TouchControl {
     onMouseMove(event) {
         if (this.canvas == null || State.map == null) return
         const { x, y } = this.getMousePosition(event)
-        const stack = WMap.findEntitiesInRadius(State.map, x, y, 4)
+        const stack = WorldMap.findEntitiesInRadius(State.map, x, y, TOUCH_AREA_SIZE)
 
         // change mouse cursor to pointer
         if (stack.length) {

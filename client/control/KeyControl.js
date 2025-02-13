@@ -18,16 +18,20 @@ export default class KeyControl {
 	}
 
 	onKeydown(e) {
-		if (State.player == null || State.map == null) return
+		if (State.player == null || State.map == null) return false
+		// exclude keydown event while in any input element
+		if ((e.target?.tagName ?? "") === "INPUT") return false
+
 		// handle movement, by sending a message to the server
 		// the server will handle the movement
 		// and update entity position
 		// then it will send an update to the client
 		// and next render cycle will update the player position
-		if (KeyControl.KEYS_MOVE.includes(e.code)) {
-			this.handleMovement(e.code)
-			return true;
-		}
+		if (!KeyControl.KEYS_MOVE.includes(e.code)) return false
+
+		// handle movement
+		this.handleMovement(e.code)
+		return true;
 	}
 
 	/**

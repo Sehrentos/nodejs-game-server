@@ -11,8 +11,8 @@ import { ELEMENT } from "../enum/Element.js";
  * @prop {string=} lastMap - Current map name.
  * @prop {number=} lastX - Current X position.
  * @prop {number=} lastY - Current Y position.
- * @prop {number=} w - The width of the entity.
- * @prop {number=} h - The height of the entity.
+ * @prop {number=} w - The width of the entity. default: 32
+ * @prop {number=} h - The height of the entity. default: 32
  * @prop {string=} saveMap - The map entity was created or saved.
  * @prop {number=} saveX - The position X entity was created or saved.
  * @prop {number=} saveY - The position Y entity was created or saved.
@@ -29,7 +29,7 @@ import { ELEMENT } from "../enum/Element.js";
  * @prop {number=} job - Job. default 0
  * @prop {number=} sex - Sex. default 0
  * @prop {number=} money - Money. default 0
- * @prop {number=} range - Melee attack range. default 2
+ * @prop {number=} range - Melee attack range. default 5
  * @prop {number=} atk - Attack. default 1
  * @prop {number=} atkMultiplier - Attack multiplier. default 1
  * @prop {number=} mAtk - Magic attack. default 1
@@ -42,7 +42,7 @@ import { ELEMENT } from "../enum/Element.js";
  * @prop {number=} mDefMultiplier - Magic defense multiplier. default 1
  * @prop {number=} dodge - Dodge. default 1
  * @prop {number=} dodgeMultiplier - Dodge multiplier. default 1
- * @prop {number=} flee - Flee. default 50
+ * @prop {number=} flee - Flee. default 1
  * @prop {number=} str - Strength. default 1
  * @prop {number=} dex - Dexterity. default 1
  * @prop {number=} vit - Vitality. default 1
@@ -58,15 +58,17 @@ import { ELEMENT } from "../enum/Element.js";
  * @prop {number=} cspdMultiplier - Cast speed multiplier. default 1
  * @prop {number=} crit - Critical. default 1
  * @prop {number=} critMultiplier - Critical multiplier. default 1
- * @prop {number=} hpRecovery - Health recovery. default 0
- * @prop {number=} mpRecovery - Mana recovery. default 0
+ * @prop {number=} hpRecovery - Health recovery amount. default 0
+ * @prop {number=} hpRecoveryRate - Health recovery rate. default 5000
+ * @prop {number=} mpRecovery - Mana recovery amount. default 0
+ * @prop {number=} mpRecoveryRate - Mana recovery rate. default 5000
  * @prop {number[]=} skills - Skill list.
  * @prop {number[]=} equipment - Equipment list.
  * @prop {number[]=} inventory - Inventory list.
  * @prop {number[]=} quests - Quest list.
  * @prop {number=} partyId - Party ID. default 0
- * @prop {number=} portalId - **Portal** destination id.
- * @prop {string=} portalName - **Portal** destination name.
+ * @prop {number=} portalId - **Portal** destination map id.
+ * @prop {string=} portalName - **Portal** destination map name.
  * @prop {number=} portalX - **Portal** destination X position.
  * @prop {number=} portalY - **Portal** destination Y position.
  * @prop {string=} dialog - **NPC** dialog text
@@ -92,8 +94,8 @@ export class Entity {
 		this.lastX = p?.lastX ?? 0
 		this.lastY = p?.lastY ?? 0
 
-		this.w = p?.w ?? 5
-		this.h = p?.h ?? 5
+		this.w = p?.w ?? 64 //32
+		this.h = p?.h ?? 64 //32
 
 		// #region the position entity was created or saved
 		this.saveMap = p?.saveMap ?? ''
@@ -118,14 +120,14 @@ export class Entity {
 		this.job = p?.job ?? 0
 		this.sex = p?.sex ?? 0
 		this.money = p?.money ?? 0
-		this.range = p?.range ?? 2
+		this.range = p?.range ?? 32
 		this.atk = p?.atk ?? 1
 		this.atkMultiplier = p?.atkMultiplier ?? 1
 		this.mAtk = p?.mAtk ?? 1
 		this.mAtkMultiplier = p?.mAtkMultiplier ?? 1
 		this.eAtk = p?.eAtk ?? ELEMENT.NEUTRAL
 		this.eDef = p?.eDef ?? ELEMENT.NEUTRAL
-		this.speed = p?.speed ?? 100
+		this.speed = p?.speed ?? 400
 		this.speedMultiplier = p?.speedMultiplier ?? 1
 		this.aspd = p?.aspd ?? 1000
 		this.aspdMultiplier = p?.aspdMultiplier ?? 1.0
@@ -139,7 +141,7 @@ export class Entity {
 		this.mDefMultiplier = p?.mDefMultiplier ?? 1
 		this.dodge = p?.dodge ?? 1
 		this.dodgeMultiplier = p?.dodgeMultiplier ?? 1
-		this.flee = p?.flee ?? 50
+		this.flee = p?.flee ?? 1
 		this.str = p?.str ?? 1
 		this.agi = p?.agi ?? 1
 		this.vit = p?.vit ?? 1
@@ -147,8 +149,16 @@ export class Entity {
 		this.dex = p?.dex ?? 1
 		this.luk = p?.luk ?? 1
 		this.hit = p?.hit ?? 1
+		// #region Recovery
+		/** @type {number} - Health recovery amount. default 0 */
 		this.hpRecovery = p?.hpRecovery ?? 0
+		/** @type {number} - Health recovery rate. default 5000 */
+		this.hpRecoveryRate = p?.hpRecoveryRate ?? 5000
+		/** @type {number} - Mana recovery amount. default 0 */
 		this.mpRecovery = p?.mpRecovery ?? 0
+		/** @type {number} - Mana recovery rate. default 5000 */
+		this.mpRecoveryRate = p?.mpRecoveryRate ?? 5000
+		// #endregion
 
 		this.skills = p?.skills ?? []
 		this.equipment = p?.equipment ?? []
@@ -159,9 +169,9 @@ export class Entity {
 		// this.party = new Party(p?.party?.name, p?.party?.leader, p?.party?.members)
 
 		// #region NPC
-		/** @type {string} - Dialog text */
+		/** @type {string} - **NPC** dialog text */
 		this.dialog = p?.dialog ?? ''
-		/** @type {number} - Warp portal destination id */
+		/** @type {number} - Warp portal destination map id */
 		this.portalId = p?.portalId ?? 0
 		/** @type {string} - Warp portal destination map name */
 		this.portalName = p?.portalName ?? ''
@@ -175,5 +185,28 @@ export class Entity {
 		/** @type {import("../control/EntityControl.js").EntityControl} */
 		this.control = p?.control ?? null
 		// #endregion
+	}
+
+	/**
+	 * Checks if the given coordinates (x, y) are within the range of the given entity.
+	 * The range is defined as the absolute difference between the entity's position and the given coordinates.
+	 * @param {Entity} entity - The first entity
+	 * @param {number} x - The x coordinate
+	 * @param {number} y - The y coordinate
+	 * @param {number} range - The range
+	 * @returns {boolean} True if the coordinates are within the range of the entity, otherwise false.
+	 */
+	static inRangeOf(entity, x, y, range) {
+		return Math.abs(entity.lastX - x) <= range && Math.abs(entity.lastY - y) <= range
+	}
+
+	/**
+	 * Checks if the entities are within the range of each other.
+	 * @param {Entity} entity1 - The first entity
+	 * @param {Entity} entity2 - The second entity
+	 * @returns {boolean} True if the coordinates are within the range of the first entity, otherwise false.
+	 */
+	static inRangeOfEntity(entity1, entity2) {
+		return Math.abs(entity1.lastX - entity2.lastX) <= entity1.range && Math.abs(entity1.lastY - entity2.lastY) <= entity1.range
 	}
 }

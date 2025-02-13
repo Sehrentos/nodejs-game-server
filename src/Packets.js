@@ -1,8 +1,8 @@
 import { ENTITY_TYPE } from "./enum/Entity.js"
 
 /**
- * @typedef {import("./model/Entity.js").TEntityProps} TEntity
- * @typedef {import("./maps/WorldMap.js").TWorldMapProps} TWorldMap
+ * @typedef {import("./models/Entity.js").TEntityProps} TEntity
+ * @typedef {import("./models/WorldMap.js").TWorldMapProps} TWorldMap
  * 
  * @typedef {Object} TPlayerLeavePacket
  * @prop {string} type
@@ -44,20 +44,20 @@ export const playerLeave = (name) => ({
 /**
  * Creates a "packet" containing the state of map and it's entities.
  * 
- * TODO should entities with hp <= 0 be filtered out? or left for the client to handle death animations ?
- * 
  * @param {TWorldMap} map - A map object.
  * @returns {TMapPacket}
  */
 export const updateMap = (map) => ({
 	type: "map",
 	map: {
+		id: map.id,
 		name: map.name,
 		width: map.width,
 		height: map.height,
 		// @ts-ignore filtered on purpose, so the client does not know everything
 		entities: map.entities.filter((entity) => entity.hp > 0)
 			.map((entity) => (entity.type === ENTITY_TYPE.PORTAL ? {
+				id: entity.id,
 				gid: entity.gid,
 				type: entity.type,
 				name: entity.name,
@@ -65,6 +65,7 @@ export const updateMap = (map) => ({
 				lastY: entity.lastY,
 				w: entity.w,
 				h: entity.h,
+				range: entity.range,
 				dir: entity.dir,
 				hp: entity.hp,
 				hpMax: entity.hpMax,
@@ -73,6 +74,7 @@ export const updateMap = (map) => ({
 				//@ts-ignore type PORTAL
 				portalTo: entity.portalTo,
 			} : {
+				id: entity.id,
 				gid: entity.gid,
 				type: entity.type,
 				name: entity.name,
@@ -80,6 +82,7 @@ export const updateMap = (map) => ({
 				lastY: entity.lastY,
 				w: entity.w,
 				h: entity.h,
+				range: entity.range,
 				dir: entity.dir,
 				hp: entity.hp,
 				hpMax: entity.hpMax,

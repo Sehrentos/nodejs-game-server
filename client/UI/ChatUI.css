@@ -21,6 +21,9 @@
     outline: none;
     cursor: pointer;
     padding: 0.1em 0.5em;
+    background-color: #aaaaaab8;
+    border-top-left-radius: 0.25em;
+    border-top-right-radius: 0.25em;
     transition: 0.3s;
 }
 

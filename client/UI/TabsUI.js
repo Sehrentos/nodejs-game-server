@@ -12,6 +12,13 @@ import "./TabsUI.css"
  * @class TabsUI
  * @description Tabs UI component
  * @exports TabsUI
+ * 
+ * @example m(TabsUI, {
+ *   tabs: [{
+ *     name: "Tab1", active: true, content: "add content, Nodes etc.",
+ *     name: "Tab2", active: false, content: "add content, Nodes etc.",
+ *   })
+ * )
  */
 export default class TabsUI {
     /** @param {m.Vnode<{tabs:TTab[]}>} vnode */

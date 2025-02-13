@@ -1,0 +1,11 @@
+.ui-accordion .header {
+    cursor: pointer;
+}
+
+.ui-accordion .content {
+    display: none;
+}
+
+.ui-accordion .content.open {
+    display: block;
+}

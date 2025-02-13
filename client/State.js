@@ -5,10 +5,10 @@ export const State = {
     /** @type {import("./control/SocketControl.js").default|null} - WebSocket state */
     socket: null,
 
-    /** @type {import("./entities/Entity.js").default|null} - player entity state */
+    /** @type {import("../src/models/Entity.js").Entity} - player entity state */
     player: null,
 
-    /** @type {import("./entities/WMap.js").default} - world map state */
+    /** @type {import("../src/models/WorldMap").WorldMap} - world map state */
     map: null,
 
     /** @type {Array<import("../src/Packets.js").TChatPacket>} - chat state */

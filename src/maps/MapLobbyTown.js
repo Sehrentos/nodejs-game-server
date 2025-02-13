@@ -1,20 +1,20 @@
-import { Entity } from '../model/Entity.js'
+import { Entity } from '../models/Entity.js'
 import { NPCS } from '../data/NPCS.js'
 import { DIRECTION, ENTITY_TYPE } from '../enum/Entity.js'
-import { WorldMap } from './WorldMap.js'
+import { WorldMap } from '../models/WorldMap.js'
 import { EntityControl } from '../control/EntityControl.js'
 import { createGameId } from '../utils/EntityUtil.js'
 
 // create map
 export default class MapLobbyTown extends WorldMap {
-	/** @param {import("./WorldMap.js").TWorldMapProps} props */
+	/** @param {import("../models/WorldMap.js").TWorldMapProps} props */
 	constructor(props = {}) {
 		super({
 			id: 1,
 			name: "Lobby town",
-			width: 600,
-			height: 400,
-			isLoaded: true,
+			width: 2000,
+			height: 1400,
+			isLoaded: true, // no assets to load
 			...props
 		})
 	}
@@ -25,8 +25,9 @@ export default class MapLobbyTown extends WorldMap {
 	 * @returns {Promise<void>} 
 	 */
 	async load() {
-		super.create()
 		// load any assets etc.
+		// ...
+		this.isLoaded = true
 	}
 
 	/**
@@ -34,47 +35,51 @@ export default class MapLobbyTown extends WorldMap {
 	 * @returns {Promise<void>} 
 	 */
 	async create() {
-		super.create()
+		this.isCreated = true
 		// create map entities
 		this.entities = [
 			new Entity({
 				type: ENTITY_TYPE.PORTAL,
-				lastX: 600 - 8,
-				lastY: 400 / 2,
+				lastX: 1975,
+				lastY: 702,
 				portalId: 2,
 				portalName: "Plain fields 1",
-				portalX: 16,
+				portalX: 20,
 				portalY: 800 / 2,
+				range: 32,
+				w: 32,
+				h: 32,
 			}),
 			new Entity({
 				...NPCS[1], // Townsfolk
-				lastX: 200,
-				lastY: 250,
+				lastX: 960,
+				lastY: 1058,
 				dir: DIRECTION.UP,
 			}),
 			new Entity({
 				...NPCS[2], // Blacksmith
-				lastX: 269,
-				lastY: 157,
+				lastX: 505,
+				lastY: 665,
 				dir: DIRECTION.DOWN,
 			}),
 			new Entity({
 				...NPCS[3], // Tool dealer
-				lastX: 313,
-				lastY: 160,
+				lastX: 1169,
+				lastY: 743,
 				dir: DIRECTION.DOWN,
 			}),
 			new Entity({
 				...NPCS[4], // Merchant
-				lastX: 216,
-				lastY: 242,
+				lastX: 606,
+				lastY: 698,
 				dir: DIRECTION.LEFT,
 			}),
 			new Entity({
+				id: 1, // same as Townsfolk
 				type: ENTITY_TYPE.NPC,
 				name: "Stranger",
-				lastX: 584,
-				lastY: 233,
+				lastX: 1863,
+				lastY: 788,
 				dir: DIRECTION.UP,
 				dialog: `<article>
 					<header>Stranger (NPC)</header>
@@ -99,6 +104,6 @@ export default class MapLobbyTown extends WorldMap {
 			entity.control = new EntityControl(entity, this.world, null, this)
 		})
 
-		console.log(`Map ${this.name} created with ${this.entities.length} entities.`)
+		console.log(`[${this.constructor.name}] "${this.name}" is created with ${this.entities.length} entities.`)
 	}
 }

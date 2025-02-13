@@ -8,7 +8,7 @@ import { ENTITY_TYPE } from "../enum/Entity.js";
  * 
  * @example const npc1 = new Entity(NPCS[0]);
  * 
- * @type {Array<import("../model/Entity.js").TEntityProps>}
+ * @type {Array<import("../models/Entity.js").TEntityProps>}
  */
 export const NPCS = [
 	{
@@ -59,6 +59,6 @@ export const NPCS = [
 			<header>Merchant</header>
 			<p>Hey there! I'm the Merchant!</p>
 			<button class="close">X</button>
-		</article>`
+		</article>`,
 	},
 ];

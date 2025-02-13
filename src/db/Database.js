@@ -4,6 +4,13 @@ import { TableAccount } from './TableAccount.js';
 import { TablePlayer } from './TablePlayer.js';
 
 /**
+ * @typedef {Object} TQueryResult
+ * @prop {number} affectedRows
+ * @prop {number} insertId
+ * @prop {number} warningStatus
+ */
+
+/**
  * @module Database
  * Database wrapper class.
  * This class definition creates a Database class

@@ -1,7 +1,7 @@
 import express from 'express';
 import { generateToken } from '../../utils/jwt.js';
 import { DB } from '../../db/index.js';
-import { Account } from '../../model/Account.js';
+import { Account } from '../../models/Account.js';
 const router = express.Router({ caseSensitive: false });
 
 // route /api/register
@@ -33,14 +33,14 @@ router.post('/', async (req, res, next) => {
         if (!newAccount) {
             throw Error('Invalid register credentials');
         }
-        console.log('[DB#register] account registered:', newAccount.insertId)
+        console.log('[API/register] account registered:', newAccount.insertId)
 
         // do login with the new account
         account = await DB.account.login(username, password, last_ip);
         if (!account) {
             throw Error('Invalid login credentials');
         }
-        console.log('[DB#register] account logged in:', account.id)
+        console.log('[API/register] account logged in:', account.id)
 
         // generate JWT token, but filter some account props
         const token = generateToken({
@@ -55,7 +55,7 @@ router.post('/', async (req, res, next) => {
 
         // update web token in database
         await DB.account.updateToken(account.id, token);
-        console.log('[DB#register] account register completed:', account.id)
+        console.log('[API/register] account register completed:', account.id)
 
         res.json({
             type: 'success',
@@ -63,7 +63,7 @@ router.post('/', async (req, res, next) => {
             token
         });
     } catch (err) {
-        console.log('[DB#register] Error', err.message, err.code || '')
+        console.log('[API/register] Error', err.message, err.code || '')
         res.status(401);
         res.json({ type: 'error', message: 'Invalid credentials' });
     } finally {

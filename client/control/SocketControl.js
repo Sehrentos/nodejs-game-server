@@ -1,10 +1,11 @@
 import { Auth } from "../Auth.js";
-import Entity from "../entities/Entity.js";
-import WMap from "../entities/WMap.js";
+import { Entity } from "../../src/models/Entity.js";
+import { WorldMap } from "../../src/models/WorldMap.js";
 import { SOCKET_URL } from "../Settings.js";
 import { State } from "../State.js"
 import ChatUI from "../UI/ChatUI.js";
 import UINPCDialog from "../UI/UINPCDialog.js";
+import CharacterUI from "../UI/CharacterUI.js";
 
 /**
  * @class SocketControl
@@ -15,6 +16,7 @@ export default class SocketControl {
         // binds methods to the `this` context
         this._onSocketOpen = this.onSocketOpen.bind(this)
         this._onSocketClose = this.onSocketClose.bind(this)
+        this._onSocketError = this.onSocketError.bind(this)
         this._onSocketMessage = this.onSocketMessage.bind(this)
 
         this._socket = new WebSocket(SOCKET_URL, [
@@ -23,6 +25,7 @@ export default class SocketControl {
 
         this._socket.onopen = this._onSocketOpen
         this._socket.onclose = this._onSocketClose
+        this._socket.onerror = this._onSocketError
         this._socket.onmessage = this._onSocketMessage
 
         // update chat list, the UI might not ready yet
@@ -80,6 +83,7 @@ export default class SocketControl {
             this._socket.close()
         }
         this._socket.onopen = null
+        this._socket.onerror = null
         this._socket.onclose = null
         this._socket.onmessage = null
     }
@@ -98,6 +102,25 @@ export default class SocketControl {
             from: "client",
             to: "any",
             message: "Socket connected",
+            timestamp: Date.now(),
+        })
+    }
+
+    /**
+     * Handles WebSocket error events.
+     * Note: websocket does not expose any message, so we can't log it.
+     * @param {Event} event - The WebSocket error event.
+     */
+
+    onSocketError(event) {
+        console.error('Socket error:', event);
+
+        ChatUI.dispatch({
+            type: "chat",
+            channel: "log",
+            from: "client",
+            to: "any",
+            message: "Socket error in connection establishment",
             timestamp: Date.now(),
         })
     }
@@ -185,15 +208,14 @@ export default class SocketControl {
      */
     updatePlayer(data) {
         // console.log("Player:", data);
+        // update player state
         if (State.player instanceof Entity) {
-            // update player state
             Object.assign(State.player, data) // naive approach
         } else {
-            // or create new player if it doesn't exist
             State.player = new Entity(data);
         }
-        // option 2. update player state and UI by dispatching a custom event
-        // document.dispatchEvent(new CustomEvent("ui-character", { detail: data }));
+        // update UI by dispatching a custom event
+        CharacterUI.dispatch(data);
         // next render cycle will update the game
     }
 
@@ -214,10 +236,10 @@ export default class SocketControl {
      */
     updateMap(data) {
         // update map state or create new map
-        if (State.map instanceof WMap) {
-            State.map.update(data)
+        if (State.map instanceof WorldMap) {
+            Object.assign(State.map, data) // naive approach
         } else {
-            State.map = new WMap(data)
+            State.map = new WorldMap(data)
         }
 
         // also update some player properties

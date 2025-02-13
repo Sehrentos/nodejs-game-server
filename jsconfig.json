@@ -14,13 +14,15 @@
 		],
 	},
 	"exclude": [
-		"certs",
-		"data",
-		"node_modules",
 		"assets",
+		"certs",
+		"dist",
+		"docs",
+		"node_modules",
 	],
 	"include": [
 		"**/*.js",
+		"**/*.ts",
 	],
 	"typeAcquisition": {
 		"enable": true,

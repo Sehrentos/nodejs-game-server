@@ -12,8 +12,8 @@ export class TablePlayer {
     /**
      * Add a new player to the database.
      * 
-     * @param {import("../model/Entity.js").TEntityProps=} player
-     * @returns {Promise<{ affectedRows:number, insertId:number, warningStatus:number }>}
+     * @param {import("../models/Entity.js").TEntityProps=} player
+     * @returns {Promise<import("./Database.js").TQueryResult>}
      */
     add(player) {
         // map player object to database columns
@@ -56,7 +56,8 @@ export class TablePlayer {
     /**
      * Update a player in the database.
      * 
-     * @param {import("../model/Entity.js").TEntityProps=} player
+     * @param {import("../models/Entity.js").TEntityProps=} player
+     * @returns {Promise<import("./Database.js").TQueryResult>}
      */
     update(player) {
         // map player object to database columns
@@ -99,7 +100,7 @@ export class TablePlayer {
     /**
      * Get players by their Account ID.
      * @param {number} aid 
-     * @returns {Promise<import("../model/Entity.js").TEntityProps[]>}
+     * @returns {Promise<import("../models/Entity.js").TEntityProps[]>}
      */
     async getByAccountId(aid) {
         const rows = await this.db.query(
@@ -138,4 +139,68 @@ export class TablePlayer {
         }))
     }
 
+    /**
+     * Get total palyers.
+     * @returns {Promise<number>}
+     */
+    async count() {
+        const rows = await this.db.query(`SELECT COUNT(*) as count FROM player`)
+        return rows[0].count
+    }
+
+    /**
+     * Set player name. Trim name to 30 chars if too long.
+     * @param {number} id 
+     * @param {string} name 
+     * @returns {Promise<import("./Database.js").TQueryResult>}
+     */
+    async setName(id, name) {
+        // trim name to 30, if too long
+        if (name.length > 30) name = name.slice(0, 30)
+        return this.db.query(`UPDATE player SET name=? WHERE id=?`, [name, id])
+    }
+
+    static CREATE_TABLE = `CREATE TABLE IF NOT EXISTS \`player\` (
+  \`id\` int(11) unsigned NOT NULL auto_increment,
+  \`account_id\` int(11) unsigned NOT NULL default '0',
+  \`name\` varchar(30) NOT NULL DEFAULT '',
+  \`base_level\` smallint(6) unsigned NOT NULL default '1',
+  \`base_exp\` int(11) unsigned NOT NULL default '0',
+  \`job\` smallint(6) unsigned NOT NULL default '0',
+  \`job_level\` smallint(6) unsigned NOT NULL default '1',
+  \`job_exp\` int(11) unsigned NOT NULL default '0',
+  \`money\` int(11) unsigned NOT NULL default '0',
+  \`str\` smallint(4) unsigned NOT NULL default '0',
+  \`agi\` smallint(4) unsigned NOT NULL default '0',
+  \`vit\` smallint(4) unsigned NOT NULL default '0',
+  \`int\` smallint(4) unsigned NOT NULL default '0',
+  \`dex\` smallint(4) unsigned NOT NULL default '0',
+  \`luk\` smallint(4) unsigned NOT NULL default '0',
+  \`crit\` smallint(4) unsigned NOT NULL default '0',
+  \`hp\` int(11) unsigned NOT NULL default '0',
+  \`hp_max\` int(11) unsigned NOT NULL default '0',
+  \`mp\` int(11) unsigned NOT NULL default '0',
+  \`mp_max\` int(11) unsigned NOT NULL default '0',
+  \`matk\` int(11) unsigned NOT NULL default '0',
+  \`party_id\` int(11) unsigned NOT NULL default '0',
+  \`e_def\` int(11) unsigned NOT NULL default '0',
+  \`body\` smallint(5) unsigned NOT NULL default '0',
+  \`weapon\` smallint(6) unsigned NOT NULL default '0',
+  \`shield\` smallint(6) unsigned NOT NULL default '0',
+  \`head\` smallint(6) unsigned NOT NULL default '0',
+  \`robe\` SMALLINT(6) UNSIGNED NOT NULL DEFAULT '0',
+  \`last_map\` varchar(50) NOT NULL default '',
+  \`last_x\` smallint(4) unsigned NOT NULL default '0',
+  \`last_y\` smallint(4) unsigned NOT NULL default '0',
+  \`save_map\` varchar(50) NOT NULL default '',
+  \`save_x\` smallint(4) unsigned NOT NULL default '0',
+  \`save_y\` smallint(4) unsigned NOT NULL default '0',
+  \`sex\` smallint(1) unsigned NOT NULL default '0'
+  \`last_login\` datetime DEFAULT NULL,
+
+  PRIMARY KEY  (\`id\`),
+  UNIQUE KEY \`name_key\` (\`name\`),
+  KEY \`account_id\` (\`account_id\`),
+  KEY \`party_id\` (\`party_id\`)
+) AUTO_INCREMENT=1`
 }

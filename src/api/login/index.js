@@ -39,7 +39,7 @@ loginRouter.post('/', async (req, res, next) => {
 
         // update web token in database
         await DB.account.updateToken(account.id, token);
-        console.log('[DB#login] account login:', account.id)
+        console.log('[API/login] account login:', account.id)
 
         res.json({
             type: 'success',
@@ -47,7 +47,7 @@ loginRouter.post('/', async (req, res, next) => {
             token
         });
     } catch (err) {
-        console.log('[DB#login] Error', err.message, err.code || '')
+        console.log('[API/login] Error', err.message, err.code || '')
         res.status(401);
         res.json({ type: 'error', message: 'Invalid credentials' });
     } finally {

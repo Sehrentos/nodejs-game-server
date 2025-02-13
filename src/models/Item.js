@@ -36,14 +36,4 @@ export class Item {
 		this.mDef = p?.mDef ?? 0
 		this.res = p?.res ?? 0
 	}
-
-	/**
-	 * Find a item by id.
-	 * @param {Array<Item>} items - Item database.
-	 * @param {number} id - Item id.
-	 * @returns {Item|undefined} Item if found, undefined otherwise.
-	 */
-	static findById(items, id) {
-		return items.find(i => i.id === id)
-	}
 }

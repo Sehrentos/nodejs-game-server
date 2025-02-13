@@ -1,6 +1,7 @@
 import { State } from "./State.js"
 import * as Settings from "./Settings.js"
 import { DIRECTION, ENTITY_TYPE } from "../src/enum/Entity.js"
+import { Sprites } from "./sprites/Sprites.js"
 
 /**
  * @class Renderer
@@ -98,7 +99,7 @@ export default class Renderer {
         if (State.map != null && State.player != null) {
             this.drawCamera(State.player)
             this.drawMapLayout(State.map)
-            this.drawMapEntities(State.map, State.player)
+            this.drawMapEntities(State.map)
         }
         // #endregion
 
@@ -109,7 +110,7 @@ export default class Renderer {
     /**
      * Draws the camera view to the world bounds.
      * 
-     * @param {import("../src/model/Entity").TEntityProps} player - The player entity.
+     * @param {import("../src/models/Entity.js").TEntityProps} player - The player entity.
      */
     drawCamera(player) {
         const cvs = this.canvas
@@ -145,19 +146,24 @@ export default class Renderer {
     /**
      * Draws the map layout on the canvas.
      * 
-     * @param {import("./entities/WMap.js").WMapProps} map - The map to draw, including its dimensions.
+     * @param {import("../src/models/WorldMap").TWorldMapProps} map - The map to draw, including its dimensions.
      */
     drawMapLayout(map) {
-        Renderer.drawRect(this.ctx, "#6F9D62", 0, 0, map.width, map.height);
+        // draw map by sprite
+        const sprite = Sprites.map[map.id]
+        if (sprite) {
+            sprite.draw(this.ctx, map)
+        } else {
+            Renderer.drawRect(this.ctx, "#6F9D62", 0, 0, map.width, map.height);
+        }
     }
 
     /**
      * Draws all entities on the map.
      * 
-     * @param {import("./entities/WMap.js").WMapProps} map - The map to draw.
-     * @param {import("../src/model/Entity").TEntityProps} player - The player entity.
+     * @param {import("../src/models/WorldMap").TWorldMapProps} map - The map to draw.
      */
-    drawMapEntities(map, player) {
+    drawMapEntities(map) {
         if (map.entities.length == 0) return;
 
         for (const entity of map.entities) {
@@ -171,7 +177,7 @@ export default class Renderer {
                 this.drawEntityPortal(entity);
             }
             else if (entity.type === ENTITY_TYPE.PLAYER) {
-                this.drawEntityPlayer(entity, player);
+                this.drawEntityPlayer(entity);
             }
         }
     }
@@ -179,51 +185,72 @@ export default class Renderer {
 
     /**
      * Draws an NPC entity on the canvas.
-     * @param {import("../src/model/Entity").TEntityProps} entity - The NPC entity to draw.
+     * @param {import("../src/models/Entity.js").TEntityProps} entity - The NPC entity to draw.
      */
     drawEntityNPC(entity) {
-        Renderer.drawCircle(this.ctx, "black", entity.lastX, entity.lastY, entity.h / 2);
-        Renderer.drawEntityFacingDirection(this.ctx, entity, 4, "white");
-        Renderer.drawEntityName(this.ctx, entity, "white", false);
+        // draw npc by sprite
+        const sprite = Sprites.npc[entity.id]
+        if (sprite) {
+            sprite.draw(this.ctx, entity)
+        } else {
+            Renderer.drawCircle(this.ctx, "black", entity.lastX, entity.lastY, entity.h / 2);
+            Renderer.drawEntityFacingDirection(this.ctx, entity, 4, "white");
+            Renderer.drawEntityName(this.ctx, entity, "white", false);
+        }
     }
 
     /**
      * Draws a warp portal entity on the canvas.
-     * @param {import("../src/model/Entity").TEntityProps} entity - The warp portal entity to draw.
+     * @param {import("../src/models/Entity.js").TEntityProps} entity - The warp portal entity to draw.
      */
     drawEntityPortal(entity) {
-        // Portal range is 4, check PortalControl
-        const range = 4
-        Renderer.drawCircle(this.ctx, "#0000ff91", entity.lastX, entity.lastY, range);
+        // Portal range
+        Renderer.drawCircle(this.ctx, "#0000ff91", entity.lastX, entity.lastY, entity.range);
         Renderer.drawCircle(this.ctx, "blue", entity.lastX, entity.lastY, entity.h / 2);
     }
 
     /**
      * Draws a monster entity on the canvas.
-     * @param {import("../src/model/Entity").TEntityProps} entity - The monster entity to draw.
+     * @param {import("../src/models/Entity.js").TEntityProps} entity - The monster entity to draw.
      */
     drawEntityMonster(entity) {
-        Renderer.drawCircle(this.ctx, "red", entity.lastX, entity.lastY, entity.h / 2);
-        Renderer.drawEntityFacingDirection(this.ctx, entity, 4, "black");
-        Renderer.drawEntityName(this.ctx, entity, "red", true);
+        // draw mob by sprite
+        const sprite = Sprites.mob[entity.id]
+        if (sprite) {
+            sprite.draw(this.ctx, entity, entity.dir === 2 ? 1 : 0)
+        } else {
+            Renderer.drawCircle(this.ctx, "red", entity.lastX, entity.lastY, entity.h / 2);
+            Renderer.drawEntityFacingDirection(this.ctx, entity, entity.range, "black");
+            Renderer.drawEntityName(this.ctx, entity, "red", true);
+        }
     }
 
     /**
      * Draws a player entity on the canvas.
-     * @param {import("../src/model/Entity").TEntityProps} entity - The player entity to draw.
-     * @param {import("../src/model/Entity").TEntityProps} player - The player entity from state.
+     * @param {import("../src/models/Entity.js").TEntityProps} entity - The player entity to draw.
      */
-    drawEntityPlayer(entity, player) {
-        // indentify the current player from entities by gid
-        if (entity.gid === player.gid) {
+    drawEntityPlayer(entity) {
+        // draw player by sprite
+        const spriteId = 0 // TODO entity.spr = SpriteID
+        const sprite = Sprites.player[spriteId]
+        if (sprite) {
+            // 0: Left (x--), 1: Right (x++), 2: Up (y--), 3: Down (y++). default 0
+            switch (entity.dir) {
+                case 0: sprite.draw(this.ctx, entity, 2); break; // left
+                case 1: sprite.draw(this.ctx, entity, 3); break; // right
+                case 2: sprite.draw(this.ctx, entity, 1); break; // back
+                default: sprite.draw(this.ctx, entity, 0); break; // front
+            }
+            // sprite.draw(this.ctx, entity, entity.dir === 2 ? 1 : 0)
+        } else {
+            // fallback
             // draw current player's melee attack radius
-            Renderer.drawCircle(this.ctx, "#2d2d2d57", entity.lastX - ((player.range / 2) - player.w), entity.lastY - ((player.range / 2) - player.h), player.range);
-            Renderer.drawEntityFacingDirection(this.ctx, entity, player.range, "black");
+            Renderer.drawCircle(this.ctx, "#2d2d2d57", entity.lastX - ((entity.range / 2) - entity.w), entity.lastY - ((entity.range / 2) - entity.h), entity.range);
+            Renderer.drawEntityFacingDirection(this.ctx, entity, entity.range, "black");
+            Renderer.drawCircle(this.ctx, "black", entity.lastX, entity.lastY, entity.h / 2);
+            Renderer.drawEntityName(this.ctx, entity, "white", true);
         }
-        Renderer.drawCircle(this.ctx, "black", entity.lastX, entity.lastY, entity.h / 2);
-        Renderer.drawEntityName(this.ctx, entity, "white", true);
     }
-
 
     // #region utilities
 
@@ -297,7 +324,7 @@ export default class Renderer {
     /**
      * Draws the name of the entity on the canvas at the given position.
      * @param {CanvasRenderingContext2D} ctx - The canvas rendering context.
-     * @param {import("../src/model/Entity").TEntityProps} entity - The entity to draw the name for.
+     * @param {import("../src/models/Entity.js").TEntityProps} entity - The entity to draw the name for.
      * @param {string} color - The color to draw the name. default: "white"
      * @param {boolean} showHp - Whether to show the entity's health. Default false.
      */
@@ -322,7 +349,7 @@ export default class Renderer {
      * The line is drawn from the entity's position to the position the entity is facing.
      * The direction is determined by the entity's dir property, which is one of the DIRECTION constants.
      * @param {CanvasRenderingContext2D} ctx - The canvas rendering context.
-     * @param {import("../src/model/Entity").TEntityProps} entity - The entity to draw the facing direction for.
+     * @param {import("../src/models/Entity.js").TEntityProps} entity - The entity to draw the facing direction for.
      * @param {number} range - The range of the line. Default 2.
      * @param {string} color - The color of the line. default: "white"
      */

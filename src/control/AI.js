@@ -1,5 +1,6 @@
-import { DIRECTION, ENTITY_TYPE } from "./enum/Entity.js"
-import { findMapEntitiesInRadius } from "./utils/EntityUtil.js"
+import { ENTITY_AI_NEARBY_RANGE, ENTITY_IDDLE_MOVE_MAX, ENTITY_IDDLE_TIME } from "../Constants.js"
+import { DIRECTION, ENTITY_TYPE } from "../enum/Entity.js"
+import { WorldMap } from "../models/WorldMap.js"
 
 /**
  * @module AI
@@ -7,7 +8,7 @@ import { findMapEntitiesInRadius } from "./utils/EntityUtil.js"
  */
 export class AI {
 	constructor(entity) {
-		/** @type {import("./model/Entity.js").Entity} */
+		/** @type {import("../models/Entity.js").Entity} */
 		this.entity = entity
 		/** @type {number} - Timestamp in milliseconds when the monster last idled */
 		this.iddleStart = 0
@@ -27,7 +28,7 @@ export class AI {
 		// find entities in nearby
 		// and set the target entity
 		// then attack it
-		this.detectNearby(20, timestamp)
+		this.detectNearby(ENTITY_AI_NEARBY_RANGE, timestamp)
 	}
 
 	/**
@@ -41,7 +42,7 @@ export class AI {
 	 * dir = 2 it will not move straight up (y--)
 	 * dir = 3 it will not move straight left (x--)
 	 * it can't move out of the map max width/height
-	 * it can't mode more than 10 times from the original saveX/saveY positions
+	 * it can't mode more than ENTITY_IDDLE_MOVE_MAX from the original saveX/saveY positions
 	 */
 	onIddleMovement(timestamp) {
 		const entity = this.entity
@@ -55,68 +56,52 @@ export class AI {
 				return
 			}
 			// make the monster stay put for 5 seconds,
-			// every 5 seconds it will move again
+			// after it will move again
 			if (this.iddleStart === 0) {
 				this.iddleStart = timestamp
 				return
 			}
-			if ((timestamp - this.iddleStart) < 5000) {
+			if ((timestamp - this.iddleStart) < ENTITY_IDDLE_TIME) {
 				return
 			}
 
 			// check movement delay
-			if (!this.iddleMoveStartTime(timestamp)) {
-				return
-			}
+			if (this.entity.control._moveCd.isNotExpired(timestamp)) return
 
 			if (entity.dir === DIRECTION.DOWN) {
-				if ((entity.lastY < entity.saveY + 10) && entity.lastY < entity.control.map.height) {
-					entity.lastY++
+				if ((entity.lastY < entity.saveY + ENTITY_IDDLE_MOVE_MAX) && entity.lastY < entity.control.map.height) {
+					entity.control.move(DIRECTION.DOWN, timestamp)
 				} else {
+					// next direction
 					entity.dir = DIRECTION.RIGHT
 					this.iddleStart = timestamp
 				}
 			}
 			if (entity.dir === DIRECTION.RIGHT) {
-				if ((entity.lastX < entity.saveX + 10) && entity.lastX < entity.control.map.width) {
-					entity.lastX++
+				if ((entity.lastX < entity.saveX + ENTITY_IDDLE_MOVE_MAX) && entity.lastX < entity.control.map.width) {
+					entity.control.move(DIRECTION.RIGHT, timestamp)
 				} else {
 					entity.dir = DIRECTION.UP
 					this.iddleStart = timestamp
 				}
 			}
 			if (entity.dir === DIRECTION.UP) {
-				if ((entity.lastY > entity.saveY - 10) && entity.lastY > 0) {
-					entity.lastY--
+				if ((entity.lastY > entity.saveY - ENTITY_IDDLE_MOVE_MAX) && entity.lastY > 0) {
+					entity.control.move(DIRECTION.UP, timestamp)
 				} else {
 					entity.dir = DIRECTION.LEFT
 					this.iddleStart = timestamp
 				}
 			}
 			if (entity.dir === DIRECTION.LEFT) {
-				if ((entity.lastX > entity.saveX - 10) && entity.lastX > 0) {
-					entity.lastX--
+				if ((entity.lastX > entity.saveX - ENTITY_IDDLE_MOVE_MAX) && entity.lastX > 0) {
+					entity.control.move(DIRECTION.LEFT, timestamp)
 				} else {
 					entity.dir = DIRECTION.DOWN
 					this.iddleStart = timestamp
 				}
 			}
 		}
-	}
-
-	/**
-	 * Function to control the movement start time of the entity.
-	 * It checks if the entity's movement timer has reached a certain delay specified in milliseconds.
-	 * Entity speed and speedMultiplier are used to calculate the delay.
-	 * 
-	 * @returns {boolean} Returns true if the entity's move delay has not exceeded the specified time, otherwise false.
-	 */
-	iddleMoveStartTime(timestamp) {
-		if (this.entity.control._moveCd !== 0 && timestamp - this.entity.control._moveCd < this.entity.speed) {
-			return false
-		}
-		this.entity.control._moveCd = timestamp
-		return true
 	}
 
 	/**
@@ -129,7 +114,7 @@ export class AI {
 			const self = this.entity
 
 			// find entities in x tiles radius
-			const nearbyEntities = findMapEntitiesInRadius(self.control.map, self.lastX, self.lastY, radius)
+			const nearbyEntities = WorldMap.findEntitiesInRadius(self.control.map, self.lastX, self.lastY, radius)
 				.filter(entity => entity.gid !== self.gid) // exclude self
 
 			// no entities in radius
@@ -142,6 +127,10 @@ export class AI {
 			// then attack it
 			for (const entity of nearbyEntities) {
 				if (entity.type === ENTITY_TYPE.PLAYER) {
+					// when player used portal, await it's cooldown to end before attack
+					if (entity.control._portalUseCd.isNotExpired(timestamp)) {
+						continue; // skip to next target
+					}
 					// start following target
 					self.control.follow(entity, timestamp)
 					// has previous target and still in range
@@ -152,6 +141,7 @@ export class AI {
 						self.control._attacking = entity
 						self.control.attack(entity, timestamp)
 					}
+					return
 				}
 			}
 		} catch (error) {

@@ -6,7 +6,7 @@
  * 
  * @example const knife = new Item(ITEMS[0]);
  * 
- * @type {Array<import("../model/Item.js").TItemProps>}
+ * @type {Array<import("../models/Item.js").TItemProps>}
  */
 export const ITEMS = [
 	{
