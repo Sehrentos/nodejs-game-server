@@ -32,6 +32,7 @@ export default class LoginUI {
 					id: "username",
 					placeholder: "Username",
 					required: true,
+					autofocus: true,
 				}),
 				m("input", {
 					type: "password",

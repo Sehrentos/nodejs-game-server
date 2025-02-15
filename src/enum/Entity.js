@@ -1,5 +1,5 @@
 /**
- * The entity types.
+ * The entity types
  */
 export const ENTITY_TYPE = {
 	NPC: 0,
@@ -7,9 +7,13 @@ export const ENTITY_TYPE = {
 	MONSTER: 2,
 	PORTAL: 3,
 }
+
 /**
- * The entity directions.
- * 0: Left (x--), 1: Right (x++), 2: Up (y--), 3: Down (y++)
+ * The entity directions
+ * - 0 Left (x--)
+ * - 1 Right (x++)
+ * - 2 Up (y--)
+ * - 3 Down (y++)
  */
 export const DIRECTION = {
 	LEFT: 0,

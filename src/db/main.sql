@@ -1,7 +1,11 @@
-CREATE DATABASE `game_server`;
+-- MariaDB/MySQL database
+CREATE DATABASE IF NOT EXISTS `game_server`;
+
 USE `game_server`;
 
-DROP TABLE `account`;
+-- Drop the table if it exists
+-- and create the table again
+DROP TABLE IF EXISTS `account`;
 
 --
 -- Table structure for table `account`
@@ -24,15 +28,18 @@ CREATE TABLE IF NOT EXISTS `account` (
   KEY `name` (`username`)
 );
 
---INSERT INTO `account` (username, password, email, state, expires, logincount, lastlogin, last_ip, auth_token)
---VALUES ('john_doe', 'password123', 'johndoe@example.com', 0, 0, 0, NOW(), '127.0.0.1', '');
-
+--
+-- Dumping data for table `account`
+--
 INSERT INTO `account` (username, password, email, state, expires, logincount, lastlogin, last_ip, auth_token)
-VALUES ('john_doe', SHA2(CONCAT('password123', 'your_unique_salt'), 512), 'johndoe@example.com', 0, 0, 0, NOW(), '127.0.0.1', '');
+VALUES ('tester', SHA2(CONCAT('password123', 'your_unique_salt'), 512), 'tester@example.com', 0, 0, 0, NOW(), '127.0.0.1', '');
 
+-- Drop the table if it exists
+-- and create the table again
+DROP TABLE IF EXISTS `player`;
 
 --
--- Table structure for table `player` TODO, this is not yet complete
+-- Table structure for table `player`
 --
 CREATE TABLE IF NOT EXISTS `player` (
   `id` int(11) unsigned NOT NULL auto_increment,
@@ -50,28 +57,19 @@ CREATE TABLE IF NOT EXISTS `player` (
   `int` smallint(4) unsigned NOT NULL default '0',
   `dex` smallint(4) unsigned NOT NULL default '0',
   `luk` smallint(4) unsigned NOT NULL default '0',
-  `crit` smallint(4) unsigned NOT NULL default '0',
   `hp` int(11) unsigned NOT NULL default '0',
   `hp_max` int(11) unsigned NOT NULL default '0',
   `mp` int(11) unsigned NOT NULL default '0',
   `mp_max` int(11) unsigned NOT NULL default '0',
-  `matk` int(11) unsigned NOT NULL default '0',
   `party_id` int(11) unsigned NOT NULL default '0',
-  `e_def` int(11) unsigned NOT NULL default '0',
-  `body` smallint(5) unsigned NOT NULL default '0',
-  `weapon` smallint(6) unsigned NOT NULL default '0',
-  `shield` smallint(6) unsigned NOT NULL default '0',
-  `head` smallint(6) unsigned NOT NULL default '0',
-  `robe` SMALLINT(6) UNSIGNED NOT NULL DEFAULT '0',
   `last_map` varchar(50) NOT NULL default '',
   `last_x` smallint(4) unsigned NOT NULL default '0',
   `last_y` smallint(4) unsigned NOT NULL default '0',
   `save_map` varchar(50) NOT NULL default '',
   `save_x` smallint(4) unsigned NOT NULL default '0',
   `save_y` smallint(4) unsigned NOT NULL default '0',
-  `sex` smallint(1) unsigned NOT NULL default '0'
+  `sex` smallint(1) unsigned NOT NULL default '0',
   `last_login` datetime DEFAULT NULL,
-
   PRIMARY KEY  (`id`),
   UNIQUE KEY `name_key` (`name`),
   KEY `account_id` (`account_id`),

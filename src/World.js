@@ -200,6 +200,8 @@ export class World {
 
 			// create new player if not found
 			if (players.length === 0) {
+				// Note: insertId can be BigInt or Number
+				// JSON.stringify can't convert BigInt
 				let { insertId } = await this.db.player.add(player)
 				player.id = insertId // update player id
 			} else {
@@ -211,7 +213,7 @@ export class World {
 			// Note: control.map will be set in onEnterMap
 			player.control = new EntityControl(player, this, ws/*, map */)
 
-			console.log(`[World] Player "${player.name}" (id:${player.id} aid:${player.aid} gid:${player.gid}) connection established.`)
+			console.log(`[World] Player "${player.name}" (id:${player.id} aid:${player.aid} lastLogin:${player.lastLogin}) connection established.`)
 
 			// make the player join map and update entity map property
 			this.joinMapByName(
@@ -238,7 +240,7 @@ export class World {
 				try {
 					entity.control.onTick(timestamp)
 				} catch (err) {
-					console.log(`[World] ${entity.name} onTick error`, err, entity)
+					console.log(`[World] ${entity.name} onTick error`, err, entity.aid, entity.name)
 				}
 			}
 		}

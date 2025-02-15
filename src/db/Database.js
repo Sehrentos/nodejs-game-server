@@ -63,38 +63,3 @@ export class Database {
     return this.pool.end();
   }
 }
-
-// const pool = mariadb.createPool({
-//   host: process.env.DB_HOST || '127.0.0.1',
-//   user: process.env.DB_USER || 'myUser',
-//   password: process.env.DB_PASS || 'myPassword',
-//   database: process.env.DB_DATABASE || 'myDatabase',
-//   port: Number(process.env.DB_PORT) || 3306,
-//   connectionLimit: Number(process.env.DB_CONNECTION_LIMIT) || 5
-// });
-
-// async function asyncFunction() {
-//   let conn;
-//   try {
-//     conn = await pool.getConnection();
-//     const rows = await conn.query("SELECT username from account");
-//     console.log(rows); //[ {val: 1}, meta: ... ]
-//     // const res = await conn.query("INSERT INTO myTable value (?, ?)", [1, "mariadb"]);
-//     // console.log(res); // { affectedRows: 1, insertId: 1, warningStatus: 0 }
-
-//   } catch (err) {
-//     throw err;
-//   } finally {
-//     if (conn) conn.end();
-//   }
-// }
-
-// asyncFunction().then(() => {
-//   pool.end();
-// });
-
-/*
-INSERT INTO `account` (username, password, email, state, expires, logincount, lastlogin, last_ip, auth_token)
-VALUES ('john_doe', SHA2(CONCAT('password123', ${SALT}), 512), 'johndoe@example.com', 0, 0, 0, NOW(), '127.0.0.1', NULL);
-
-*/

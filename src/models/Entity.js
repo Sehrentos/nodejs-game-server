@@ -3,9 +3,9 @@ import { ELEMENT } from "../enum/Element.js";
 
 /**
  * @typedef {Object} TEntityProps
- * @prop {number=} id - Database id.
- * @prop {string=} gid - Game id.
- * @prop {number=} aid - Account ID. default 0
+ * @prop {bigint|number|string=} id - Database ID. Note: use type `string` if `bigint` (MariaDB int(11) auto_increment)
+ * @prop {string=} gid - Game ID.
+ * @prop {bigint|number|string=} aid - Account ID. Note: use type `string` if `bigint` (MariaDB int(11) auto_increment)
  * @prop {string=} name - Visual name.
  * @prop {number=} type - Entity type. default ENTITY_TYPE.NPC
  * @prop {string=} lastMap - Current map name.
@@ -28,6 +28,7 @@ import { ELEMENT } from "../enum/Element.js";
  * @prop {number=} jobExp - Job experience. default 0
  * @prop {number=} job - Job. default 0
  * @prop {number=} sex - Sex. default 0
+ * @prop {Date=} lastLogin - Last login date.
  * @prop {number=} money - Money. default 0
  * @prop {number=} range - Melee attack range. default 5
  * @prop {number=} atk - Attack. default 1
@@ -85,8 +86,11 @@ export class Entity {
 	 * @param {TEntityProps} p 
 	 */
 	constructor(p) {
+		/** @type {bigint|number|string=} Database ID. Note: use type `string` if `bigint` (MariaDB int(11) auto_increment) */
 		this.id = p?.id ?? 0
+		/** @type {string} Game ID */
 		this.gid = p?.gid ?? ''
+		/** @type {bigint|number|string=} AccountID. Note: use type `string` if `bigint` (MariaDB int(11) auto_increment) */
 		this.aid = p?.aid ?? 0
 		this.type = p?.type ?? ENTITY_TYPE.NPC
 		this.name = p?.name ?? ''
@@ -112,13 +116,13 @@ export class Entity {
 		/** @type {DOMHighResTimeStamp} - time of death. default 0 */
 		this.death = p?.death ?? 0
 
-		this.aid = p?.aid ?? 0
 		this.level = p?.level ?? 1
 		this.jobLevel = p?.jobLevel ?? 1
 		this.baseExp = p?.baseExp ?? 0
 		this.jobExp = p?.jobExp ?? 0
 		this.job = p?.job ?? 0
 		this.sex = p?.sex ?? 0
+		this.lastLogin = p?.lastLogin ?? new Date()
 		this.money = p?.money ?? 0
 		this.range = p?.range ?? 32
 		this.atk = p?.atk ?? 1

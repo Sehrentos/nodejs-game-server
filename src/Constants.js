@@ -12,28 +12,35 @@ export const COOLDOWN_SOCKET_SEND_PLAYER = 5000
 export const COOLDOWN_PORTAL_USE = 5000
 
 /**
- * The touch area size to find targets, when player click/touch screen.
- * Set same value in the client code.
- */
-export const ENTITY_TOUCH_AREA_SIZE = 25
-/**
  * **Monster** The time in milliseconds after which an entity will be automatically revived.
  */
 export const ENTITY_AUTO_REVIVE_TIME = 5 * 60 * 1000 // 5 minutes
 /**
  * **Monster** The time in milliseconds the entity will idle, before moving.
  */
-export const ENTITY_IDDLE_TIME = 5000 // 5 seconds
+export const ENTITY_AI_IDDLE_TIME = 5000 // 5 seconds
 /**
  * **Monster** The max distance in pixels from 
  * the original position that the entity can move. 
  * While idle.
  */
-export const ENTITY_IDDLE_MOVE_MAX = 30 // pixels
+export const ENTITY_AI_IDDLE_MOVE_MAX = 30 // pixels
 /**
  * **Monster** The range in pixels to detect other entities.
  */
 export const ENTITY_AI_NEARBY_RANGE = 80
+
+/**
+ * The touch area size (in pixels) to find targets, 
+ * when player click/touch screen.
+ * Set same value in the client-side code.
+ */
+export const PLAYER_TOUCH_AREA_SIZE = 25
+/**
+ * **Socket** The view area size (in pixels) to find entities.
+ * Found entities will be sent to the client. Set `0` for no limit.
+ */
+export const PLAYER_VIEW_AREA_SIZE = 400
 
 // #region player stats
 export const PLAYER_BASE_HP = 100

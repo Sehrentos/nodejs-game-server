@@ -1,4 +1,6 @@
+import { PLAYER_VIEW_AREA_SIZE } from "./Constants.js"
 import { ENTITY_TYPE } from "./enum/Entity.js"
+import { Entity } from "./models/Entity.js"
 
 /**
  * @typedef {import("./models/Entity.js").TEntityProps} TEntity
@@ -44,10 +46,11 @@ export const playerLeave = (name) => ({
 /**
  * Creates a "packet" containing the state of map and it's entities.
  * 
- * @param {TWorldMap} map - A map object.
+ * @param {Entity} player
+ * @param {TWorldMap} map
  * @returns {TMapPacket}
  */
-export const updateMap = (map) => ({
+export const updateMap = (player, map) => ({
 	type: "map",
 	map: {
 		id: map.id,
@@ -55,40 +58,44 @@ export const updateMap = (map) => ({
 		width: map.width,
 		height: map.height,
 		// @ts-ignore filtered on purpose, so the client does not know everything
-		entities: map.entities.filter((entity) => entity.hp > 0)
-			.map((entity) => (entity.type === ENTITY_TYPE.PORTAL ? {
-				id: entity.id,
-				gid: entity.gid,
-				type: entity.type,
-				name: entity.name,
-				lastX: entity.lastX,
-				lastY: entity.lastY,
-				w: entity.w,
-				h: entity.h,
-				range: entity.range,
-				dir: entity.dir,
-				hp: entity.hp,
-				hpMax: entity.hpMax,
-				mp: entity.mp,
-				mpMax: entity.mpMax,
-				//@ts-ignore type PORTAL
-				portalTo: entity.portalTo,
-			} : {
-				id: entity.id,
-				gid: entity.gid,
-				type: entity.type,
-				name: entity.name,
-				lastX: entity.lastX,
-				lastY: entity.lastY,
-				w: entity.w,
-				h: entity.h,
-				range: entity.range,
-				dir: entity.dir,
-				hp: entity.hp,
-				hpMax: entity.hpMax,
-				mp: entity.mp,
-				mpMax: entity.mpMax,
-			})),
+		entities: map.entities.filter(PLAYER_VIEW_AREA_SIZE === 0
+			? (entity) => entity.hp > 0
+			: (entity) => entity.hp > 0 && Entity.inRangeOf(player, entity.lastX, entity.lastY, PLAYER_VIEW_AREA_SIZE)
+		).map((entity) => (entity.type === ENTITY_TYPE.PORTAL ? {
+			id: typeof entity.id === "bigint" ? entity.id.toString() : entity.id,
+			gid: entity.gid,
+			type: entity.type,
+			name: entity.name,
+			lastX: entity.lastX,
+			lastY: entity.lastY,
+			w: entity.w,
+			h: entity.h,
+			range: entity.range,
+			dir: entity.dir,
+			hp: entity.hp,
+			hpMax: entity.hpMax,
+			mp: entity.mp,
+			mpMax: entity.mpMax,
+			// portal only
+			portalName: entity.portalName,
+			portalX: entity.portalX,
+			portalY: entity.portalY,
+		} : {
+			id: typeof entity.id === "bigint" ? entity.id.toString() : entity.id,
+			gid: entity.gid,
+			type: entity.type,
+			name: entity.name,
+			lastX: entity.lastX,
+			lastY: entity.lastY,
+			w: entity.w,
+			h: entity.h,
+			range: entity.range,
+			dir: entity.dir,
+			hp: entity.hp,
+			hpMax: entity.hpMax,
+			mp: entity.mp,
+			mpMax: entity.mpMax,
+		}))
 	}
 })
 

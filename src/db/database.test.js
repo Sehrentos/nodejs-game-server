@@ -17,6 +17,8 @@ import { Database } from "./Database.js";
         const addAccount = await db.account.add(new Account({
             username: 'john_doe',
             password: 'password123',
+            email: 'johndoe@example.com',
+            last_ip: '127.0.0.1',
         }));
         console.log('add account:', addAccount)
 

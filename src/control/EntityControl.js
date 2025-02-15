@@ -19,7 +19,7 @@ import { onEntityClickPosition } from '../events/onEntityClickPosition.js';
 import { onEntityCloseDialog } from '../events/onEntityCloseDialog.js';
 import { onEntityChat } from '../events/onEntityChat.js';
 import { onEntityMove } from '../events/onEntityMove.js';
-import Cooldown from '../utils/cooldown.js';
+import Cooldown from '../utils/Cooldown.js';
 
 export class EntityControl {
 	/**
@@ -161,9 +161,9 @@ export class EntityControl {
 	onTickPlayer(timestamp) {
 		// update client map data,
 		// so the client can update the map with new entity positions
-		if (this._socketSentMapUpdateCd.isExpired(timestamp)) {
+		if (this._socketSentMapUpdateCd.isExpired(timestamp) && this.map != null) {
 			this._socketSentMapUpdateCd.set(timestamp + COOLDOWN_SOCKET_SEND_MAP)
-			this.socket.send(JSON.stringify(Packets.updateMap(this.map)));
+			this.socket.send(JSON.stringify(Packets.updateMap(this.entity, this.map)));
 		}
 
 		// send full player state update every x seconds
@@ -443,21 +443,30 @@ export class EntityControl {
 	 * @param {number} timestamp - The current timestamp in milliseconds
 	 */
 	moveTo(x, y, timestamp) {
-		// already at target position
-		if (x === this.entity.lastX && y === this.entity.lastY) {
-			this._moveTo = null
-			return
-		}
-		// already in range of target position
-		if (Math.abs(x - this.entity.lastX) <= 4 && Math.abs(y - this.entity.lastY) <= 4) {
-			this._moveTo = null
-			return
-		}
-		const dir = this.getMoveDir(x, y)
-		this.move(dir, timestamp)
 		// set move to position
 		// next tick will move entity closer to this position
 		this._moveTo = { x, y }
+
+		// calculate direction
+		const dir = this.getMoveDir(x, y)
+
+		// move
+		if (dir !== undefined) {
+			this.move(dir, timestamp)
+
+			// already at target positions
+			if (Math.abs(x - this.entity.lastX) <= 1) {
+				this._moveTo.x = -1
+			}
+			if (Math.abs(y - this.entity.lastY) <= 1) {
+				this._moveTo.y = -1
+			}
+			if (this._moveTo.x === -1 && this._moveTo.y === -1) {
+				this._moveTo = null // stopMoveTo
+			}
+		} else {
+			this._moveTo = null // stopMoveTo
+		}
 	}
 
 	/**
@@ -476,10 +485,10 @@ export class EntityControl {
 	 * @returns {number}
 	 */
 	getMoveDir(x, y) {
-		if (x < this.entity.lastX) return DIRECTION.LEFT
-		if (x > this.entity.lastX) return DIRECTION.RIGHT
-		if (y < this.entity.lastY) return DIRECTION.UP
-		if (y > this.entity.lastY) return DIRECTION.DOWN
+		if (x > -1 && x < this.entity.lastX) return DIRECTION.LEFT
+		if (x > -1 && x > this.entity.lastX) return DIRECTION.RIGHT
+		if (y > -1 && y < this.entity.lastY) return DIRECTION.UP
+		if (y > -1 && y > this.entity.lastY) return DIRECTION.DOWN
 	}
 
 	/**

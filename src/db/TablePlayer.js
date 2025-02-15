@@ -25,15 +25,14 @@ export class TablePlayer {
             base_exp: player.baseExp,
             job_exp: player.jobExp,
             job: player.job,
-            money: player.money,
             sex: player.sex,
+            money: player.money,
             str: player.str,
             agi: player.agi,
             vit: player.vit,
             int: player.int,
             dex: player.dex,
             luk: player.luk,
-            crit: player.crit,
             hp: player.hp,
             hp_max: player.hpMax,
             mp: player.mp,
@@ -43,12 +42,13 @@ export class TablePlayer {
             last_y: player.lastY,
             save_map: player.saveMap,
             save_x: player.saveX,
-            save_y: player.saveY
+            save_y: player.saveY,
+            // last_login: player.lastLogin,
         }
         const names = Object.keys(params).map((v) => '`' + v + '`').join(',')
         const values = Object.values(params)
         return this.db.query(
-            `INSERT INTO player (${names}) VALUES (${values.map(() => '?').join(',')})`,
+            `INSERT INTO player (${names}, last_login) VALUES (${values.map(() => '?').join(',')}, NOW())`,
             values
         )
     }
@@ -68,15 +68,14 @@ export class TablePlayer {
             base_exp: player.baseExp,
             job_exp: player.jobExp,
             job: player.job,
-            money: player.money,
             sex: player.sex,
+            money: player.money,
             str: player.str,
             agi: player.agi,
             vit: player.vit,
             int: player.int,
             dex: player.dex,
             luk: player.luk,
-            crit: player.crit,
             hp: player.hp,
             hp_max: player.hpMax,
             mp: player.mp,
@@ -86,13 +85,14 @@ export class TablePlayer {
             last_y: player.lastY,
             save_map: player.saveMap,
             save_x: player.saveX,
-            save_y: player.saveY
+            save_y: player.saveY,
+            // last_login: player.lastLogin,
         }
         // to `name`=? pairs
         const names = Object.keys(params).map((v) => '`' + v + '`=?').join(',')
         const values = Object.values(params)
         return this.db.query(
-            `UPDATE player SET ${names} WHERE id=?`,
+            `UPDATE player SET ${names}, last_login = NOW() WHERE id=?`,
             [...values, player.id]
         )
     }
@@ -108,34 +108,34 @@ export class TablePlayer {
             [aid]
         )
         // map rows to Player objects
-        return rows.map(player => ({
-            id: player.id,
-            aid: player.account_id,
-            name: player.name,
-            level: player.base_level,
-            jobLevel: player.job_level,
-            baseExp: player.base_exp,
-            jobExp: player.job_exp,
-            job: player.job,
-            money: player.money,
-            sex: player.sex,
-            str: player.str,
-            agi: player.agi,
-            vit: player.vit,
-            int: player.int,
-            dex: player.dex,
-            luk: player.luk,
-            crit: player.crit,
-            hp: player.hp,
-            hpMax: player.hp_max,
-            mp: player.mp,
-            mpMax: player.mp_max,
-            lastMap: player.last_map,
-            lastX: player.last_x,
-            lastY: player.last_y,
-            saveMap: player.save_map,
-            saveX: player.save_x,
-            saveY: player.save_y
+        return rows.map(row => ({
+            id: row.id,
+            aid: row.account_id,
+            name: row.name,
+            level: row.base_level,
+            jobLevel: row.job_level,
+            baseExp: row.base_exp,
+            jobExp: row.job_exp,
+            job: row.job,
+            sex: row.sex,
+            money: row.money,
+            str: row.str,
+            agi: row.agi,
+            vit: row.vit,
+            int: row.int,
+            dex: row.dex,
+            luk: row.luk,
+            hp: row.hp,
+            hpMax: row.hp_max,
+            mp: row.mp,
+            mpMax: row.mp_max,
+            lastMap: row.last_map,
+            lastX: row.last_x,
+            lastY: row.last_y,
+            saveMap: row.save_map,
+            saveX: row.save_x,
+            saveY: row.save_y,
+            lastLogin: row.last_login,
         }))
     }
 
@@ -159,48 +159,4 @@ export class TablePlayer {
         if (name.length > 30) name = name.slice(0, 30)
         return this.db.query(`UPDATE player SET name=? WHERE id=?`, [name, id])
     }
-
-    static CREATE_TABLE = `CREATE TABLE IF NOT EXISTS \`player\` (
-  \`id\` int(11) unsigned NOT NULL auto_increment,
-  \`account_id\` int(11) unsigned NOT NULL default '0',
-  \`name\` varchar(30) NOT NULL DEFAULT '',
-  \`base_level\` smallint(6) unsigned NOT NULL default '1',
-  \`base_exp\` int(11) unsigned NOT NULL default '0',
-  \`job\` smallint(6) unsigned NOT NULL default '0',
-  \`job_level\` smallint(6) unsigned NOT NULL default '1',
-  \`job_exp\` int(11) unsigned NOT NULL default '0',
-  \`money\` int(11) unsigned NOT NULL default '0',
-  \`str\` smallint(4) unsigned NOT NULL default '0',
-  \`agi\` smallint(4) unsigned NOT NULL default '0',
-  \`vit\` smallint(4) unsigned NOT NULL default '0',
-  \`int\` smallint(4) unsigned NOT NULL default '0',
-  \`dex\` smallint(4) unsigned NOT NULL default '0',
-  \`luk\` smallint(4) unsigned NOT NULL default '0',
-  \`crit\` smallint(4) unsigned NOT NULL default '0',
-  \`hp\` int(11) unsigned NOT NULL default '0',
-  \`hp_max\` int(11) unsigned NOT NULL default '0',
-  \`mp\` int(11) unsigned NOT NULL default '0',
-  \`mp_max\` int(11) unsigned NOT NULL default '0',
-  \`matk\` int(11) unsigned NOT NULL default '0',
-  \`party_id\` int(11) unsigned NOT NULL default '0',
-  \`e_def\` int(11) unsigned NOT NULL default '0',
-  \`body\` smallint(5) unsigned NOT NULL default '0',
-  \`weapon\` smallint(6) unsigned NOT NULL default '0',
-  \`shield\` smallint(6) unsigned NOT NULL default '0',
-  \`head\` smallint(6) unsigned NOT NULL default '0',
-  \`robe\` SMALLINT(6) UNSIGNED NOT NULL DEFAULT '0',
-  \`last_map\` varchar(50) NOT NULL default '',
-  \`last_x\` smallint(4) unsigned NOT NULL default '0',
-  \`last_y\` smallint(4) unsigned NOT NULL default '0',
-  \`save_map\` varchar(50) NOT NULL default '',
-  \`save_x\` smallint(4) unsigned NOT NULL default '0',
-  \`save_y\` smallint(4) unsigned NOT NULL default '0',
-  \`sex\` smallint(1) unsigned NOT NULL default '0'
-  \`last_login\` datetime DEFAULT NULL,
-
-  PRIMARY KEY  (\`id\`),
-  UNIQUE KEY \`name_key\` (\`name\`),
-  KEY \`account_id\` (\`account_id\`),
-  KEY \`party_id\` (\`party_id\`)
-) AUTO_INCREMENT=1`
 }

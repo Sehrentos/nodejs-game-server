@@ -80,20 +80,4 @@ export class TableAccount {
         }
     }
 
-    static CREATE_TABLE = `CREATE TABLE IF NOT EXISTS \`account\` (
-  \`id\` int(11) unsigned NOT NULL auto_increment,
-  \`username\` varchar(30) NOT NULL default '',
-  \`password\` varchar(130) NOT NULL default '',
-  \`email\` varchar(40) NOT NULL default '',
-  \`state\` int(11) unsigned NOT NULL default '0',
-  \`expires\` int(11) unsigned NOT NULL default '0',
-  \`logincount\` mediumint(9) unsigned NOT NULL default '0',
-  \`lastlogin\` datetime,
-  \`last_ip\` varchar(100) NOT NULL default '',
-  \`auth_token\` varchar(2048) DEFAULT NULL,
-  PRIMARY KEY  (\`id\`),
-  UNIQUE KEY \`username\` (\`username\`),
-  UNIQUE KEY \`auth_token\` (\`auth_token\`),
-  KEY \`name\` (\`username\`)
-)`
 }

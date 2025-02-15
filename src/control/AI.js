@@ -1,4 +1,4 @@
-import { ENTITY_AI_NEARBY_RANGE, ENTITY_IDDLE_MOVE_MAX, ENTITY_IDDLE_TIME } from "../Constants.js"
+import { ENTITY_AI_NEARBY_RANGE, ENTITY_AI_IDDLE_MOVE_MAX, ENTITY_AI_IDDLE_TIME } from "../Constants.js"
 import { DIRECTION, ENTITY_TYPE } from "../enum/Entity.js"
 import { WorldMap } from "../models/WorldMap.js"
 
@@ -61,7 +61,7 @@ export class AI {
 				this.iddleStart = timestamp
 				return
 			}
-			if ((timestamp - this.iddleStart) < ENTITY_IDDLE_TIME) {
+			if ((timestamp - this.iddleStart) < ENTITY_AI_IDDLE_TIME) {
 				return
 			}
 
@@ -69,7 +69,7 @@ export class AI {
 			if (this.entity.control._moveCd.isNotExpired(timestamp)) return
 
 			if (entity.dir === DIRECTION.DOWN) {
-				if ((entity.lastY < entity.saveY + ENTITY_IDDLE_MOVE_MAX) && entity.lastY < entity.control.map.height) {
+				if ((entity.lastY < entity.saveY + ENTITY_AI_IDDLE_MOVE_MAX) && entity.lastY < entity.control.map.height) {
 					entity.control.move(DIRECTION.DOWN, timestamp)
 				} else {
 					// next direction
@@ -78,7 +78,7 @@ export class AI {
 				}
 			}
 			if (entity.dir === DIRECTION.RIGHT) {
-				if ((entity.lastX < entity.saveX + ENTITY_IDDLE_MOVE_MAX) && entity.lastX < entity.control.map.width) {
+				if ((entity.lastX < entity.saveX + ENTITY_AI_IDDLE_MOVE_MAX) && entity.lastX < entity.control.map.width) {
 					entity.control.move(DIRECTION.RIGHT, timestamp)
 				} else {
 					entity.dir = DIRECTION.UP
@@ -86,7 +86,7 @@ export class AI {
 				}
 			}
 			if (entity.dir === DIRECTION.UP) {
-				if ((entity.lastY > entity.saveY - ENTITY_IDDLE_MOVE_MAX) && entity.lastY > 0) {
+				if ((entity.lastY > entity.saveY - ENTITY_AI_IDDLE_MOVE_MAX) && entity.lastY > 0) {
 					entity.control.move(DIRECTION.UP, timestamp)
 				} else {
 					entity.dir = DIRECTION.LEFT
@@ -94,7 +94,7 @@ export class AI {
 				}
 			}
 			if (entity.dir === DIRECTION.LEFT) {
-				if ((entity.lastX > entity.saveX - ENTITY_IDDLE_MOVE_MAX) && entity.lastX > 0) {
+				if ((entity.lastX > entity.saveX - ENTITY_AI_IDDLE_MOVE_MAX) && entity.lastX > 0) {
 					entity.control.move(DIRECTION.LEFT, timestamp)
 				} else {
 					entity.dir = DIRECTION.DOWN

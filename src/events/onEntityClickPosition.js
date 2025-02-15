@@ -1,4 +1,4 @@
-import { ENTITY_TOUCH_AREA_SIZE } from "../Constants.js"
+import { PLAYER_TOUCH_AREA_SIZE } from "../Constants.js"
 import { ENTITY_TYPE } from "../enum/Entity.js"
 import { WorldMap } from "../models/WorldMap.js"
 
@@ -21,7 +21,7 @@ export function onEntityClickPosition(player, json) {
 
     // check if player is in range of entity
     // find entities at clicked position in 4-cell radius
-    const entities = WorldMap.findEntitiesInRadius(player.control.map, json.x, json.y, ENTITY_TOUCH_AREA_SIZE)
+    const entities = WorldMap.findEntitiesInRadius(player.control.map, json.x, json.y, PLAYER_TOUCH_AREA_SIZE)
         .filter(entity => entity.gid !== player.gid) // exclude self
 
     // if no entities found
