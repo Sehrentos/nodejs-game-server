@@ -1,4 +1,8 @@
 import Map1 from "./Map1.js";
+import Map2 from "./Map2.js";
+import Map3 from "./Map3.js";
+import Map4 from "./Map4.js";
+import Map5 from "./Map5.js";
 import Mob1 from "./Mob1.js";
 import Mob10 from "./Mob10.js";
 import Mob11 from "./Mob11.js";
@@ -29,6 +33,10 @@ export const Sprites = {
     map: [
         undefined, // ID:0 sprite does not exist
         Map1,
+        Map2,
+        Map3,
+        Map4,
+        Map5,
     ],
     mob: [
         undefined, // ID:0 sprite does not exist

@@ -2,135 +2,91 @@ import m from "mithril"
 import "./TabsUI.css"
 
 /**
- * @typedef {Object} TTab
- * @prop {string} name
- * @prop {any} content
- * @prop {boolean} active
- */
-
-/**
  * @class TabsUI
  * @description Tabs UI component
  * @exports TabsUI
  * 
- * @example m(TabsUI, {
- *   tabs: [{
- *     name: "Tab1", active: true, content: "add content, Nodes etc.",
- *     name: "Tab2", active: false, content: "add content, Nodes etc.",
- *   })
+ * @example m(TabsUI,
+ *   m(".tab",
+ *     m(".tablink.active", "Tab 1"),
+ *     m(".tablink", "Tab 2"),
+ *   ),
+ *   m(".tabcontent.active", m(".stats", "My tab content 1")),
+ *   m(".tabcontent", m(".stats", "My tab content 2")),
  * )
  */
 export default class TabsUI {
-    /** @param {m.Vnode<{tabs:TTab[]}>} vnode */
+    /** @param {m.Vnode<any>} vnode */
     constructor(vnode) {
-        this.tabs = vnode.attrs.tabs
+        // this.activeTab = vnode.attrs.activeTab || 0
         this._onClick = this.onClick.bind(this)
     }
 
     // #region mithril events
+
+    /** @param {m.VnodeDOM} vnode */
     oncreate(vnode) {
         vnode.dom.addEventListener("click", this._onClick)
     }
 
+    /** @param {m.VnodeDOM} vnode */
     onremove(vnode) {
         vnode.dom.removeEventListener("click", this._onClick)
     }
 
+    /** @param {m.Vnode<any>} vnode */
     view(vnode) {
-        return m("div.ui-tabs",
-            /** create tab & tablinks */
-            m("div.tab",
-                this.tabs.map((tab, index) => m("div", {
-                    key: index,
-                    "data-index": index,
-                    "data-tabcontent": `tabcontent-${index}`,
-                    class: tab.active ? "tablink active" : "tablink",
-                }, tab.name))
-            ),
-            /** create tabcontent */
-            this.tabs.map((tab, index) => m("div", {
-                key: index,
-                "data-index": index,
-                id: `tabcontent-${index}`,
-                class: tab.active ? "tabcontent active" : "tabcontent",
-            }, tab.content))
-        )
+        return m("div.ui-tabs", vnode.children)
     }
+
     // #endregion mithril events
 
+    /** @param {Event} event */
     onClick(event) {
-        event.preventDefault()
-        event.stopPropagation()
+        // event.preventDefault()
+        // event.stopPropagation()
 
         /** @type {HTMLElement|null} */
+        // @ts-ignore has null check
         const target = event.target
         if (!target) return false
 
-        // /** @type {HTMLElement|null} */
-        // const currentTarget = event.currentTarget
-        // if (!currentTarget) return false
+        /** @type {HTMLElement|null} */
+        // @ts-ignore has null check
+        const currentTarget = event.currentTarget
+        if (!currentTarget) return false
 
-        const targetTablink = target.closest("div.tablink")
+        // was tablink clicked
+        const targetTablink = target.closest(".tablink")
         if (!targetTablink) return false
 
-        // const targetTabContent = currentTarget.querySelector("#" + targetTablink.getAttribute("data-tabcontent"))
-        // if (!targetTabContent) return false
+        const tablinks = currentTarget.querySelectorAll(".tablink")
+        if (!tablinks.length) return false
 
-        // const tablinks = currentTarget.getElementsByClassName("tablink")
-        // if (!tablinks.length) return false
+        const indexOfTablink = Array.prototype.indexOf.call(tablinks, targetTablink)
+        if (indexOfTablink === -1) return false
 
-        // const tabcontent = currentTarget.getElementsByClassName("tabcontent")
-        // if (!tabcontent.length) return false
+        const tabContents = currentTarget.querySelectorAll(".tabcontent")
+        if (!tabContents.length) return false
 
-        // // Get all elements with class="tablinks" and remove the class "active"
-        // for (let i = 0; i < tablinks.length; i++) {
-        //     tablinks[i].classList.remove("active")
-        // }
+        const targetTabContent = tabContents[indexOfTablink]
+        if (!targetTabContent) return false
 
-        // // Get all elements with class="tabcontent" and remove the class "active"
-        // for (let i = 0; i < tabcontent.length; i++) {
-        //     tabcontent[i].classList.remove("active")
-        // }
+        // Get all elements with class="tablinks" and remove the class "active"
+        for (let i = 0; i < tablinks.length; i++) {
+            tablinks[i].classList.remove("active")
+        }
 
-        // // Show the current tab, and add an "active" class
-        // targetTablink.classList.add("active")
-        // targetTabContent.classList.add("active")
+        // Get all elements with class="tabcontent" and remove the class "active"
+        for (let i = 0; i < tabContents.length; i++) {
+            tabContents[i].classList.remove("active")
+        }
 
-        const index = targetTablink.getAttribute("data-index")
-        if (!index) return false
+        // Show the current tab, and add an "active" class
+        targetTablink.classList.add("active")
+        targetTabContent.classList.add("active")
 
-        const tab = this.tabs[index]
-        if (!tab) return false
-
-        this.tabs.forEach(t => t.active = false)
-        tab.active = true
-
-        m.redraw()
+        // if you notice UI update issues, uncomment this
+        // m.redraw()
     }
-
 }
-
-/* Example usage
-m(TabsUI, {
-    tabs: [
-        {
-            name: "Stats",
-            content: m("div.stats", [
-                m("strong", "Str"),
-                m("span", State.player.str || "1"),
-                m("strong", "Agi"),
-                m("span", State.player.agi || "1"),
-                m("strong", "Int"),
-                m("span", State.player.int || "1"),
-                m("strong", "Vit"),
-                m("span", State.player.vit || "1"),
-                m("strong", "Dex"),
-                m("span", State.player.dex || "1"),
-                m("strong", "Luk"),
-                m("span", State.player.luk || "1"),
-            ]),
-            active: true,
-        },
-    ],
-})
-*/

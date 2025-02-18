@@ -6,19 +6,19 @@ import { Entity } from "./models/Entity.js"
  * @typedef {import("./models/Entity.js").TEntityProps} TEntity
  * @typedef {import("./models/WorldMap.js").TWorldMapProps} TWorldMap
  * 
- * @typedef {Object} TPlayerLeavePacket
+ * @typedef {Object} TPlayerLeavePacket - Player leave packet
  * @prop {string} type
  * @prop {string} name
  * 
- * @typedef {Object} TMapPacket
+ * @typedef {Object} TMapPacket - Map update sent from the server
  * @prop {string} type
  * @prop {TWorldMap} map
  * 
- * @typedef {Object} TPlayerPacket
+ * @typedef {Object} TPlayerPacket - Player update sent from the server
  * @prop {string} type
  * @prop {TEntity} player
  * 
- * @typedef {Object} TChatPacket
+ * @typedef {Object} TChatPacket - Chat message sent from the server or player
  * @prop {string} type
  * @prop {string} channel
  * @prop {string} from
@@ -26,10 +26,20 @@ import { Entity } from "./models/Entity.js"
  * @prop {string} message
  * @prop {number=} timestamp Date.now()
  * 
- * @typedef {Object} TDialogPacket
+ * @typedef {Object} TDialogPacket - NPC dialog sent from the server
  * @prop {string} type
  * @prop {string} gid
  * @prop {string} dialog
+ * 
+ * @typedef {Object} TDialogResponsePacket - NPC dialog response sent from the player
+ * @prop {string} type "dialog"
+ * @prop {string} action e.g. "open", "close", "next"
+ * @prop {string} gid
+ * @prop {string} playerGid
+ * 
+ * @typedef {Object} THeartbeatPacket - Ping/Pong packet sent from the server/client
+ * @prop {string} type
+ * @prop {number} timestamp
  */
 
 /**
@@ -38,13 +48,20 @@ import { Entity } from "./models/Entity.js"
  * @param {string} name - The name of the player leaving.
  * @returns {TPlayerLeavePacket} A packet object indicating the player has left.
  */
-export const playerLeave = (name) => ({
-	type: "player-leave",
-	name
-})
+export const playerLeave = (name) => ({ type: "player-leave", name })
+
+/**
+ * Creates a "ping/pong" packet. Used to get player latency.
+ * 
+ * @param {"ping"|"pong"} type - The type of the packet.
+ * @param {number} timestamp - The timestamp of the packet.
+ * @returns {THeartbeatPacket}
+ */
+export const heartbeat = (type, timestamp) => ({ type, timestamp })
 
 /**
  * Creates a "packet" containing the state of map and it's entities.
+ * - Only entities that are visible, alive and in range of player view size are sent
  * 
  * @param {Entity} player
  * @param {TWorldMap} map
@@ -59,8 +76,8 @@ export const updateMap = (player, map) => ({
 		height: map.height,
 		// @ts-ignore filtered on purpose, so the client does not know everything
 		entities: map.entities.filter(PLAYER_VIEW_AREA_SIZE === 0
-			? (entity) => entity.hp > 0
-			: (entity) => entity.hp > 0 && Entity.inRangeOf(player, entity.lastX, entity.lastY, PLAYER_VIEW_AREA_SIZE)
+			? (entity) => entity.visible && entity.hp > 0
+			: (entity) => entity.visible && entity.hp > 0 && Entity.inRangeOf(player, entity.lastX, entity.lastY, PLAYER_VIEW_AREA_SIZE)
 		).map((entity) => (entity.type === ENTITY_TYPE.PORTAL ? {
 			id: typeof entity.id === "bigint" ? entity.id.toString() : entity.id,
 			gid: entity.gid,
@@ -154,6 +171,7 @@ export const updatePlayer = (player) => ({
 		inventory: player.inventory,
 		quests: player.quests,
 		partyId: player.partyId,
+		latency: player.latency
 	}
 })
 

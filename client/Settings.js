@@ -18,6 +18,7 @@ export const FPS_LIMIT = 60
 
 /** @type {string} - WebSocket address */
 export const SOCKET_URL = `${SSL_ENABLED ? "wss" : "ws"}://${HOST}:${PORT}/world`
+export const SOCKET_HEARTBEAT = 5000
 
 /** @type {string} - Font family */
 export const FONT_FAMILY = "Arial"

@@ -6,6 +6,7 @@ import CanvasUI from "./CanvasUI.js"
 import { State } from "../State.js"
 import UINPCDialog from "./UINPCDialog.js"
 import SocketControl from "../control/SocketControl.js"
+import DialogUI from "./DialogUI.js"
 
 /**
  * @class GameUI
@@ -30,10 +31,32 @@ export default class GameUI {
 	 */
 	view() {
 		return m("main.ui-game",
+			m(ChatUI),
 			m(CanvasUI),
 			m(CharacterUI),
-			m(ChatUI),
 			m(UINPCDialog),
+			// show dialog to reconnect
+			State.socket != null && State.socket.readyState === WebSocket.CLOSED ? m(DialogUI, {
+				content: m("div",
+					m("h1", "Connection closed"),
+					m("p", "The web socket connection has been closed."),
+					m("p", "Click the button below to log in again."),
+					m("button", {
+						type: "button",
+						//class: "btn btn-primary",
+						onclick: () => {
+							// it's probably better to reload the page
+							// clean up the state etc.
+							window.location.reload()
+							// navigate to login UI
+							// window.location.href = "/#!/login"
+						}
+					}, "Go to login")
+				),
+				isVisible: true,
+				isBackdropVisible: true,
+				isBackdropClose: false
+			}) : null,
 		)
 	}
 

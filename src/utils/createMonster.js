@@ -1,14 +1,5 @@
-import { randomBytes } from 'node:crypto';
 import { Entity } from '../models/Entity.js';
 import { getRandomInt } from './getRandomInt.js';
-
-/**
- * Creates a new game ID `(gid)`
- * @returns {string}
- */
-export function createGameId() {
-	return randomBytes(16).toString('hex')
-}
 
 /**
  * Helper to creates monsters.
@@ -17,7 +8,7 @@ export function createGameId() {
  * @param {import("../models/Entity.js").TEntityProps} monster - The monster to add.
  * @returns {Array<Entity>}
  */
-export function createMonster(map, quantity, monster) {
+export default function createMonster(map, quantity, monster) {
 	let i, x, y, dir, mob
 	const stack = []
 	for (i = 0; i < quantity; i++) {

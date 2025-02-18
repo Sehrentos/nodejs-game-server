@@ -77,9 +77,7 @@ export default class KeyControl {
 		// }
 
 		// send websocket if it's open
-		if (State.socket != null && State.socket.readyState === WebSocket.OPEN) {
-			State.socket.send(JSON.stringify({ type: "move", code: keyCode }));
-		}
+		State.socket.send(JSON.stringify({ type: "move", code: keyCode }));
 	}
 
 	static KEYS_MOVE = ["KeyA", "KeyD", "KeyW", "KeyS", "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"]

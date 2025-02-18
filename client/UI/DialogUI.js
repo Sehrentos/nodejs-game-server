@@ -3,7 +3,7 @@ import "./DialogUI.css"
 
 /**
  * @typedef {Object} TDialogUIProps
- * @prop {string=} content
+ * @prop {any=} content
  * @prop {boolean=} isVisible
  * @prop {boolean=} isBackdropVisible
  * @prop {boolean=} isBackdropClose
@@ -17,7 +17,7 @@ import "./DialogUI.css"
 export default class DialogUI {
     /** @param {m.Vnode<TDialogUIProps>} vnode */
     constructor(vnode) {
-        /** @type {string} - dialog content */
+        /** @type {any} - dialog content */
         this.content = vnode.attrs.content || ""
         /** @type {boolean} - whether the dialog should be visible */
         this.isVisible = vnode.attrs.isVisible || false
@@ -45,7 +45,7 @@ export default class DialogUI {
         }
 
         // the backdrop is clicked
-        if (target.closest("div.ui-dialog-backdrop")) {
+        if (this.isBackdropClose && target.closest("div.ui-dialog-backdrop")) {
             // hide the UI
             this.isVisible = false
             return
@@ -58,7 +58,7 @@ export default class DialogUI {
             return
         }
 
-        // TODO other actions
+        // other actions
         event.redraw = false
     }
 
@@ -68,12 +68,12 @@ export default class DialogUI {
                 class: this.isVisible ? "show" : "",
                 onclick: this._onClick
             },
-                m("div.ui-dialog", m.trust(this.content))
+                m("div.ui-dialog", typeof this.content === "string" ? m.trust(this.content) : this.content)
             )
         }
         return m("div.ui-dialog", {
             class: this.isVisible ? "show" : "",
             onclick: this._onClick
-        }, m.trust(this.content))
+        }, typeof this.content === "string" ? m.trust(this.content) : this.content)
     }
 }

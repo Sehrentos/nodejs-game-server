@@ -8,10 +8,11 @@ export const Auth = {
      * If the game is already running, it throws an error.
      * @param {string} [username=""] - The username to log in with.
      * @param {string} [password=""] - The password to log in with.
+     * @param {boolean} [saveCredentials=false] - Whether to save the credentials to local storage.
      * @throws {Error} If the game is already running or if the login fails.
      * @returns {Promise<boolean>} - True if the login was successful, false otherwise.
      */
-    login: async (username = "", password = "") => {
+    login: async (username = "", password = "", saveCredentials = false) => {
         if (Auth.isLoggedIn) {
             throw new Error("Already logged in.");
         }
@@ -31,6 +32,58 @@ export const Auth = {
             throw new Error("Login failed.")
         }
 
+        // has used decided to save credentials
+        if (saveCredentials) {
+            localStorage.setItem("token", data.token)
+        } else {
+            localStorage.removeItem("token")
+        }
+
+        Auth.jwtToken = data.token
+        Auth.isLoggedIn = true
+        return true
+    },
+
+    /**
+     * Logs into the game server with the given JWT token.
+     * If there is no token given, an empty string is used.
+     * If the game is already running, it throws an error.
+     * @param {string} [token=""] - The JWT token to log in with.
+     * @param {boolean} [saveCredentials=false] - Whether to save the credentials to local storage.
+     * @throws {Error} If the game is already running or if the login fails.
+     * @returns {Promise<boolean>} - True if the login was successful, false otherwise.
+     */
+    loginToken: async (token = "", saveCredentials = false) => {
+        if (Auth.isLoggedIn) {
+            throw new Error("Already logged in.");
+        }
+        // sent the POST /login/token request,
+        // then await for token as response {token:string,...}
+        // and then start the game
+        const response = await fetch("/api/login/token", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ token })
+        });
+        const data = await response.json()
+
+        if (data.type === "error") {
+            throw new Error(data.message)
+        }
+
+        if (!data.token) {
+            throw new Error("Login failed.")
+        }
+
+        // has used decided to save credentials
+        if (saveCredentials) {
+            localStorage.setItem("token", data.token)
+        } else {
+            localStorage.removeItem("token")
+        }
+
         Auth.jwtToken = data.token
         Auth.isLoggedIn = true
         return true
@@ -42,10 +95,11 @@ export const Auth = {
      * @param {string} [username=""] - The username to register with.
      * @param {string} [password=""] - The password to register with.
      * @param {string} [email=""] - The email to register with.
+     * @param {boolean} [saveCredentials=false] - Whether to save the credentials to local storage.
      * @throws {Error} If the game is already running or if the registration fails.
      * @returns {Promise<boolean>} - True if the registration was successful, false otherwise.
      */
-    register: async (username = "", password = "", email = "") => {
+    register: async (username = "", password = "", email = "", saveCredentials = false) => {
         if (Auth.isLoggedIn) {
             throw new Error("Already logged in.");
         }
@@ -63,6 +117,13 @@ export const Auth = {
 
         if (!data.token) {
             throw new Error("Register failed.");
+        }
+
+        // has used decided to save credentials
+        if (saveCredentials) {
+            localStorage.setItem("token", data.token)
+        } else {
+            localStorage.removeItem("token")
         }
 
         Auth.jwtToken = data.token

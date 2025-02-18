@@ -70,5 +70,5 @@ export function onEntityKill(killer, killed) {
     killer.control._socketSentPlayerUpdateCd.reset()
 
     // DEBUG
-    console.log(`[Event.onEntityKill] killer "${killer.name} (${killer.level})" with exp: ${killed.baseExp}/${killed.jobExp}`)
+    // console.log(`[Event.onEntityKill] killer "${killer.name} (${killer.level})" with exp: ${killed.baseExp}/${killed.jobExp}`)
 }

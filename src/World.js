@@ -9,8 +9,12 @@ import MapLobbyTown from './maps/MapLobbyTown.js';
 import MapPlainFields1 from './maps/MapPlainFields1.js';
 import MapPlainFields2 from './maps/MapPlainFields2.js';
 import { EntityControl } from './control/EntityControl.js';
-import { createGameId } from './utils/EntityUtil.js';
-import { UPDATE_TICK } from './Constants.js';
+import createGameId from './utils/createGameId.js';
+import { PLAYER_BASE_HP_REGEN, UPDATE_TICK } from './Constants.js';
+import MapFlowerTown from './maps/MapFlowerTown.js';
+import MapCarTown from './maps/MapCarTown.js';
+import MapUnderWater1 from './maps/MapUnderWater1.js';
+import MapUnderWater2 from './maps/MapUnderWater2.js';
 
 /**
  * @module World
@@ -41,9 +45,13 @@ export class World {
 
 		/** @type {Array<WorldMap>} - Game maps */
 		this.maps = [
-			new MapLobbyTown({ world: this }),
-			new MapPlainFields1({ world: this }),
-			new MapPlainFields2({ world: this }),
+			new MapLobbyTown({ world: this }), // 1
+			new MapFlowerTown({ world: this }), // 2
+			new MapCarTown({ world: this }), // 3
+			new MapUnderWater1({ world: this }), // 4
+			new MapUnderWater2({ world: this }), // 5
+			new MapPlainFields1({ world: this }), // 6
+			new MapPlainFields2({ world: this }), // 7
 		]
 
 		/** @type {number} - total number of players, from server start */
@@ -161,37 +169,33 @@ export class World {
 		console.log(`[World] token verified, account_id:${payload.id}, created:${datetime}, expires:${tokenExpires}`)
 
 		// token is valid, load user data from database
-		let conn, account, player;
+		let conn;
 		try {
 			conn = await this.db.connect()
 
 			// Note: find the account with same token
 			// TODO disable multiple logins on the same account
 			// account = await this.db.account.login(payload.username, payload.password);
-			account = await this.db.account.loginToken(token);
+			let account = await this.db.account.loginToken(token);
 			if (!account) {
 				throw Error('Invalid credentials');
 			}
 
 			// Authorized, create new player or load existing player
 			this.playersCountTotal = await this.db.player.count()
+
 			// create new player
 			// set default values
-			player = new Entity({
+			let player = new Entity({
 				type: ENTITY_TYPE.PLAYER,
-				id: account.id,
 				aid: account.id,
 				gid: createGameId(), // generate unique id for player
 				name: `player-${this.playersCountTotal}`, // initial name
-				hp: 100,
-				hpMax: 100,
-				atk: 25,
-				saveMap: 'Lobby town',
-				saveX: 300,
-				saveY: 200,
-				speed: 1, // 50 move speed, lower is faster
-				range: 32, // fine-tune, depending on the sprite size
-				hpRecovery: 10,
+				// saveMap: 'Lobby town',
+				// saveX: 875,
+				// saveY: 830,
+				speed: 30, // X step in ms per tick, lower is faster
+				hpRecovery: PLAYER_BASE_HP_REGEN,
 			})
 
 			// load players data from database

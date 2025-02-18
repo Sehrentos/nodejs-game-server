@@ -10,14 +10,13 @@ import { WorldMap } from "../models/WorldMap.js"
  * @param {Object} json - The JSON object containing click coordinates.
  * @param {number} json.x - The x-coordinate of the click.
  * @param {number} json.y - The y-coordinate of the click.
+ * @param {number} timestamp - The current timestamp or performance.now().
  */
-export function onEntityClickPosition(player, json) {
+export default function onEntityPacketTouchPosition(player, json, timestamp) {
     player.control.stopFollow()
     player.control.stopMoveTo()
 
     if (player.hp <= 0) return // must be alive
-
-    const timestamp = performance.now()
 
     // check if player is in range of entity
     // find entities at clicked position in 4-cell radius
@@ -46,7 +45,7 @@ export function onEntityClickPosition(player, json) {
             return
         }
         else if (entity.type === ENTITY_TYPE.PLAYER) {
-            console.log(`[Event.onEntityClickPosition] "${player.name}" is interacting with "${entity.name}" x:${json.x}, y:${json.y})`)
+            console.log(`[Event.onEntityPacketTouchPosition] "${player.name}" is interacting with "${entity.name}" x:${json.x}, y:${json.y})`)
         }
     }
 }

@@ -150,7 +150,7 @@ export class TablePlayer {
 
     /**
      * Set player name. Trim name to 30 chars if too long.
-     * @param {number} id 
+     * @param {number|bigint|string} id 
      * @param {string} name 
      * @returns {Promise<import("./Database.js").TQueryResult>}
      */

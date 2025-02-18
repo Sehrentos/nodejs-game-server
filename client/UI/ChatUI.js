@@ -10,26 +10,37 @@ export default class ChatUI {
 		this.isVisible = true
 		/** @type {string} - channel name e.g. "default" | "private" | "log" */
 		this.activeTab = "default"
-		// this.messages = State.chat // []
+
+		this.messages = []
+		this.messagesMax = 10
+		this.messagesAt = 0
 
 		this._onTabsClick = this.onTabsClick.bind(this)
 		this._onSubmit = this.onSubmit.bind(this)
+		this._onFocusIn = this.onFocusIn.bind(this)
+		this._onFocusOut = this.onFocusOut.bind(this)
 		this._onKeydownListener = this.onKeydownListener.bind(this)
 		this._onSelectStart = this.onSelectStart.bind(this)
 		// custom event to update chat state on the UI
 		this._onDOMChat = this.onDOMChat.bind(this)
 	}
 
+	/** @param {m.VnodeDOM} vnode */
 	oncreate(vnode) {
 		vnode.dom.addEventListener("selectstart", this._onSelectStart)
 		window.addEventListener("keydown", this._onKeydownListener)
 		document.addEventListener("ui-chat", this._onDOMChat)
+		vnode.dom.addEventListener("focusin", this._onFocusIn)
+		vnode.dom.addEventListener("focusout", this._onFocusOut)
 	}
 
+	/** @param {m.VnodeDOM} vnode */
 	onremove(vnode) {
 		vnode.dom.removeEventListener("selectstart", this._onSelectStart)
 		window.removeEventListener("keydown", this._onKeydownListener)
 		document.removeEventListener("ui-chat", this._onDOMChat)
+		vnode.dom.removeEventListener("focusin", this._onFocusIn)
+		vnode.dom.removeEventListener("focusout", this._onFocusOut)
 	}
 
 	onupdate(vnode) {
@@ -88,6 +99,9 @@ export default class ChatUI {
 	}
 
 	onTabsClick(event) {
+		event.preventDefault()
+		event.stopPropagation()
+
 		/** @type {HTMLElement|null} */
 		const target = event.target
 		if (!target) return
@@ -98,27 +112,55 @@ export default class ChatUI {
 		const activeTab = targetTablink.getAttribute("data-active-tab")
 		if (!activeTab) return
 
-		event.preventDefault()
-		event.stopPropagation()
-
 		// @ts-ignore
 		this.activeTab = activeTab
+		// @ts-ignore
+		document.querySelector("div.ui-chat input#chat-input")?.focus()
 
-		m.redraw()
+		//m.redraw()
 	}
 
 	onKeydownListener(event) {
-		const tag = event.target?.tagName ?? ""
 		// pressing Enter will focus the chat, when no input is being focused
-		if (event.code === "Enter" && tag !== "INPUT") {
+		if (event.code === "Enter" && event.target?.tagName !== "INPUT") {
 			event.preventDefault()
 			// @ts-ignore
 			document.querySelector("div.ui-chat input#chat-input")?.focus()
 		}
-		// pressing Escape will unset the focus from chat
-		else if (event.code === "Escape" && event.target?.id === "chat-input") {
-			// @ts-ignore
-			document.querySelector("div.ui-chat input#chat-input")?.blur()
+		else if (event.target?.id === "chat-input") {
+			// pressing Escape will unset the focus from chat
+			if (event.code === "Escape") {
+				// @ts-ignore
+				event.target?.blur()
+			}
+			else if (event.code === "ArrowUp") {
+				this.messagesAt = this.messagesAt - 1;
+				// get old message and add it to the chat input element
+				const oldMessage = this.messages[this.messagesAt]
+				if (oldMessage) {
+					// @ts-ignore
+					event.target.value = oldMessage
+				} else {
+					event.target.value = ""
+				}
+				if (this.messagesAt < 0) {
+					this.messagesAt = 0
+				}
+			}
+			else if (event.code === "ArrowDown") {
+				this.messagesAt = this.messagesAt + 1;
+				// get old message and add it to the chat input element
+				const oldMessage = this.messages[this.messagesAt]
+				if (oldMessage) {
+					// @ts-ignore
+					event.target.value = oldMessage
+				} else {
+					event.target.value = ""
+				}
+				if (this.messagesAt > this.messages.length) {
+					this.messagesAt = this.messages.length
+				}
+			}
 		}
 	}
 
@@ -134,7 +176,7 @@ export default class ChatUI {
 	onSubmit(event) {
 		event.preventDefault()
 
-		// socket is ready and player state exists
+		// socket and player state exists
 		if (State.socket == null || State.player == null) return
 
 		/** @type {HTMLFormElement|null} - chat form element **/
@@ -154,6 +196,8 @@ export default class ChatUI {
 			event.stopPropagation()
 			// @ts-ignore
 			document.activeElement?.blur()
+			// reset last message index
+			this.messagesAt = this.messages.length
 			return false
 		}
 
@@ -170,6 +214,46 @@ export default class ChatUI {
 			message,
 		}
 		State.socket.send(JSON.stringify(pkt));
+
+		// add message to the memory
+		this.messages.push(message)
+		// remove old messages
+		if (this.messages.length > this.messagesMax) {
+			this.messages.shift()
+		}
+		this.messagesAt = this.messages.length;
+	}
+
+	/**
+	 * Handles the focus-in event for the chat UI.
+	 * This method adds the "ontop" class to the chat UI element,
+	 * ensuring that it appears on top layers when focused.
+	 *
+	 * @param {FocusEvent} event - The focus event.
+	 */
+	onFocusIn(event) {
+		try {
+			// @ts-ignore
+			document.querySelector("div.ui-chat").classList.add("ontop")
+		} catch (e) {
+			// silent
+		}
+	}
+
+	/**
+	 * Handles the focus-out event for the chat UI.
+	 * This method removes the "ontop" class from the chat UI element,
+	 * ensuring that it is no longer visible on top layers when unfocused.
+	 *
+	 * @param {FocusEvent} event - The focus event.
+	 */
+	onFocusOut(event) {
+		try {
+			// @ts-ignore
+			document.querySelector("div.ui-chat").classList.remove("ontop")
+		} catch (e) {
+			// silent
+		}
 	}
 
 	/**
@@ -203,7 +287,7 @@ export default class ChatUI {
 	 * 
 	 * @param {import("../../src/Packets.js").TChatPacket} params - The chat message data.
 	 * 
-	 * @example ChatUI.add({
+	 * @example ChatUI.emit({
 	 * 	type: "chat",
 	 *  channel: "default",
 	 * 	from: "player",
@@ -211,7 +295,7 @@ export default class ChatUI {
 	 * 	message: "Hello World",
 	 * });
 	 */
-	static dispatch(params) {
+	static emit(params) {
 		return document.dispatchEvent(new CustomEvent("ui-chat", { detail: params }));
 	}
 }

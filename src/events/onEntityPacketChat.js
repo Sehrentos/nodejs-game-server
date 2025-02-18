@@ -1,9 +1,10 @@
+import e from "express";
 import { ENTITY_TYPE } from "../enum/Entity.js";
 import { updateChat } from "../Packets.js";
 
 /**
  * Chat commands available in the game
- * @type {Object<string, (control:import("../control/EntityControl.js").EntityControl, data:import("../Packets.js").TChatPacket, params:string[]) => void>}
+ * @type {Object<string, (entity:import("../models/Entity.js").Entity, data:import("../Packets.js").TChatPacket, params:string[]) => void>}
  */
 const CMD = {};
 
@@ -16,14 +17,15 @@ const CMD = {};
  *
  * @param {import("../models/Entity.js").Entity} player
  * @param {import("../Packets.js").TChatPacket} json - The JSON object containing chat details.
+ * @param {number} timestamp - The current timestamp or performance.now().
  */
-export function onEntityChat(player, json) {
+export default function onEntityPacketChat(player, json, timestamp) {
     if (json.message === "") return;
     const packet = updateChat(json.channel, player.name, json.to, json.message)
 
     // is message custom command format
     if (packet.message.startsWith("/")) {
-        return onChatCommand(player.control, packet)
+        return onChatCommand(player, packet, timestamp)
     }
 
     // send to world channel
@@ -45,17 +47,18 @@ export function onEntityChat(player, json) {
 /**
  * Event called when player entity sent chat command e.g. `"/changename MyNewName"`
  * 
- * @param {import("../control/EntityControl.js").EntityControl} control - the entity controller
+ * @param {import("../models/Entity.js").Entity} entity - the entity
  * @param {import("../Packets.js").TChatPacket} data - the chat packet data
+ * @param {number} timestamp - the timestamp
  */
-function onChatCommand(control, data) {
+function onChatCommand(entity, data, timestamp) {
     const parts = data.message.split(' '); // "/command param1 param2"
     const command = parts[0]; // "/command"
     const params = parts.slice(1); // ["param1", "param2"]
     const cmd = CMD[command];
 
     if (typeof cmd === "function") {
-        cmd(control, data, params);
+        cmd(entity, data, params);
     } else {
         console.log(`[Event.onChatCommand] unknown command. from: ${data.from} message: ${data.message}`)
     }
@@ -63,23 +66,48 @@ function onChatCommand(control, data) {
 
 // #region commands
 
-CMD['/help'] = (control, data, params) => {
+CMD['/help'] = (entity, data, params) => {
+    const ctrl = entity.control
     const packet = updateChat(
         'default',
         'Server',
-        control.entity.name,
+        entity.name,
         `Available commands: ${Object.keys(CMD).join(', ')}`
     );
-    control.socket.send(JSON.stringify(packet));
+    ctrl.socket.send(JSON.stringify(packet));
 }
 
-CMD['/changename'] = async (control, data, params) => {
+// save position in the current map
+CMD['/save'] = async (entity, data, params) => {
     try {
+        const ctrl = entity.control
+        // check current map name from entity
+        if (!/(\stown|\svillage)/i.test(ctrl.map.name)) {
+            console.log(`[Event.onChatCommand] only save position in towns.`)
+            const packet = updateChat("default", "Server", entity.name, "You can only save position in towns.");
+            ctrl.socket.send(JSON.stringify(packet));
+            return
+        }
+        entity.saveMap = entity.lastMap
+        entity.saveX = entity.lastX
+        entity.saveY = entity.lastY
+
+        const packet = updateChat("default", "Server", entity.name, "Position saved.");
+        ctrl.socket.send(JSON.stringify(packet));
+
+    } catch (error) {
+        console.log(`[Event.onChatCommand] error changing name.`, error)
+    }
+}
+
+CMD['/changename'] = async (entity, data, params) => {
+    try {
+        const ctrl = entity.control
         const name = params.join(' ');
-        const entityId = control.entity.id
-        const { affectedRows } = await control.world.db.player.setName(entityId, name)
+        const entityId = entity.id
+        const { affectedRows } = await ctrl.world.db.player.setName(entityId, name)
         if (affectedRows > 0) {
-            control.entity.name = name
+            entity.name = name
         } else {
             console.log(`[Event.onChatCommand] error changing name.`)
         }
@@ -88,20 +116,20 @@ CMD['/changename'] = async (control, data, params) => {
     }
 }
 
-CMD['/changemap'] = async (control, data, params) => {
+CMD['/changemap'] = async (entity, data, params) => {
     try {
+        const ctrl = entity.control
         // "<map name with possible space> <x> <y>"
         const matches = params.join(' ').match(/^([a-zA-Z0-9 -_']{1,100})\s([0-9]{1,4})\s([0-9]{1,4})$/)
         if (!matches) {
-            console.log(`[Event.onChatCommand] invalid params`)
+            console.log(`[Event.onChatCommand] invalid params`, params)
             return
         }
         const mapName = matches[1]
         const mapX = Number(matches[2] || -1)
         const mapY = Number(matches[3] || -1)
-        const entity = control.entity
         // check map exists
-        const map = control.world.maps.find(m => m.name === mapName)
+        const map = ctrl.world.maps.find(m => m.name === mapName)
         if (!map) {
             console.log(`[Event.onChatCommand] map "${mapName}" not found.`)
             return

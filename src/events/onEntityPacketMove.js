@@ -6,13 +6,12 @@ import { DIRECTION } from "../enum/Entity.js"
  * The player is moved if the direction is valid and the movement timer has expired.
  * The movement is based on the player's direction and current speed.
  * Updates the player's position on the map while ensuring it stays within boundaries.
- * The movement is constrained by a delay calculated from speed and speedMultiplier.
  *
  * @param {import("../models/Entity.js").Entity} entity - The player entity
  * @param {{code:string}} json - WebSocket message containing the movement information.
+ * @param {number} timestamp - The current timestamp or performance.now().
  */
-export function onEntityMove(entity, json) {
-    const timestamp = performance.now()
+export default function onEntityPacketMove(entity, json, timestamp) {
     entity.control.stopAttack()
     entity.control.stopFollow()
     entity.control.stopMoveTo()

@@ -5,7 +5,7 @@ import { State } from "../State.js"
 /**
  * @typedef {Object} TUINPCDialogProps
  * @prop {string=} gid - The NPC's gid.
- * @prop {string=} content
+ * @prop {any=} content
  * @prop {boolean=} isVisible
  * @prop {boolean=} isBackdropVisible
  * @prop {boolean=} isBackdropClose
@@ -88,6 +88,10 @@ export default class UINPCDialog extends DialogUI {
                 articles[i].style.display = "none"
             }
         }
+
+        // send a "next" message to the server if it's open
+        // this will tell server that the dialog is changing
+        State.socket.send(JSON.stringify({ type: "dialog", action: "next", gid: this.gid, playerGid: State.player.gid }))
     }
 
     /**
@@ -103,9 +107,7 @@ export default class UINPCDialog extends DialogUI {
         // send a "close" message to the server if it's open
         // this will tell server that the dialog is closed
         // and user can interact with other things or move
-        if (State.socket != null && State.socket.readyState === WebSocket.OPEN) {
-            State.socket.send(JSON.stringify({ type: "npc-dialog-close", gid: this.gid }))
-        }
+        State.socket.send(JSON.stringify({ type: "dialog", action: "close", gid: this.gid, playerGid: State.player.gid }))
     }
 
     oncreate(vnode) {
@@ -133,6 +135,10 @@ export default class UINPCDialog extends DialogUI {
         this.isBackdropVisible = data.isBackdropVisible || false
         this.isBackdropClose = data.isBackdropClose || false
 
+        // send a "open" message to the server if it's open
+        // this will tell server that the dialog is opened
+        State.socket.send(JSON.stringify({ type: "dialog", action: "open", gid: this.gid, playerGid: State.player.gid }))
+
         m.redraw()
     }
 
@@ -141,9 +147,9 @@ export default class UINPCDialog extends DialogUI {
      * 
      * @param {TUINPCDialogProps} params 
      * 
-     * @example DialogUI.dispatch({ content: "Hello World", isVisible: true });
+     * @example DialogUI.emit({ content: "Hello World", isVisible: true });
      */
-    static dispatch(params) {
+    static emit(params) {
         return document.dispatchEvent(new CustomEvent("ui-npc-dialog", { detail: params }));
     }
 }

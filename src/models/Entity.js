@@ -1,5 +1,6 @@
 import { ENTITY_TYPE } from "../enum/Entity.js"
 import { ELEMENT } from "../enum/Element.js";
+import * as Const from "../Constants.js";
 
 /**
  * @typedef {Object} TEntityProps
@@ -11,8 +12,9 @@ import { ELEMENT } from "../enum/Element.js";
  * @prop {string=} lastMap - Current map name.
  * @prop {number=} lastX - Current X position.
  * @prop {number=} lastY - Current Y position.
- * @prop {number=} w - The width of the entity. default: 32
- * @prop {number=} h - The height of the entity. default: 32
+ * @prop {number=} w - The width of the entity. default: 64
+ * @prop {number=} h - The height of the entity. default: 64
+ * @prop {boolean=} visible - Whether the entity is visible. default: true
  * @prop {string=} saveMap - The map entity was created or saved.
  * @prop {number=} saveX - The position X entity was created or saved.
  * @prop {number=} saveY - The position Y entity was created or saved.
@@ -22,28 +24,36 @@ import { ELEMENT } from "../enum/Element.js";
  * @prop {number=} mp - Current mana points.
  * @prop {number=} mpMax - Maximum mana points.
  * @prop {DOMHighResTimeStamp=} death - Time of death. default 0
+ * @prop {number=} latency - **Player** Latency. default 0
  * @prop {number=} level - Level. default 1
- * @prop {number=} jobLevel - Job level. default 0
+ * @prop {number=} jobLevel - Job level. default 1
  * @prop {number=} baseExp - Base experience. default 0
  * @prop {number=} jobExp - Job experience. default 0
- * @prop {number=} job - Job. default 0
+ * @prop {number=} job - Job / class. default 0
  * @prop {number=} sex - Sex. default 0
  * @prop {Date=} lastLogin - Last login date.
  * @prop {number=} money - Money. default 0
- * @prop {number=} range - Melee attack range. default 5
- * @prop {number=} atk - Attack. default 1
- * @prop {number=} atkMultiplier - Attack multiplier. default 1
- * @prop {number=} mAtk - Magic attack. default 1
- * @prop {number=} mAtkMultiplier - Magic attack multiplier. default 1
  * @prop {number=} eAtk - Attack element. default ELEMENT.NEUTRAL
  * @prop {number=} eDef - Defense element. default ELEMENT.NEUTRAL
- * @prop {number=} def - Defense. default 1
- * @prop {number=} defMultiplier - Defense multiplier. default 1
- * @prop {number=} mDef - Magic defense. default 1
- * @prop {number=} mDefMultiplier - Magic defense multiplier. default 1
- * @prop {number=} dodge - Dodge. default 1
- * @prop {number=} dodgeMultiplier - Dodge multiplier. default 1
- * @prop {number=} flee - Flee. default 1
+ * @prop {number=} range - Melee attack range.
+ * @prop {number=} atk - Attack. default 1
+ * @prop {number=} atkMultiplier - Attack multiplier. default 1.0
+ * @prop {number=} mAtk - Magic attack. default 1
+ * @prop {number=} mAtkMultiplier - Magic attack multiplier. default 1.0
+ * @prop {number=} aspd - Attack speed. default 1000
+ * @prop {number=} aspdMultiplier - Attack speed multiplier. default 1.0
+ * @prop {number=} cspd - Cast speed. default 1000
+ * @prop {number=} cspdMultiplier - Cast speed multiplier. default 1.0
+ * @prop {number=} crit - Critical. default 0
+ * @prop {number=} critMultiplier - Critical multiplier. default 1.0
+ * @prop {number=} def - Defense. default 0
+ * @prop {number=} defMultiplier - Defense multiplier. default 1.0
+ * @prop {number=} mDef - Magic defense. default 0
+ * @prop {number=} mDefMultiplier - Magic defense multiplier. default 1.0
+ * @prop {number=} dodge - Dodge. default 0
+ * @prop {number=} dodgeMultiplier - Dodge multiplier. default 1.0
+ * @prop {number=} block - Block change. default 0
+ * @prop {number=} blockMultiplier - Block change multiplier. default 1.0
  * @prop {number=} str - Strength. default 1
  * @prop {number=} dex - Dexterity. default 1
  * @prop {number=} vit - Vitality. default 1
@@ -51,24 +61,16 @@ import { ELEMENT } from "../enum/Element.js";
  * @prop {number=} agi - Agility. default 1
  * @prop {number=} luk - Luck. default 1
  * @prop {number=} hit - Hit change / accuracy. default 1
- * @prop {number=} speed - Speed. default 400
- * @prop {number=} speedMultiplier - Speed multiplier. default 1
- * @prop {number=} aspd - Attack speed. default 1000
- * @prop {number=} aspdMultiplier - Attack speed multiplier. default 1.0
- * @prop {number=} cspd - Cast speed. default 1
- * @prop {number=} cspdMultiplier - Cast speed multiplier. default 1
- * @prop {number=} crit - Critical. default 1
- * @prop {number=} critMultiplier - Critical multiplier. default 1
+ * @prop {number=} speed - Movement speed.
  * @prop {number=} hpRecovery - Health recovery amount. default 0
- * @prop {number=} hpRecoveryRate - Health recovery rate. default 5000
+ * @prop {number=} hpRecoveryRate - Health recovery rate.
  * @prop {number=} mpRecovery - Mana recovery amount. default 0
- * @prop {number=} mpRecoveryRate - Mana recovery rate. default 5000
+ * @prop {number=} mpRecoveryRate - Mana recovery rate.
  * @prop {number[]=} skills - Skill list.
  * @prop {number[]=} equipment - Equipment list.
  * @prop {number[]=} inventory - Inventory list.
  * @prop {number[]=} quests - Quest list.
  * @prop {number=} partyId - Party ID. default 0
- * @prop {number=} portalId - **Portal** destination map id.
  * @prop {string=} portalName - **Portal** destination map name.
  * @prop {number=} portalX - **Portal** destination X position.
  * @prop {number=} portalY - **Portal** destination Y position.
@@ -86,35 +88,43 @@ export class Entity {
 	 * @param {TEntityProps} p 
 	 */
 	constructor(p) {
-		/** @type {bigint|number|string=} Database ID. Note: use type `string` if `bigint` (MariaDB int(11) auto_increment) */
+		/** @type {bigint|number|string=} Database ID. Note: use type `string` if `bigint` (JSON serialization) */
 		this.id = p?.id ?? 0
 		/** @type {string} Game ID */
 		this.gid = p?.gid ?? ''
-		/** @type {bigint|number|string=} AccountID. Note: use type `string` if `bigint` (MariaDB int(11) auto_increment) */
+		/** @type {bigint|number|string=} AccountID. Note: use type `string` if `bigint` (JSON serialization) */
 		this.aid = p?.aid ?? 0
 		this.type = p?.type ?? ENTITY_TYPE.NPC
 		this.name = p?.name ?? ''
-		this.lastMap = p?.lastMap ?? ''
-		this.lastX = p?.lastX ?? 0
-		this.lastY = p?.lastY ?? 0
 
-		this.w = p?.w ?? 64 //32
-		this.h = p?.h ?? 64 //32
+		/** @type {boolean} Whether the entity is visible. default: true */
+		this.visible = p?.visible ?? true
 
-		// #region the position entity was created or saved
-		this.saveMap = p?.saveMap ?? ''
-		this.saveX = p?.saveX ?? 0
-		this.saveY = p?.saveY ?? 0
+		// #region size
+		this.w = p?.w ?? Const.ENTITY_WIDTH
+		this.h = p?.h ?? Const.ENTITY_HEIGHT
 		// #endregion
-		this.dir = p?.dir ?? 0
 
+		// #region positions current & saved
+		this.dir = p?.dir ?? 0
+		this.lastMap = p?.lastMap ?? Const.ENTITY_LAST_MAP
+		this.lastX = p?.lastX ?? Const.ENTITY_LAST_X
+		this.lastY = p?.lastY ?? Const.ENTITY_LAST_Y
+		this.saveMap = p?.saveMap ?? Const.ENTITY_LAST_MAP
+		this.saveX = p?.saveX ?? Const.ENTITY_LAST_X
+		this.saveY = p?.saveY ?? Const.ENTITY_LAST_Y
+		// #endregion
+
+		// #region health & mana
 		this.hp = p?.hp ?? 1
 		this.hpMax = p?.hpMax ?? 1
 		this.mp = p?.mp ?? 1
 		this.mpMax = p?.mpMax ?? 1
+		// #endregion
 
 		/** @type {DOMHighResTimeStamp} - time of death. default 0 */
 		this.death = p?.death ?? 0
+		this.latency = p?.latency ?? 0
 
 		this.level = p?.level ?? 1
 		this.jobLevel = p?.jobLevel ?? 1
@@ -124,28 +134,28 @@ export class Entity {
 		this.sex = p?.sex ?? 0
 		this.lastLogin = p?.lastLogin ?? new Date()
 		this.money = p?.money ?? 0
-		this.range = p?.range ?? 32
-		this.atk = p?.atk ?? 1
-		this.atkMultiplier = p?.atkMultiplier ?? 1
-		this.mAtk = p?.mAtk ?? 1
-		this.mAtkMultiplier = p?.mAtkMultiplier ?? 1
 		this.eAtk = p?.eAtk ?? ELEMENT.NEUTRAL
 		this.eDef = p?.eDef ?? ELEMENT.NEUTRAL
-		this.speed = p?.speed ?? 400
-		this.speedMultiplier = p?.speedMultiplier ?? 1
-		this.aspd = p?.aspd ?? 1000
+		this.range = p?.range ?? Const.ENTITY_RANGE
+		this.atk = p?.atk ?? 1
+		this.atkMultiplier = p?.atkMultiplier ?? 1.0
+		this.mAtk = p?.mAtk ?? 1
+		this.mAtkMultiplier = p?.mAtkMultiplier ?? 1.0
+		this.speed = p?.speed ?? Const.ENTITY_MOVE_SPEED
+		this.aspd = p?.aspd ?? Const.ENTITY_ATK_SPEED
 		this.aspdMultiplier = p?.aspdMultiplier ?? 1.0
-		this.cspd = p?.cspd ?? 1
-		this.cspdMultiplier = p?.cspdMultiplier ?? 1
-		this.crit = p?.crit ?? 1
-		this.critMultiplier = p?.critMultiplier ?? 1
-		this.def = p?.def ?? 1
-		this.defMultiplier = p?.defMultiplier ?? 1
-		this.mDef = p?.mDef ?? 1
-		this.mDefMultiplier = p?.mDefMultiplier ?? 1
-		this.dodge = p?.dodge ?? 1
-		this.dodgeMultiplier = p?.dodgeMultiplier ?? 1
-		this.flee = p?.flee ?? 1
+		this.cspd = p?.cspd ?? Const.ENTITY_CAST_SPEED
+		this.cspdMultiplier = p?.cspdMultiplier ?? 1.0
+		this.crit = p?.crit ?? 0
+		this.critMultiplier = p?.critMultiplier ?? 1.0
+		this.def = p?.def ?? 0
+		this.defMultiplier = p?.defMultiplier ?? 1.0
+		this.mDef = p?.mDef ?? 0
+		this.mDefMultiplier = p?.mDefMultiplier ?? 1.0
+		this.dodge = p?.dodge ?? 0
+		this.dodgeMultiplier = p?.dodgeMultiplier ?? 1.0
+		this.block = p?.block ?? 0
+		this.blockMultiplier = p?.blockMultiplier ?? 1.0
 		this.str = p?.str ?? 1
 		this.agi = p?.agi ?? 1
 		this.vit = p?.vit ?? 1
@@ -153,15 +163,16 @@ export class Entity {
 		this.dex = p?.dex ?? 1
 		this.luk = p?.luk ?? 1
 		this.hit = p?.hit ?? 1
+
 		// #region Recovery
 		/** @type {number} - Health recovery amount. default 0 */
 		this.hpRecovery = p?.hpRecovery ?? 0
-		/** @type {number} - Health recovery rate. default 5000 */
-		this.hpRecoveryRate = p?.hpRecoveryRate ?? 5000
+		/** @type {number} - Health recovery rate */
+		this.hpRecoveryRate = p?.hpRecoveryRate ?? Const.ENTITY_HP_REGEN_RATE
 		/** @type {number} - Mana recovery amount. default 0 */
 		this.mpRecovery = p?.mpRecovery ?? 0
-		/** @type {number} - Mana recovery rate. default 5000 */
-		this.mpRecoveryRate = p?.mpRecoveryRate ?? 5000
+		/** @type {number} - Mana recovery rate */
+		this.mpRecoveryRate = p?.mpRecoveryRate ?? Const.ENTITY_MP_REGEN_RATE
 		// #endregion
 
 		this.skills = p?.skills ?? []
@@ -175,8 +186,9 @@ export class Entity {
 		// #region NPC
 		/** @type {string} - **NPC** dialog text */
 		this.dialog = p?.dialog ?? ''
-		/** @type {number} - Warp portal destination map id */
-		this.portalId = p?.portalId ?? 0
+		// #endregion
+
+		// #region PORTAL
 		/** @type {string} - Warp portal destination map name */
 		this.portalName = p?.portalName ?? ''
 		/** @type {number} - Warp portal destination X */

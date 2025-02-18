@@ -53,10 +53,8 @@ export default class TouchControl {
         console.log(x, y, stack)
 
         // send a "click" message to the server if it's open
-        if (State.socket != null && State.socket.readyState === WebSocket.OPEN) {
-            // server EntityControl.onClickPosition
-            State.socket.send(JSON.stringify({ type: "click", x, y }))
-        }
+        // server EntityControl.onClickPosition
+        State.socket.send(JSON.stringify({ type: "click", x, y }))
     }
 
     /**

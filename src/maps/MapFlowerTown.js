@@ -1,31 +1,32 @@
 import { Entity } from '../models/Entity.js'
-import { MOBS } from '../data/MOBS.js'
+import { NPCS } from '../data/NPCS.js'
+import { DIRECTION, ENTITY_TYPE } from '../enum/Entity.js'
 import { WorldMap } from '../models/WorldMap.js'
 import { EntityControl } from '../control/EntityControl.js'
-import { ENTITY_TYPE } from '../enum/Entity.js'
 import createGameId from '../utils/createGameId.js'
-import createMonster from '../utils/createMonster.js'
 
 // create map
-export default class MapPlainFields1 extends WorldMap {
+export default class MapFlowerTown extends WorldMap {
 	/** @param {import("../models/WorldMap.js").TWorldMapProps} props */
 	constructor(props = {}) {
 		super({
-			id: 6,
-			name: "Plain fields 1",
-			width: 1200,
-			height: 800,
+			id: 2,
+			name: "Flower town",
+			width: 2000,
+			height: 1400,
 			isLoaded: true, // no assets to load
 			...props
 		})
 	}
 
 	/**
-	 * Loads the map data asynchronously
+	 * Loads the map data asynchronously.
+	 * Sets the map's `isLoaded` property to true upon successful loading.
 	 * @returns {Promise<void>} 
 	 */
 	async load() {
 		// load any assets etc.
+		// ...
 		this.isLoaded = true
 	}
 
@@ -39,38 +40,32 @@ export default class MapPlainFields1 extends WorldMap {
 		this.entities = [
 			new Entity({
 				type: ENTITY_TYPE.PORTAL,
-				lastX: 8,
-				lastY: 800 / 2,
+				lastX: this.width - 20,
+				lastY: 785,
 				portalName: "Lobby town",
-				portalX: 1878,
-				portalY: 722,
+				portalX: 80,
+				portalY: 890,
 				range: 32,
 				w: 32,
 				h: 32,
 			}),
 			new Entity({
 				type: ENTITY_TYPE.PORTAL,
-				lastX: 1200 - 8,
-				lastY: 800 / 2,
-				portalName: "Plain fields 2",
-				portalX: 20,
-				portalY: 800 / 2,
+				lastX: 20,
+				lastY: 785,
+				portalName: "Car town",
+				portalX: 1980,
+				portalY: 500,
 				range: 32,
 				w: 32,
 				h: 32,
 			}),
-			// to create single monsters:
-			// new MonsterControl({ ...MOBS[1], map: this }),
-			// new MonsterControl({ ...MOBS[2], map: this }),
-			// multiple monsters:
-			// ...createMonster(this, 50, { ...MOBS[0] }), // Worm
-			...createMonster(this, 10, { ...MOBS[1] }), // Cat
-			...createMonster(this, 10, { ...MOBS[2] }), // Orc
-			...createMonster(this, 10, { ...MOBS[8] }), // Dino
-			...createMonster(this, 10, { ...MOBS[9] }), // Mushroom
-			...createMonster(this, 10, { ...MOBS[10] }), // Wind spirit
-			...createMonster(this, 10, { ...MOBS[11] }), // Slushie
-			...createMonster(this, 10, { ...MOBS[12] }), // Red mushroom
+			// new Entity({
+			// 	...NPCS[1], // Townsfolk
+			// 	lastX: 960,
+			// 	lastY: 1058,
+			// 	dir: DIRECTION.UP,
+			// }),
 		]
 		// add controllers and game ids
 		this.entities.forEach((entity) => {

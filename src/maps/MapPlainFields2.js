@@ -3,14 +3,15 @@ import { MOBS } from '../data/MOBS.js'
 import { WorldMap } from '../models/WorldMap.js'
 import { EntityControl } from '../control/EntityControl.js'
 import { ENTITY_TYPE } from '../enum/Entity.js'
-import { createGameId, createMonster } from '../utils/EntityUtil.js'
+import createGameId from '../utils/createGameId.js'
+import createMonster from '../utils/createMonster.js'
 
 // create map
 export default class MapPlainFields1 extends WorldMap {
 	/** @param {import("../models/WorldMap.js").TWorldMapProps} props */
 	constructor(props = {}) {
 		super({
-			id: 3,
+			id: 7,
 			name: "Plain fields 2",
 			width: 1200,
 			height: 800,
@@ -40,7 +41,6 @@ export default class MapPlainFields1 extends WorldMap {
 				type: ENTITY_TYPE.PORTAL,
 				lastX: 8,
 				lastY: 800 / 2,
-				portalId: 2,
 				portalName: "Plain fields 1",
 				portalX: 1200 - 8 - 20, // map width - portal X position - portal width/range
 				portalY: 800 / 2,
