@@ -28,8 +28,8 @@ export class EntityControl {
 	 * @param {import("../models/WorldMap.js").WorldMap=} map - The map instance.
 	 */
 	constructor(entity, world, socket, map) {
-		/** @type {number} - server timestamp to calculate latency */
-		this.serverTimestamp = performance.now()
+		/** @type {DOMHighResTimeStamp} - Created timestamp */
+		this.created = performance.now()
 
 		/** @type {import("../models/Entity.js").Entity} - Entity instance */
 		this.entity = entity
