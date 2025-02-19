@@ -1,93 +1,109 @@
 # Docs
 
-TODO some guides how things work around here...
+TODO
+ - add some guides how things work around here...
+ - explain how to create maps, entity textures and how to use them.
+ - explain how the login / register flow works
 
 Sample diagram:
 ```mermaid
 classDiagram
-    World <|-- WorldMap
-    World: +int playersTotalCount
-    World: +int serverStartTime
-    World: +int updateTick->setInterval->onTick
-    World: +broadcast()
-    World: +joinMapByName()
-    World: +getPlayersCount()
-    World: +onTick()
-    World: +onConnection()
-    World: +onClientClose()
-    class WorldMap{
-      +int id
-      +String name
-      +WorldMap world
-      +Number width
-      +Number height
-      +Boolean isLoaded
-      +Boolean isCreated
-      +Array entities
-      +load()
-      +create()
-      +playerEnterMap()
-      +removeEntity()
-      +onLeaveMap()
-    }
-    WorldMap <|-- MapLobbyTown
-    MapLobbyTown <|-- EntityControl
-    class MapLobbyTown{
-      +int id=1
-      +String name="Lobby Town"
-      +Number width=600
-      +Number height=600
-      +Boolean isLoaded=true
-      +Array entities
-    }
-    WorldMap <|-- MapPlainFields1
-    class MapPlainFields1{
-      +int id=2
-      +String name="Plain Fields 1"
-      +Number width=1200
-      +Number height=800
-      +Boolean isLoaded=true
-      +Array entities
-    }
-    EntityControl <|-- Entity
-    World <|-- EntityControl
-    class EntityControl {
-        +int id
-        +string gid
-        +int aid
-        +Entity _follow
-        +move()
-        +attack()
-        +stopAttack()
-        +takeDamageFrom()
-        +die()
-        +revive()
-        +follow()
-        +stopFollow()
-        +toSavePosition()
-        +nearbyAutoAttack()
-        +onTick()
-        +onError()
-        +onMessage()
-        +onClose()
-        +onChat()
-        +onEnterMap()
-        +onKill()
-    }
-    class Entity {
-        +int id
-        +int gid
-        +int type
-        +String name="Player-1"
-        +String lastMap
-        +Number lastX
-        +Number lastY
-        +WorldMap map
-        +Number hp
-        +Number hpMax
-        +Number level
-        +Number baseExp
-        +Number atk
-        +Number def
-    }
+  World <|-- WorldMap
+  class World{
+    +WebSocketServer socket
+    +Database db
+    +Array dbPools
+    +Array maps
+    +int playersTotalCount
+    +int serverStartTime
+    +Boolean isClosing = false
+    +int updateTick->setInterval->onTick
+    +broadcast()
+    +joinMapByName()
+    +getPlayersCount(): Online
+    +addEntityToMap()
+    +removeEntityFromMap()
+    +onTick()
+    +onExit()
+    +onConnection()
+    +onClientClose()
+  }
+  class WorldMap{
+    +int id
+    +String name
+    +World world
+    +Number width
+    +Number height
+    +Boolean isLoaded
+    +Boolean isCreated
+    +Array entities
+    +load()
+    +create()
+    +findEntitiesInRadius()
+    +findMapEntityById()
+    +findMapEntityByGid()
+  }
+  WorldMap <|-- MapLobbyTown: extends WorldMap
+  MapLobbyTown <|-- EntityControl
+  class MapLobbyTown {
+    +int id = 1
+    +String name = "Lobby Town"
+    +Number width = 2000
+    +Number height = 1400
+    +Boolean isLoaded = true
+    +Array entities
+    +create(): CreateEntities
+  }
+  WorldMap <|-- MapPlainFields1: extends WorldMap
+  class MapPlainFields1{
+    +int id = 2
+    +String name = "Plain Fields 1"
+    +Number width = 1200
+    +Number height = 800
+    +Boolean isLoaded = true
+    +Array entities
+    +create(): CreateEntities
+  }
+  MapLobbyTown <|-- Entity
+  Entity <|-- EntityControl
+  class Entity {
+    +int id
+    +int gid
+    +int aid = 
+    +int type = ENTITY_TYPE.PLAYER
+    +String name = "Player-1"
+    +String lastMap
+    +Number lastX
+    +Number lastY
+    +WorldMap map
+    +Number hp
+    +Number hpMax
+    +Number level
+    +Number baseExp
+    +Number atk
+    +Number def
+  }
+  World <|-- EntityControl
+  class EntityControl {
+    +int created
+    +Entity entity
+    +World world
+    +WebSocket socket
+    +WorldMap map
+    +AI ai
+    +move()
+    +attack()
+    +stopAttack()
+    +takeDamage()
+    +touch()
+    +revive()
+    +follow()
+    +stopFollow()
+    +toSavePosition()
+    +syncStats()
+    +onTick()
+    +onSocketError()
+    +onSocketMessage()
+    +onSocketClose()
+  }
 ```
