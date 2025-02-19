@@ -20,6 +20,8 @@ In this game, players can...
 - Interact with other players and NPCs (Non-Playable Characters)
 - Customize characters, entities and maps with your own (or kids) drawing skills :)
 
+**Please note: some of the demo assets are not included in the project!**
+
 Login view:
 
 ![Login](./docs/login_01.jpg)
@@ -39,6 +41,10 @@ Game view 3 (Plain field 1 - Monsters):
 Game view 4 (Other Players):
 
 ![Other Players](./docs/game_04.jpg)
+
+Game view 5 (without any assets):
+
+![No assets](./docs/game_05.jpg)
 
 ## Prerequisites
  - Some coding experience is required.
