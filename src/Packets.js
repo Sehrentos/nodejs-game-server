@@ -7,19 +7,22 @@ import { Entity } from "./models/Entity.js"
  * @typedef {import("./models/WorldMap.js").TWorldMapProps} TWorldMap
  * 
  * @typedef {Object} TPlayerLeavePacket - Player leave packet
- * @prop {string} type
+ * @prop {"player-leave"} type
  * @prop {string} name
  * 
+ * @typedef {Object} TPlayerLogoutPacket - Player logout packet
+ * @prop {"logout"} type
+ * 
  * @typedef {Object} TMapPacket - Map update sent from the server
- * @prop {string} type
+ * @prop {"map"} type
  * @prop {TWorldMap} map
  * 
  * @typedef {Object} TPlayerPacket - Player update sent from the server
- * @prop {string} type
+ * @prop {"player"} type
  * @prop {TEntity} player
  * 
  * @typedef {Object} TChatPacket - Chat message sent from the server or player
- * @prop {string} type
+ * @prop {"chat"} type
  * @prop {string} channel
  * @prop {string} from
  * @prop {string} to
@@ -27,18 +30,18 @@ import { Entity } from "./models/Entity.js"
  * @prop {number=} timestamp Date.now()
  * 
  * @typedef {Object} TDialogPacket - NPC dialog sent from the server
- * @prop {string} type
+ * @prop {"npc-dialog"} type
  * @prop {string} gid
  * @prop {string} dialog
  * 
  * @typedef {Object} TDialogResponsePacket - NPC dialog response sent from the player
- * @prop {string} type "dialog"
+ * @prop {"dialog"} type "dialog"
  * @prop {string} action e.g. "open", "close", "next"
  * @prop {string} gid
  * @prop {string} playerGid
  * 
  * @typedef {Object} THeartbeatPacket - Ping/Pong packet sent from the server/client
- * @prop {string} type
+ * @prop {"ping"|"pong"} type
  * @prop {number} timestamp
  */
 
@@ -49,6 +52,13 @@ import { Entity } from "./models/Entity.js"
  * @returns {TPlayerLeavePacket} A packet object indicating the player has left.
  */
 export const playerLeave = (name) => ({ type: "player-leave", name })
+
+/**
+ * Creates a "logout" packet.
+ * 
+ * @returns {TPlayerLogoutPacket} A packet object indicating the player has left.
+ */
+export const playerLogout = () => ({ type: "logout" })
 
 /**
  * Creates a "ping/pong" packet. Used to get player latency.

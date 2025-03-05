@@ -9,6 +9,8 @@ import Mob11 from "./Mob11.js";
 import Mob12 from "./Mob12.js";
 import Mob13 from "./Mob13.js";
 import Mob14 from "./Mob14.js";
+import Mob15 from "./Mob15.js";
+import Mob16 from "./Mob16.js";
 import Mob2 from "./Mob2.js";
 import Mob3 from "./Mob3.js";
 import Mob4 from "./Mob4.js";
@@ -54,6 +56,8 @@ export const Sprites = {
         Mob12,
         Mob13,
         Mob14,
+        Mob15,
+        Mob16,
     ],
     npc: [
         undefined, // ID:0 sprite does not exist

@@ -1,6 +1,6 @@
-import e from "express";
 import { ENTITY_TYPE } from "../enum/Entity.js";
 import { updateChat } from "../Packets.js";
+import { REGEX_BLACKLIST_PLAYER_NAMES } from "../Constants.js";
 
 /**
  * Chat commands available in the game
@@ -67,33 +67,29 @@ function onChatCommand(entity, data, timestamp) {
 // #region commands
 
 CMD['/help'] = (entity, data, params) => {
-    const ctrl = entity.control
-    const packet = updateChat(
+    entity.control.socket.send(JSON.stringify(updateChat(
         'default',
         'Server',
         entity.name,
         `Available commands: ${Object.keys(CMD).join(', ')}`
-    );
-    ctrl.socket.send(JSON.stringify(packet));
+    )));
 }
 
 // save position in the current map
 CMD['/save'] = async (entity, data, params) => {
     try {
         const ctrl = entity.control
-        // check current map name from entity
-        if (!/(\stown|\svillage)/i.test(ctrl.map.name)) {
-            console.log(`[Event.onChatCommand] only save position in towns.`)
-            const packet = updateChat("default", "Server", entity.name, "You can only save position in towns.");
-            ctrl.socket.send(JSON.stringify(packet));
+        // check current map is town
+        // if (!/(\stown|\svillage)/i.test(ctrl.map.name)) {
+        if (!ctrl.map.isTown) {
+            ctrl.socket.send(JSON.stringify(updateChat("default", "Server", entity.name, "You can only save position in towns.")));
             return
         }
         entity.saveMap = entity.lastMap
         entity.saveX = entity.lastX
         entity.saveY = entity.lastY
 
-        const packet = updateChat("default", "Server", entity.name, "Position saved.");
-        ctrl.socket.send(JSON.stringify(packet));
+        ctrl.socket.send(JSON.stringify(updateChat("default", "Server", entity.name, "Position saved.")));
 
     } catch (error) {
         console.log(`[Event.onChatCommand] error changing name.`, error)
@@ -104,13 +100,23 @@ CMD['/changename'] = async (entity, data, params) => {
     try {
         const ctrl = entity.control
         const name = params.join(' ');
-        const entityId = entity.id
-        const { affectedRows } = await ctrl.world.db.player.setName(entityId, name)
-        if (affectedRows > 0) {
-            entity.name = name
-        } else {
-            console.log(`[Event.onChatCommand] error changing name.`)
+
+        // blacklist validation for names
+        if (REGEX_BLACKLIST_PLAYER_NAMES.test(name)) {
+            ctrl.socket.send(JSON.stringify(updateChat("default", "Server", entity.name, "Change name failed.")));
+            return
         }
+
+        const { affectedRows } = await ctrl.world.db.player.setName(entity.id, name)
+        if (!affectedRows) {
+            ctrl.socket.send(JSON.stringify(updateChat("default", "Server", entity.name, "Change name failed.")));
+            return
+        }
+
+        // success
+        entity.name = name
+        ctrl.socket.send(JSON.stringify(updateChat("default", "Server", entity.name, "Change name success.")));
+
     } catch (error) {
         console.log(`[Event.onChatCommand] error changing name.`, error)
     }
@@ -119,22 +125,22 @@ CMD['/changename'] = async (entity, data, params) => {
 CMD['/changemap'] = async (entity, data, params) => {
     try {
         const ctrl = entity.control
-        // "<map name with possible space> <x> <y>"
+        // "<map name or id> <x> <y>"
         const matches = params.join(' ').match(/^([a-zA-Z0-9 -_']{1,100})\s([0-9]{1,4})\s([0-9]{1,4})$/)
         if (!matches) {
-            console.log(`[Event.onChatCommand] invalid params`, params)
+            ctrl.socket.send(JSON.stringify(updateChat("default", "Server", entity.name, "Change map invalid format. Use <mapname|mapid> <x> <y>")));
             return
         }
-        const mapName = matches[1]
+        const mapNameOrId = matches[1]
         const mapX = Number(matches[2] || -1)
         const mapY = Number(matches[3] || -1)
         // check map exists
-        const map = ctrl.world.maps.find(m => m.name === mapName)
+        const map = ctrl.world.maps.find(m => m.name === mapNameOrId || m.id === parseInt(mapNameOrId))
         if (!map) {
-            console.log(`[Event.onChatCommand] map "${mapName}" not found.`)
+            ctrl.socket.send(JSON.stringify(updateChat("default", "Server", entity.name, `The map "${mapNameOrId}" does not exist.`)));
             return
         }
-        map.world.joinMapByName(entity, mapName, mapX, mapY)
+        map.world.joinMap(entity, mapNameOrId, mapX, mapY)
     } catch (error) {
         console.log(`[Event.onChatCommand] error changing map.`, error.message)
     }

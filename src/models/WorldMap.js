@@ -7,6 +7,8 @@
  * @prop {number=} height - The height of the map.
  * @prop {boolean=} isLoaded - Whether the map is loaded.
  * @prop {boolean=} isCreated - Whether the map is created.
+ * @prop {boolean=} isTown - Whether the map is a town.
+ * @prop {boolean=} isPVP - Whether the map has Player versus Player enabled.
  * @prop {Array<import("../models/Entity.js").Entity>=} entities - A list of entities.
  */
 
@@ -35,6 +37,10 @@ export class WorldMap {
 		this.isLoaded = p?.isLoaded ?? false
 		/** @type {boolean} */
 		this.isCreated = p?.isCreated ?? false
+		/** @type {boolean} */
+		this.isTown = p?.isTown ?? false
+		/** @type {boolean} */
+		this.isPVP = p?.isPVP ?? false
 		/** @type {Array<import("../models/Entity.js").Entity>} */
 		this.entities = p?.entities ?? []
 	}

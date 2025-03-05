@@ -1,4 +1,4 @@
-const TAG = '[Event.onEntityCloseDialog]';
+const TAG = '[Event.onEntityPacketDialog]';
 
 /**
  * Handles the NPC interaction dialog packets received from the server. These are sent by the client.

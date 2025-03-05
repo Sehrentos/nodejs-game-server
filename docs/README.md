@@ -19,7 +19,7 @@ classDiagram
     +Boolean isClosing = false
     +int updateTick->setInterval->onTick
     +broadcast()
-    +joinMapByName()
+    +joinMap()
     +getPlayersCount(): Online
     +addEntityToMap()
     +removeEntityFromMap()
@@ -95,7 +95,6 @@ classDiagram
     +attack()
     +stopAttack()
     +takeDamage()
-    +touch()
     +revive()
     +follow()
     +stopFollow()

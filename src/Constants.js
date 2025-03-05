@@ -1,15 +1,31 @@
 /**
- * The server update interval in milliseconds
+ * The server update interval in milliseconds.
+ * Used to control the frequency of server updates/tics.
+ * For example, Entity move positions are calculated based on this interval with timestamps.
  */
-export const UPDATE_TICK = 1000 / 60 // or 1000/60
+export const UPDATE_TICK = 1000 / 60
 /**
- * maximum length of the message player can send to the socket
+ * maximum length of the message WebSocket will accept from the client.
  */
 export const SOCKET_MESSAGE_MAX_SIZE = 250
+/**
+ * The heartbeat (ping/pong) interval in milliseconds for calculating latency.
+ */
 export const SOCKET_HEARTBEAT_INTERVAL = 5000
 
+/**
+ * The update frequency in milliseconds for the server to send map entity updates to the client.
+ * This is used to keep the client up to date with the server's map state.
+ * Also see the `PLAYER_VIEW_AREA_SIZE` constant for the area of interest.
+ */
 export const COOLDOWN_SOCKET_SEND_MAP = 60
+/**
+ * The update frequency in milliseconds for the server to send player entity updates to the client.
+ */
 export const COOLDOWN_SOCKET_SEND_PLAYER = 5000
+/**
+ * Cooldown time in milliseconds for the player to use a portal again.
+ */
 export const COOLDOWN_PORTAL_USE = 5000
 
 /**
@@ -48,16 +64,22 @@ export const ENTITY_HP_REGEN_RATE = 5000
 export const ENTITY_MP_REGEN_RATE = 5000
 
 /**
- * The touch area size (in pixels) to find targets, 
- * when player click/touch screen.
+ * The touch area size (in pixels) to find targets, when player click/touch screen.
  * Set same value in the client-side code.
  */
 export const PLAYER_TOUCH_AREA_SIZE = 25
 /**
+ * Area of Interest/Relevance
+ * --
  * The view area size (in pixels) to find entities.
- * Found entities will be sent to the client. Set `0` for no limit.
+ * Only the found entities will be sent to the client.
+ * 
+ * This will limit how far the player can see entities 
+ * and how much data is sent to the client on each update/tick.
+ * 
+ * Use `0` for no limit.
  */
-export const PLAYER_VIEW_AREA_SIZE = 0 // was 400
+export const PLAYER_VIEW_AREA_SIZE = 600
 
 // #region Player experience
 export const EXP_BASE = 200
@@ -82,4 +104,8 @@ export const PLAYER_BASE_MATK = 5
 // defence
 export const PLAYER_BASE_DEF = 1.5
 export const PLAYER_BASE_MDEF = 1.5
+// #endregion
+
+// #region Regex
+export const REGEX_BLACKLIST_PLAYER_NAMES = /^(root|admin|gm|user|test|security|server|bot)$/i
 // #endregion

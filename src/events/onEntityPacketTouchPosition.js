@@ -1,9 +1,11 @@
 import { PLAYER_TOUCH_AREA_SIZE } from "../Constants.js"
 import { ENTITY_TYPE } from "../enum/Entity.js"
+import { Entity } from "../models/Entity.js"
 import { WorldMap } from "../models/WorldMap.js"
+import { updateNPCDialog } from "../Packets.js"
 
 /**
- * Handles the click event on the map from the player.
+ * Handles the click/touch event on the map from the player.
  * If an entity is found within a touch area radius, interact with the entity.
  * 
  * @param {import("../models/Entity.js").Entity} player
@@ -13,39 +15,102 @@ import { WorldMap } from "../models/WorldMap.js"
  * @param {number} timestamp - The current timestamp or performance.now().
  */
 export default function onEntityPacketTouchPosition(player, json, timestamp) {
-    player.control.stopFollow()
-    player.control.stopMoveTo()
+    const ctrl = player.control
+    ctrl.stopFollow()
+    ctrl.stopMoveTo()
 
     if (player.hp <= 0) return // must be alive
 
-    // check if player is in range of entity
-    // find entities at clicked position in 4-cell radius
-    const entities = WorldMap.findEntitiesInRadius(player.control.map, json.x, json.y, PLAYER_TOUCH_AREA_SIZE)
+    // find entities at clicked position in x radius
+    const entities = WorldMap.findEntitiesInRadius(ctrl.map, json.x, json.y, PLAYER_TOUCH_AREA_SIZE)
         .filter(entity => entity.gid !== player.gid) // exclude self
 
     // if no entities found
-    // start moving player to the clicked position
+    // start moving to the clicked position
     if (entities.length === 0) {
-        player.control.moveTo(json.x, json.y, timestamp)
+        ctrl.moveTo(json.x, json.y, timestamp)
         return
     }
 
-    for (const entity of entities) {
-        if (entity.type === ENTITY_TYPE.MONSTER && entity.hp > 0) {
-            player.control.attack(entity, timestamp)
-            return
-        }
-        else if (entity.type === ENTITY_TYPE.NPC) {
-            player.control.follow(entity, timestamp)
-            player.control.touch(entity, timestamp)
-            return
-        }
-        else if (entity.type === ENTITY_TYPE.PORTAL) {
-            player.control.moveTo(json.x, json.y, timestamp)
-            return
-        }
-        else if (entity.type === ENTITY_TYPE.PLAYER) {
-            console.log(`[Event.onEntityPacketTouchPosition] "${player.name}" is interacting with "${entity.name}" x:${json.x}, y:${json.y})`)
-        }
+    // 1. priority - Monster (alive)
+    const mobs = entities.filter(e => e.type === ENTITY_TYPE.MONSTER && e.hp > 0)
+    if (mobs.length) {
+        return touch(player, mobs[0], timestamp)
     }
+
+    // 2. priority - NPC
+    const npcs = entities.filter(e => e.type === ENTITY_TYPE.NPC)
+    if (npcs.length) {
+        return touch(player, npcs[0], timestamp)
+    }
+
+    // 3. priority - Player
+    const players = entities.filter(e => e.type === ENTITY_TYPE.PLAYER)
+    if (players.length) {
+        return touch(player, players[0], timestamp)
+    }
+
+    // 4. priority - PORTAL
+    const portals = entities.filter(e => e.type === ENTITY_TYPE.PORTAL)
+    if (portals.length) {
+        return touch(player, portals[0], timestamp)
+    }
+
+    // 5. move to position
+    ctrl.moveTo(json.x, json.y, timestamp)
+}
+
+/**
+ * Handles the interaction between a player and another entity when the player touches/clicks
+ * on the map. Depending on the type of entity, the player may attack, follow, or interact
+ * with the entity. The interaction logic varies:
+ * - If the entity is a MONSTER, the player will attack it.
+ * - If the entity is a PLAYER and the map is PVP-enabled, the player will attack the other player.
+ * - If the entity is an NPC, the player will follow the NPC if not in range, or interact if in range.
+ * - If the entity is a PORTAL, the player will move to the portal's position.
+ * 
+ * @param {import("../models/Entity.js").Entity} player - The player entity initiating the interaction.
+ * @param {import("../models/Entity.js").Entity} entity - The target entity being interacted with.
+ * @param {number} timestamp - The current timestamp or performance.now().
+ */
+function touch(player, entity, timestamp) {
+    const inRange = Entity.inRangeOfEntity(player, entity)
+
+    switch (entity.type) {
+        case ENTITY_TYPE.MONSTER:
+            player.control.attack(entity, timestamp)
+            break;
+
+        case ENTITY_TYPE.PLAYER:
+            // player interaction
+            if (player.control.map.isPVP) {
+                // in PVP maps, players can attack each other
+                player.control.attack(entity, timestamp)
+            }
+            break;
+
+        case ENTITY_TYPE.NPC:
+            // must be in range to interact with
+            if (!inRange) {
+                // start moving towards the NPC
+                player.control.follow(entity, timestamp)
+                return
+            }
+            // in range of the NPC
+            // while interacting with an NPC disable entity movement
+            player.control.isMovementBlocked = true
+            // send start NPC interact message
+            player.control.socket.send(JSON.stringify(updateNPCDialog(entity.gid, entity.dialog)))
+            break;
+
+        case ENTITY_TYPE.PORTAL:
+            player.control.moveTo(entity.lastX, entity.lastY, timestamp)
+            break;
+
+        default:
+            break;
+    }
+
+    // DEBUG
+    console.log(`[Event.onEntityPacketTouchPosition] (inRange:${inRange}) "${player.name}" interact with "${entity.name}" x:${entity.lastX}, y:${entity.lastY} (gid: ${entity.gid})`)
 }

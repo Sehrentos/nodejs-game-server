@@ -16,6 +16,7 @@ export default class LoginUI {
 		this.isRegister = false
 		this.isRemember = false
 		this.isLoading = false
+		this.errorMessage = ""
 		this.nextView = vnode.attrs.nextView || "#!/game"
 		this._onSubmit = this.onSubmit.bind(this)
 		this._onChange = this.onChange.bind(this)
@@ -32,6 +33,7 @@ export default class LoginUI {
 			if (jwtToken) {
 				this.isRemember = true
 				this.isLoading = true
+				this.errorMessage = ""
 				Auth.loginToken(jwtToken, this.isRemember).then(() => {
 					// success, move to next view
 					this.isLoading = false
@@ -39,6 +41,8 @@ export default class LoginUI {
 				}).catch(e => {
 					console.log("login failed:", e.message)
 					this.isLoading = false
+					this.errorMessage = e.message
+					localStorage.removeItem("token")
 					m.redraw()
 				})
 			}
@@ -54,6 +58,7 @@ export default class LoginUI {
 				m("div.title", this.isRegister ? "Register" : "Login"),
 				m("p", "Note: This is only for testing purposes."),
 				m("p", "Register an account to play the game."),
+				m("div.response", this.isLoading ? "Loading..." : this.errorMessage),
 				m("input", {
 					type: "text",
 					name: "username",
@@ -109,6 +114,9 @@ export default class LoginUI {
 	async onSubmit(event) {
 		event.preventDefault()
 
+		// reset error message
+		this.errorMessage = ""
+
 		// check is loading already
 		if (this.isLoading) return
 
@@ -137,12 +145,14 @@ export default class LoginUI {
 				await Auth.register(username, password, email, this.isRemember)
 			} catch (e) {
 				console.log("register failed", e.message)
+				this.errorMessage = e.message
 			}
 		} else {
 			try {
 				await Auth.login(username, password, this.isRemember)
 			} catch (e) {
 				console.log("login failed", e.message)
+				this.errorMessage = e.message
 			}
 		}
 		// success, move to next view
@@ -158,13 +168,12 @@ export default class LoginUI {
 			case "register":
 				// @ts-ignore tested, checked exists
 				this.isRegister = event.target.checked
-				console.log(event.type, "register:", this.isRegister)
+				this.errorMessage = "" // reset error message
 				m.redraw()
 				break;
 			case "remember":
 				// @ts-ignore tested, checked exists
 				this.isRemember = event.target.checked
-				console.log(event.type, "remember:", this.isRemember)
 				break;
 			default:
 				break;

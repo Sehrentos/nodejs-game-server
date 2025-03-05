@@ -17,6 +17,6 @@ export const State = {
         channel: "default",
         from: "info",
         to: "world",
-        message: `Move with WASD or Arrow keys. Press "C" to toggle character info.`,
+        message: `Move with WASD or Arrow keys. Press "C" to toggle character info. Type "/help" for commands. Press "Escape" to open exit menu.`,
     }],
 }

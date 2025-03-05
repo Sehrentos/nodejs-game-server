@@ -27,7 +27,7 @@ export default function onEntityUpdatePortal(portal, timestamp) {
                 // player use portal again 5 seconds after last portal used
                 if (entity.control._portalUseCd.isExpired(timestamp)) {
                     entity.control._portalUseCd.set(timestamp + COOLDOWN_PORTAL_USE)
-                    world.joinMapByName(entity, portal.portalName, portal.portalX, portal.portalY)
+                    world.joinMap(entity, portal.portalName, portal.portalX, portal.portalY)
                 }
             }
         }

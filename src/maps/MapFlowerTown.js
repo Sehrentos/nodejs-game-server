@@ -12,6 +12,7 @@ export default class MapFlowerTown extends WorldMap {
 		super({
 			id: 2,
 			name: "Flower town",
+			isTown: true,
 			width: 2000,
 			height: 1400,
 			isLoaded: true, // no assets to load

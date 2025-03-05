@@ -23,9 +23,6 @@ loginRouter.post('/', async (req, res, next) => {
         conn = await DB.connect()
 
         const account = await DB.account.login(username, password, last_ip);
-        if (!account) {
-            throw Error('Invalid credentials');
-        }
 
         // generate JWT token, but filter some account props
         const token = generateToken({
@@ -90,11 +87,8 @@ loginRouter.post('/token', async (req, res, next) => {
     try {
         conn = await DB.connect()
 
-        // get accout data with old token
+        // get account data with old token
         const account = await DB.account.loginToken(token);
-        if (!account) {
-            throw Error('Invalid token');
-        }
 
         // generate JWT token, but filter some account props
         const jwtToken = generateToken({

@@ -16,6 +16,9 @@ import onEntityUpdatePlayer from '../events/onEntityUpdatePlayer.js';
 import onEntityUpdateMonster from '../events/onEntityUpdateMonster.js';
 import onEntityUpdateNPC from '../events/onEntityUpdateNPC.js';
 import onEntityUpdatePortal from '../events/onEntityUpdatePortal.js';
+import onEntityPacketLogout from '../events/onEntityPacketLogout.js';
+import onEntityEnterMap from '../events/onEntityEnterMap.js';
+import onEntityLeaveMap from '../events/onEntityLeaveMap.js';
 import Cooldown from '../utils/Cooldown.js';
 import * as Const from '../Constants.js';
 
@@ -106,6 +109,7 @@ export class EntityControl {
 					case 'chat': onEntityPacketChat(this.entity, json, timestamp); break;
 					case 'click': onEntityPacketTouchPosition(this.entity, json, timestamp); break;
 					case 'dialog': onEntityPacketDialog(this.entity, json, timestamp); break;
+					case 'logout': onEntityPacketLogout(this.entity, json, timestamp); break;
 					default:
 						console.log(`[${this.constructor.name}] message "${this.entity.name}":`, json)
 						break;
@@ -173,36 +177,12 @@ export class EntityControl {
 	}
 
 	/**
-	 * when player touches the Entity NPC send the start dialog packet to the player
-	 * - Player must be in range of the NPC
-	 * - Player movement must be blocked
-	 * 
-	 * @param {import("../models/Entity.js").Entity} target 
-	 * @param {number} timestamp `performance.now()` when the player starts interacting
-	 */
-	touch(target, timestamp) {
-		if (!Entity.inRangeOfEntity(this.entity, target)) return
-
-		console.log(`[${this.constructor.name}] "${this.entity.name}" start NPC interaction with "${target.name}" x:${target.lastX}, y:${target.lastY} (gid: ${target.gid})`);
-		this.isMovementBlocked = true
-		// send start NPC interacting message
-		this.socket.send(JSON.stringify(Packets.updateNPCDialog(target.gid, target.dialog)))
-	}
-
-	/**
 	 * Called when the player entity enters a map.
 	 * @param {import("../models/WorldMap.js").WorldMap} map - The map the player is entering
 	 * @param {import("../models/WorldMap.js").WorldMap} oldMap - The map the player was previously in
 	 */
-	async onEnterMap(map, oldMap) {
-		console.log(`[${this.constructor.name}] id:${this.entity.id} "${this.entity.name}" enter map: "${map.name}" from "${oldMap?.name ?? ''}"`)
-		// recalculate player stats
-		this.syncStats()
-
-		// Note: this is also send in onTick
-		// send packet to client, containing player data
-		this.socket.send(JSON.stringify(Packets.updatePlayer(this.entity)));
-		return true
+	onEnterMap(map, oldMap) {
+		return onEntityEnterMap(this.entity, map, oldMap)
 	}
 
 	/**
@@ -210,12 +190,8 @@ export class EntityControl {
 	 * @param {import("../models/WorldMap.js").WorldMap} map - The map the player is entering
 	 * @param {import("../models/WorldMap.js").WorldMap} oldMap - The map the player was previously in
 	 */
-	async onLeaveMap(map, oldMap) {
-		console.log(`[${this.constructor.name}] id:${this.entity.id} "${this.entity.name}" leave map: "${oldMap?.name ?? ''}" to "${map.name}"`)
-		this.stopAttack()
-		this.stopFollow()
-		this.stopMoveTo()
-		return true
+	onLeaveMap(map, oldMap) {
+		return onEntityLeaveMap(this.entity, map, oldMap)
 	}
 
 	/**
@@ -330,16 +306,20 @@ export class EntityControl {
 	}
 
 	/**
-	 * Start attacking the target entity.
+	 * Start attacking the target entity
+	 * - call stopMoveTo method
 	 * 
 	 * @param {import("../models/Entity.js").Entity} entity - The target entity to attack.
 	 * @param {number} timestamp - The current timestamp in milliseconds.
 	 */
 	attack(entity, timestamp) {
-		this.stopMoveTo()
+		if (entity.hp <= 0) return // must be alive
 		if (entity.type === ENTITY_TYPE.NPC) return // NPC can't be attacked
 		if (entity.type === ENTITY_TYPE.PORTAL) return // PORTAL can't be attacked
-		if (entity.hp <= 0) return // must be alive
+		if (this.map !== entity.control.map) return // must be in the same map
+		if (this.entity.type === ENTITY_TYPE.PLAYER && entity.type === ENTITY_TYPE.PLAYER && !this.map.isPVP) return // PLAYER can attack in PVP map only
+
+		this.stopMoveTo()
 
 		this._attacking = entity // set target
 		this._follow = entity // start to follow
@@ -373,11 +353,11 @@ export class EntityControl {
 	 *        power (atk), and attack multiplier (atkMultiplier).
 	 */
 	takeDamageFrom(attacker) {
+		if (this.entity.hp <= 0) return // must be alive
 		if (this.entity.type === ENTITY_TYPE.NPC) return // NPC can't take damage
 		if (this.entity.type === ENTITY_TYPE.PORTAL) return // PORTAL can't take damage
-		if (this.entity.hp <= 0) return // must be alive
-		// must be in the same map, to receive damage
-		if (this.map !== attacker.control.map) return
+		if (this.map !== attacker.control.map) return // must be in the same map, to receive damage
+		if (this.entity.type === ENTITY_TYPE.PLAYER && attacker.type === ENTITY_TYPE.PLAYER && !this.map.isPVP) return // PLAYER can take damage in PVP map only
 
 		// physical attacks are always neutral? what about weapons elements?
 		// TODO take defence into account
@@ -442,7 +422,7 @@ export class EntityControl {
 		}
 		// different map, join
 		if (this.entity.type === ENTITY_TYPE.PLAYER) {
-			this.map.world.joinMapByName(this.entity, this.entity.saveMap, this.entity.saveX, this.entity.saveY)
+			this.map.world.joinMap(this.entity, this.entity.saveMap, this.entity.saveX, this.entity.saveY)
 		}
 	}
 

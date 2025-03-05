@@ -90,6 +90,8 @@ export class World {
 					}
 				}
 			}
+			// logout all accounts
+			await this.db.account.logoutAll(false)
 			// close databases
 			this.socket.close()
 			this.dbPools.forEach(pool => pool.end())
@@ -104,19 +106,19 @@ export class World {
 	/**
 	 * Join a map (or create it if it doesn't exist), and tell the Player to join it
 	 * @param {Entity} player - The Player that wants to join the map
-	 * @param {string} mapName - The name of the map to join (default: "Lobby town")
+	 * @param {string|number} mapNameOrId - The name or ID of the map to join (default: "Lobby town")
 	 * @param {number} x - The x coordinate of the map to join (default: -1)
 	 * @param {number} y - The y coordinate of the map to join (default: -1)
 	 * @returns {Promise<WorldMap>} - The map that was joined
 	 */
-	async joinMapByName(player, mapName = "Lobby town", x = -1, y = -1) {
+	async joinMap(player, mapNameOrId = "Lobby town", x = -1, y = -1) {
 		// check if map exists
-		let map = this.maps.find(m => m.name === mapName)
+		let map = this.maps.find(m => typeof mapNameOrId === "string" ? (m.name === mapNameOrId || m.id === parseInt(mapNameOrId)) : mapNameOrId)
 		if (!map) {
 			// @ts-ignore create new map from map data
 			// map = new WorldMap(this, MAPS.find(m => m.name === mapName) || { name: mapName })
 			// this.maps.push(map)
-			console.log(`[World] joinMapByName '${mapName}' not found.`)
+			console.log(`[World] joinMap '${mapNameOrId}' not found.`)
 			return
 		}
 		// load any map assets async
@@ -169,24 +171,37 @@ export class World {
 		console.log(`[World] token verified, account_id:${payload.id}, created:${datetime}, expires:${tokenExpires}`)
 
 		// token is valid, load user data from database
-		let conn;
+		let conn, player, account;
 		try {
 			conn = await this.db.connect()
 
 			// Note: find the account with same token
-			// TODO disable multiple logins on the same account
 			// account = await this.db.account.login(payload.username, payload.password);
-			let account = await this.db.account.loginToken(token);
-			if (!account) {
-				throw Error('Invalid credentials');
+			account = await this.db.account.loginToken(token);
+
+			// when multiple logins on the same account
+			// send notification and close connection
+			player = this.getPlayerByAccount(account.id);
+			if (player) {
+				player.control.socket.send(JSON.stringify(Packets.updateChat(
+					'default',
+					'Security',
+					player.name,
+					'Some one just logged into this account, but you are already logged in.'
+				)));
+				player.control.socket.close();
+				// await here for a brief moment to save player data
+				await new Promise(resolve => setTimeout(resolve, 3000)); // 3s should be enough
 			}
+
+			// TODO check if account is banned and other states
 
 			// Authorized, create new player or load existing player
 			this.playersCountTotal = await this.db.player.count()
 
 			// create new player
 			// set default values
-			let player = new Entity({
+			player = new Entity({
 				type: ENTITY_TYPE.PLAYER,
 				aid: account.id,
 				gid: createGameId(), // generate unique id for player
@@ -220,7 +235,7 @@ export class World {
 			console.log(`[World] Player "${player.name}" (id:${player.id} aid:${player.aid} lastLogin:${player.lastLogin}) connection established.`)
 
 			// make the player join map and update entity map property
-			this.joinMapByName(
+			this.joinMap(
 				player,
 				player.lastMap || 'Lobby town',
 				player.lastX || -1,
@@ -274,14 +289,16 @@ export class World {
 	 */
 	async onClientClose(player) {
 		if (this.isClosing) return // Skip, server closing process is handled in onExit method
-		console.log(`[World] player disconnected.`);
 
 		this.broadcast(JSON.stringify(Packets.playerLeave(player.name)));
+
+		// do logout by setting state=0
+		await this.db.account.logout(player.aid, false);
 
 		// save player data
 		const { affectedRows } = await this.db.player.update(player)
 		const state = affectedRows > 0 ? 'saved' : 'not saved'
-		console.log(`[World] Player ${player.name} ${state} (id:${player.id}) disconnected.`)
+		console.log(`[World] Player "${player.name}" (id:${player.id}) disconnected. State is ${state}`)
 
 		// remove player from map
 		this.maps.forEach((map) => {
@@ -303,6 +320,21 @@ export class World {
 			})
 		})
 		return count
+	}
+
+	/**
+	 * Returns player with the given account ID if it exists in any of the maps.
+	 * @param {number|string} id - The account ID to check for.
+	 * @returns {Entity|undefined} - Returns Entity if the player is found, otherwise `undefined`.
+	 */
+	getPlayerByAccount(id) {
+		for (const map of this.maps) {
+			for (const entity of map.entities) {
+				if (entity.aid === id) {
+					return entity
+				}
+			}
+		}
 	}
 
 	/**

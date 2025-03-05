@@ -16,6 +16,11 @@
     text-align: center;
 }
 
+.ui-login .response {
+    margin-bottom: 0.5em;
+    color: red;
+}
+
 .ui-login input[type=text],
 .ui-login input[type=password],
 .ui-login input[type=email] {

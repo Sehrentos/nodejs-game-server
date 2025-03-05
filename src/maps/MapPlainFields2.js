@@ -59,6 +59,8 @@ export default class MapPlainFields1 extends WorldMap {
 			...createMonster(this, 10, { ...MOBS[6] }), // Ladybug
 			...createMonster(this, 10, { ...MOBS[13] }), // Ladybug 2
 			...createMonster(this, 10, { ...MOBS[14] }), // Robot 1
+			...createMonster(this, 2, { ...MOBS[15] }), // Unicorn
+			...createMonster(this, 2, { ...MOBS[16] }), // Ghost
 			// ...createMonster(this, 1, { ...MOBS[7] }), // Skeleton
 			new Entity({ ...MOBS[7], lastX: (this.width / 2), lastY: (this.height / 2), dir: 0, saveX: (this.width / 2), saveY: (this.height / 2) }),
 		]

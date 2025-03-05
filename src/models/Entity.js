@@ -1,4 +1,4 @@
-import { ENTITY_TYPE } from "../enum/Entity.js"
+import { DIRECTION, ENTITY_TYPE } from "../enum/Entity.js"
 import { ELEMENT } from "../enum/Element.js";
 import * as Const from "../Constants.js";
 
@@ -106,7 +106,7 @@ export class Entity {
 		// #endregion
 
 		// #region positions current & saved
-		this.dir = p?.dir ?? 0
+		this.dir = p?.dir ?? DIRECTION.DOWN
 		this.lastMap = p?.lastMap ?? Const.ENTITY_LAST_MAP
 		this.lastX = p?.lastX ?? Const.ENTITY_LAST_X
 		this.lastY = p?.lastY ?? Const.ENTITY_LAST_Y

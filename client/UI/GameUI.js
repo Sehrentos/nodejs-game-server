@@ -7,6 +7,7 @@ import { State } from "../State.js"
 import UINPCDialog from "./UINPCDialog.js"
 import SocketControl from "../control/SocketControl.js"
 import DialogUI from "./DialogUI.js"
+import ExitGameUI from "./ExitGameUI.js"
 
 /**
  * @class GameUI
@@ -31,6 +32,7 @@ export default class GameUI {
 	 */
 	view() {
 		return m("main.ui-game",
+			m(ExitGameUI, { isVisible: false }),
 			m(ChatUI),
 			m(CanvasUI),
 			m(CharacterUI),

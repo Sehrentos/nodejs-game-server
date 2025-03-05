@@ -1,0 +1,34 @@
+/* ExitGameUI */
+.ui-exit-game {
+    position: absolute;
+    top: calc(50% - 4em);
+    left: calc(50% - 5em);
+    height: 8em;
+    width: 10em;
+    box-sizing: border-box;
+    border: 1px solid #dddddd;
+    border-radius: 0.4em;
+    padding: 0.25em;
+    background-color: #f1f1f1;
+    color: #252525;
+}
+
+/** bring UI on top layer */
+.ui-exit-game.ontop {
+    z-index: 1;
+}
+
+.ui-exit-game .title {
+    font-size: 120%;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 0.5em;
+}
+
+.ui-exit-game .actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5em;
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+}

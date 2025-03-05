@@ -3,11 +3,11 @@ A NodeJS MMO Game Server
 
 # Project Description
 
-Welcome to our MMO-like game server, designed for learning and fun!
+Welcome to our MMO-like game server. It's for learning purpose and fun!
 
 ## Overview
 
-This project is a **test project** for learning and having fun. 
+This project is a **test project** for learning and having some fun in the process. 
 It's an MMO-like game that allows you ( or kids 😊 ) to draw textures for the entities 
 and maps used in the game, but of course, this requires the developer 
 to put them in the project assets manually.
@@ -164,6 +164,10 @@ open "http://127.0.0.1/"
 
 ## Future Plans
  - Improve safety.
+ - Add more features:
+   - Items and equipment
+   - Skills/spells
+   - Etc.
  - When the server-side is at the stable ground, start improving the client-side with Phaser or other game engine library.
  - Improve the README and documentation.
 

@@ -12,6 +12,7 @@ export default class MapCarTown extends WorldMap {
 		super({
 			id: 3,
 			name: "Car town",
+			isTown: true,
 			width: 2000,
 			height: 1400,
 			isLoaded: true, // no assets to load

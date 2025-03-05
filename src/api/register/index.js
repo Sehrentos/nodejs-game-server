@@ -30,16 +30,10 @@ router.post('/', async (req, res, next) => {
             email,
             last_ip,
         }));
-        if (!newAccount) {
-            throw Error('Invalid register credentials');
-        }
         console.log('[API/register] account registered:', newAccount.insertId)
 
         // do login with the new account
         account = await DB.account.login(username, password, last_ip);
-        if (!account) {
-            throw Error('Invalid login credentials');
-        }
         console.log('[API/register] account logged in:', account.id)
 
         // generate JWT token, but filter some account props
@@ -65,7 +59,7 @@ router.post('/', async (req, res, next) => {
     } catch (err) {
         console.log('[API/register] Error', err.message, err.code || '')
         res.status(401);
-        res.json({ type: 'error', message: 'Invalid credentials' });
+        res.json({ type: 'error', message: `Register failed. Code: ${err.code || '-1'}` });
     } finally {
         if (conn) conn.end();
     }
