@@ -1,0 +1,29 @@
+{
+	"compilerOptions": {
+		"allowJs": true,
+		"checkJs": true,
+		"noEmit": true,
+		"module": "NodeNext",
+		"target": "ESNext",
+		"moduleResolution": "nodenext",
+		"noImplicitAny": false,
+		"resolveJsonModule": false,
+		"typeRoots": [
+			"./node_modules/@types",
+			"./types",
+		],
+	},
+	"exclude": [
+		"certs",
+		"docs",
+		"node_modules",
+	],
+	"include": [
+		"**/*.js",
+		"**/*.ts",
+	],
+	"typeAcquisition": {
+		"enable": true,
+		"include": [],
+	},
+}

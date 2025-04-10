@@ -7,10 +7,10 @@ Welcome to our MMO-like game server. It's for learning purpose and fun!
 
 ## Overview
 
-This project is a **test project** for learning and having some fun in the process. 
-It's an MMO-like game that allows you ( or kids 😊 ) to draw textures for the entities 
-and maps used in the game, but of course, this requires the developer 
-to put them in the project assets manually.
+This project is a **test project** for learning purpose and having some fun in the process.
+It's an MMO-like game that allows you ( or kids 😊 ) to draw textures for the entities
+and maps used in the game, but of course, this requires the developer
+to put them in the project assets manually and link them to the game.
 
 ## Gameplay
 
@@ -61,11 +61,28 @@ To get started with the game, follow these steps:
 
 Start by installing the required Node modules.
 
+Client side
 ```sh
+cd client
 npm install
 ```
 
-Create or modify the `.env` file and set web options:
+Create or modify the `/client/.env` file and set web options:
+```sh
+# Web
+HOST=127.0.0.1
+#PORT=80
+PORT=443
+SSL_ENABLED=true
+```
+
+Server side
+```sh
+cd server
+npm install
+```
+
+Create or modify the `/server/.env` file and set web options:
 ```sh
 # Web
 HOST=127.0.0.1
@@ -106,7 +123,7 @@ FLUSH PRIVILEGES;
 SHOW GRANTS FOR 'myUser'@localhost;
 ```
 
-Create or modify the `.env` file with database connection options (example):
+Create or modify the `/server/.env` file with database connection options (example):
 ```sh
 # MariaDB
 DB_HOST=127.0.0.1
@@ -118,16 +135,16 @@ DB_CONNECTION_LIMIT=5
 DB_SALT=your_unique_salt
 ```
 
+### Build client app
+
+```sh
+npm run build
+```
+
 ### Start the server
 
 ```sh
 npm run start
-```
-
-### Build sample Client app
-
-```sh
-npm run build
 ```
 
 ### Open the Client app in browser
@@ -160,7 +177,9 @@ open "http://127.0.0.1/"
 
 ## Docs
  - See more documentation in the [docs/README.md](./docs/README.md).
- - Or view the source files, it's pretty verbal with comments. Start from [server.js](./server.js) and follow from there.
+ - Or view the source files, it's pretty verbal with comments.
+   - Server-side start from [server/index](./server/index.js) and follow from there.
+   - Client-side start from [client/index](./client/src/index.js) and follow from there.
 
 ## Future Plans
  - Improve safety.
@@ -170,14 +189,6 @@ open "http://127.0.0.1/"
    - Etc.
  - When the server-side is at the stable ground, start improving the client-side with Phaser or other game engine library.
  - Improve the README and documentation.
-
-## Contributing
-
-Contributions are welcome to make the game even better. Here are some ways you can contribute:
-
-- Report bugs or issues
-- Suggest new features or improvements
-- Submit pull requests with code changes
 
 ## License
 

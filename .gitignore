@@ -1,15 +1,6 @@
 assets/*
-certs/*
-!certs/README.md
-/dist
-/node_modules
-/test
-/tests
-/backup
-/backups
-
+server/certs/*
+server/!certs/README.md
 .env
 .7z
 .zip
-
-package-lock.json

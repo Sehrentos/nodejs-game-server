@@ -1,0 +1,6 @@
+certs/*
+!certs/README.md
+/node_modules
+.env
+.zip
+.7z

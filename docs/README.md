@@ -4,6 +4,8 @@ TODO
  - add some guides how things work around here...
  - explain how to create maps, entity textures and how to use them.
  - explain how the login / register flow works
+ - Server side docs
+ - Client side docs
 
 Sample diagram:
 ```mermaid
@@ -69,7 +71,7 @@ classDiagram
   class Entity {
     +int id
     +int gid
-    +int aid = 
+    +int aid =
     +int type = ENTITY_TYPE.PLAYER
     +String name = "Player-1"
     +String lastMap

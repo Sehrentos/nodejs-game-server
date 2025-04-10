@@ -1,0 +1,16 @@
+{
+	"type": "module",
+	"name": "nodejs-game-shared",
+	"private": true,
+	"version": "1.0.0",
+	"description": "The shared resources",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"keywords": [],
+	"author": "Niko H.",
+	"license": "MIT",
+	"dependencies": {},
+	"engines": {},
+	"devDependencies": {}
+}
