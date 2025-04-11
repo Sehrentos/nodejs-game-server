@@ -1,6 +1,7 @@
 import m from "mithril"
 import "./ExitGameUI.css"
 import { State } from "../State.js"
+import { sendLogout } from "../events/sendLogout.js"
 
 /**
  * @example m(ExitGameUI, { isVisible: true })
@@ -30,9 +31,8 @@ export default class ExitGameUI {
 				m("div.actions",
 					m("button", {
 						onclick: () => {
-							/** @type {import("../../../shared/websocket/Packets.js").TPlayerLogoutPacket} */
-							const pkt = { type: "logout" };
-							State.socket.send(JSON.stringify(pkt));
+							// send logout packet
+							State.socket.send(sendLogout());
 							// TODO await response from server before leave or trust it to handle the logout process?
 							State.socket.remove();
 							localStorage.removeItem("token");

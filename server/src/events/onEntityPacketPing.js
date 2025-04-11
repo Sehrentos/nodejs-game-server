@@ -1,4 +1,4 @@
-import { heartbeat } from "../Packets.js";
+import { sendHeartbeat } from "./sendHeartbeat.js";
 
 /**
  * Handles the "ping" packet sent by the client.
@@ -6,7 +6,7 @@ import { heartbeat } from "../Packets.js";
  * Responds with a "pong" packet.
  *
  * @param {import("../../../shared/models/Entity.js").Entity} entity
- * @param {import("../Packets.js").THeartbeatPacket} data
+ * @param {import("../../../client/src/events/sendHeartbeat.js").THeartbeatPacket} data
  */
 export default function onEntityPacketPing(entity, data) {
 	try {
@@ -16,7 +16,7 @@ export default function onEntityPacketPing(entity, data) {
 		}
 
 		// return the timestamp back to the client
-		entity.control.socket.send(heartbeat('pong', data.timestamp))
+		entity.control.socket.send(sendHeartbeat('pong', data.timestamp))
 
 	} catch (ex) {
 		console.error(`[Event.onEntityPacketPing] ${entity.gid} error:`, ex.message || ex || '[no-code]');

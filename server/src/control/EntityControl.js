@@ -1,4 +1,3 @@
-import * as Packets from '../../../shared/websocket/Packets.js';
 import { AI } from './AI.js';
 import { DIRECTION, ENTITY_TYPE } from '../../../shared/enum/Entity.js';
 import { ELEMENT } from '../../../shared/enum/Element.js';
@@ -21,6 +20,8 @@ import onEntityEnterMap from '../events/onEntityEnterMap.js';
 import onEntityLeaveMap from '../events/onEntityLeaveMap.js';
 import Cooldown from '../utils/Cooldown.js';
 import * as Const from '../../../shared/Constants.js';
+import { sendHeartbeat } from '../events/sendHeartbeat.js';
+// import { sendRateLimit } from '../events/sendRateLimit.js';
 
 export class EntityControl {
 	/**
@@ -120,7 +121,7 @@ export class EntityControl {
 		})) {
 			// console.log(`[${this.constructor.name}] onSocketMessage "${this.entity.name}" message rate limited!`);
 			// // Optionally, send a message back to the client indicating rate limiting
-			// this.socket.send(JSON.stringify({ type: 'rate-limited', message: 'Too many requests.' }));
+			// this.socket.send(sendRateLimit('Too many requests.'));
 		}
 	}
 
@@ -149,7 +150,7 @@ export class EntityControl {
 	 * The packet contains the current timestamp and is serialized to JSON format.
 	 */
 	onSocketHeartbeat() {
-		this.socket.send(Packets.heartbeat("ping", performance.now()))
+		this.socket.send(sendHeartbeat("ping", performance.now()))
 	}
 
 	/**

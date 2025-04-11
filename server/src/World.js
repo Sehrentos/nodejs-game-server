@@ -2,7 +2,6 @@ import WebSocket, { WebSocketServer } from 'ws';
 import { WorldMap } from '../../shared/models/WorldMap.js';
 import { Entity } from '../../shared/models/Entity.js';
 import { DIRECTION, ENTITY_TYPE } from '../../shared/enum/Entity.js';
-import * as Packets from '../../shared/websocket/Packets.js';
 import { verifyToken } from './utils/jwt.js';
 import { Database } from './db/Database.js';
 import MapLobbyTown from './maps/MapLobbyTown.js';
@@ -15,6 +14,8 @@ import MapFlowerTown from './maps/MapFlowerTown.js';
 import MapCarTown from './maps/MapCarTown.js';
 import MapUnderWater1 from './maps/MapUnderWater1.js';
 import MapUnderWater2 from './maps/MapUnderWater2.js';
+import { sendPlayerLeave } from './events/sendPlayerLeave.js';
+import { sendChat } from './events/sendChat.js';
 
 /**
  * @module World
@@ -183,7 +184,7 @@ export class World {
 			// send notification and close connection
 			player = this.getPlayerByAccount(account.id);
 			if (player) {
-				player.control.socket.send(Packets.updateChat(
+				player.control.socket.send(sendChat(
 					'default',
 					'Security',
 					player.name,
@@ -290,7 +291,7 @@ export class World {
 	async onClientClose(player) {
 		if (this.isClosing) return // Skip, server closing process is handled in onExit method
 
-		this.broadcast(Packets.playerLeave(player.name));
+		this.broadcast(sendPlayerLeave(player.name));
 
 		// do logout by setting state=0
 		await this.db.account.logout(player.aid, false);

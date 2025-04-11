@@ -137,7 +137,7 @@ export default class CharacterUI {
 
 	/**
 	 * update the character UI with optional data
-	 * @param {import("../../../shared/websocket/Packets.js").TEntity} params - The player data from the server.
+	 * @param {import("../../../shared/models/Entity").TEntityProps} params - The player data from the server.
 	 */
 	static emit(params) {
 		return document.dispatchEvent(new CustomEvent("ui-character", { detail: params }));

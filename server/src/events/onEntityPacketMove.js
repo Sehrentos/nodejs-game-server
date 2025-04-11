@@ -8,7 +8,7 @@ import { DIRECTION } from "../../../shared/enum/Entity.js"
  * Updates the player's position on the map while ensuring it stays within boundaries.
  *
  * @param {import("../../../shared/models/Entity.js").Entity} entity - The player entity
- * @param {{code:string}} json - WebSocket message containing the movement information.
+ * @param {import("../../../client/src/events/sendKeyboardMove.js").TKeyboardMovePacket} json - The move packet from the client
  * @param {number} timestamp - The current timestamp or performance.now().
  */
 export default function onEntityPacketMove(entity, json, timestamp) {

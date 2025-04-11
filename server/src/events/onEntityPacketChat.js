@@ -1,10 +1,10 @@
 import { ENTITY_TYPE } from "../../../shared/enum/Entity.js";
-import { updateChat } from "../../../shared/websocket/Packets.js";
 import { REGEX_BLACKLIST_PLAYER_NAMES } from "../../../shared/Constants.js";
+import { sendChat } from "./sendChat.js";
 
 /**
  * Chat commands available in the game
- * @type {Object<string, (entity:import("../../../shared/models/Entity.js").Entity, data:import("../../../shared/websocket/Packets.js").TChatPacket, params:string[]) => void>}
+ * @type {Object<string, (entity:import("../../../shared/models/Entity.js").Entity, data:import("../../../client/src/events/sendChat.js").TChatPacket, params:string[]) => void>}
  */
 const CMD = {};
 
@@ -16,7 +16,7 @@ const CMD = {};
  * and send the message to them directly.
  *
  * @param {import("../../../shared/models/Entity.js").Entity} player
- * @param {import("../../../shared/websocket/Packets.js").TChatPacket} json - The JSON object containing chat details.
+ * @param {import("../../../client/src/events/sendChat.js").TChatPacket} json - The chat packet from the client.
  * @param {number} timestamp - The current timestamp or performance.now().
  */
 export default function onEntityPacketChat(player, json, timestamp) {
@@ -27,7 +27,7 @@ export default function onEntityPacketChat(player, json, timestamp) {
 		return onChatCommand(player, json, timestamp)
 	}
 
-	const packet = updateChat(json.channel, player.name, json.to, json.message)
+	const packet = sendChat(json.channel, player.name, json.to, json.message)
 
 	// send to world channel
 	if (json.channel === '' || json.channel === 'default') {
@@ -49,7 +49,7 @@ export default function onEntityPacketChat(player, json, timestamp) {
  * Event called when player entity sent chat command e.g. `"/changename MyNewName"`
  *
  * @param {import("../../../shared/models/Entity.js").Entity} entity - the entity
- * @param {import("../../../shared/websocket/Packets.js").TChatPacket} data - the chat packet data
+ * @param {import("../../../client/src/events/sendChat.js").TChatPacket} data - the chat packet data
  * @param {number} timestamp - the timestamp
  */
 function onChatCommand(entity, data, timestamp) {
@@ -68,7 +68,7 @@ function onChatCommand(entity, data, timestamp) {
 // #region commands
 
 CMD['/help'] = (entity, data, params) => {
-	entity.control.socket.send(updateChat(
+	entity.control.socket.send(sendChat(
 		'default',
 		'Server',
 		entity.name,
@@ -83,14 +83,14 @@ CMD['/save'] = async (entity, data, params) => {
 		// check current map is town
 		// if (!/(\stown|\svillage)/i.test(ctrl.map.name)) {
 		if (!ctrl.map.isTown) {
-			ctrl.socket.send(updateChat("default", "Server", entity.name, "You can only save position in towns."))
+			ctrl.socket.send(sendChat("default", "Server", entity.name, "You can only save position in towns."))
 			return
 		}
 		entity.saveMap = entity.lastMap
 		entity.saveX = entity.lastX
 		entity.saveY = entity.lastY
 
-		ctrl.socket.send(updateChat("default", "Server", entity.name, "Position saved."))
+		ctrl.socket.send(sendChat("default", "Server", entity.name, "Position saved."))
 
 	} catch (error) {
 		console.log(`[Event.onChatCommand] error changing name.`, error)
@@ -104,19 +104,19 @@ CMD['/changename'] = async (entity, data, params) => {
 
 		// blacklist validation for names
 		if (REGEX_BLACKLIST_PLAYER_NAMES.test(name)) {
-			ctrl.socket.send(updateChat("default", "Server", entity.name, "Change name failed."))
+			ctrl.socket.send(sendChat("default", "Server", entity.name, "Change name failed."))
 			return
 		}
 
 		const { affectedRows } = await ctrl.world.db.player.setName(entity.id, name)
 		if (!affectedRows) {
-			ctrl.socket.send(updateChat("default", "Server", entity.name, "Change name failed."))
+			ctrl.socket.send(sendChat("default", "Server", entity.name, "Change name failed."))
 			return
 		}
 
 		// success
 		entity.name = name
-		ctrl.socket.send(updateChat("default", "Server", entity.name, "Change name success."))
+		ctrl.socket.send(sendChat("default", "Server", entity.name, "Change name success."))
 
 	} catch (error) {
 		console.log(`[Event.onChatCommand] error changing name.`, error)
@@ -129,7 +129,7 @@ CMD['/changemap'] = async (entity, data, params) => {
 		// "<map name or id> <x> <y>"
 		const matches = params.join(' ').match(/^([a-zA-Z0-9 -_']{1,100})\s([0-9]{1,4})\s([0-9]{1,4})$/)
 		if (!matches) {
-			ctrl.socket.send(updateChat("default", "Server", entity.name, "Change map invalid format. Use <mapname|mapid> <x> <y>"))
+			ctrl.socket.send(sendChat("default", "Server", entity.name, "Change map invalid format. Use <mapname|mapid> <x> <y>"))
 			return
 		}
 		const mapNameOrId = matches[1]
@@ -138,7 +138,7 @@ CMD['/changemap'] = async (entity, data, params) => {
 		// check map exists
 		const map = ctrl.world.maps.find(m => m.name === mapNameOrId || m.id === parseInt(mapNameOrId))
 		if (!map) {
-			ctrl.socket.send(updateChat("default", "Server", entity.name, `The map "${mapNameOrId}" does not exist.`))
+			ctrl.socket.send(sendChat("default", "Server", entity.name, `The map "${mapNameOrId}" does not exist.`))
 			return
 		}
 		map.world.joinMap(entity, mapNameOrId, mapX, mapY)

@@ -1,4 +1,5 @@
 import { State } from "../State.js"
+import { sendKeyboardMove } from "../events/sendKeyboardMove.js"
 
 /**
  * @class KeyControl
@@ -77,7 +78,7 @@ export default class KeyControl {
 		// }
 
 		// send websocket if it's open
-		State.socket.send(JSON.stringify({ type: "move", code: keyCode }));
+		State.socket.send(sendKeyboardMove(keyCode));
 	}
 
 	static KEYS_MOVE = ["KeyA", "KeyD", "KeyW", "KeyS", "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"]

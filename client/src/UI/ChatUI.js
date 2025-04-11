@@ -1,6 +1,7 @@
 import m from "mithril"
 import "./ChatUI.css"
 import { State } from "../State.js"
+import { sendChat } from "../events/sendChat.js"
 
 export default class ChatUI {
 	/**
@@ -205,15 +206,12 @@ export default class ChatUI {
 		form.reset()
 
 		// send chat message
-		/** @type {import("../../../shared/websocket/Packets.js").TChatPacket} */
-		const pkt = {
-			type: "chat",
-			channel: this.activeTab || "default",
-			from: State.player.name || "unknown",
-			to: "any", // TODO private chat, player name goes here
-			message,
-		}
-		State.socket.send(JSON.stringify(pkt));
+		State.socket.send(sendChat(
+			this.activeTab || "default",
+			State.player.name || "unknown",
+			"any", // TODO private chat, player name goes here
+			message
+		));
 
 		// add message to the memory
 		this.messages.push(message)
@@ -271,7 +269,7 @@ export default class ChatUI {
 	// bind chat event listener to document element
 	// to receive chat messages from any where in the app
 	onDOMChat(event) {
-		/** @type {import("../../../shared/websocket/Packets.js").TChatPacket} */
+		/** @type {import("../events/sendChat.js").TChatPacket} */
 		const data = event.detail
 
 		State.chat.push({
@@ -285,7 +283,7 @@ export default class ChatUI {
 	/**
 	 * Adds a chat message to the chat UI.
 	 *
-	 * @param {import("../../../shared/websocket/Packets.js").TChatPacket} params - The chat message data.
+	 * @param {import("../events/sendChat.js").TChatPacket} params - The chat message data.
 	 *
 	 * @example ChatUI.emit({
 	 * 	type: "chat",

@@ -8,17 +8,17 @@ import { WorldMap } from "../../../shared/models/WorldMap.js"
  * @param {number} timestamp
  */
 export default function onEntityUpdateNPC(npc, timestamp) {
-    try {
-        // const ctrl = npc.control
-        // const map = ctrl.map
-        // const world = ctrl.world
-        if (npc.control.map.isTown) {
-            return moveEntitiesAroundNPC(npc, Math.round(npc.range / 2), timestamp)
-        }
+	try {
+		// const ctrl = npc.control
+		// const map = ctrl.map
+		// const world = ctrl.world
+		if (npc.control.map.isTown) {
+			return moveEntitiesAroundNPC(npc, Math.round(npc.range / 2), timestamp)
+		}
 
-    } catch (ex) {
-        console.error(`[Event.onEntityUpdateNPC] ${npc.gid} error:`, ex.message || ex || '[no-code]');
-    }
+	} catch (ex) {
+		console.error(`[Event.onEntityUpdateNPC] ${npc.gid} error:`, ex.message || ex || '[no-code]');
+	}
 }
 
 /**
@@ -30,15 +30,15 @@ export default function onEntityUpdateNPC(npc, timestamp) {
  * @param {number} timestamp
  */
 function moveEntitiesAroundNPC(npc, range, timestamp) {
-    const nearbyEntities = WorldMap.findEntitiesInRadius(npc.control.map, npc.lastX, npc.lastY, range)
-        .filter(ent => ent.gid !== npc.gid) // exclude itself
+	const nearbyEntities = WorldMap.findEntitiesInRadius(npc.control.map, npc.lastX, npc.lastY, range)
+		.filter(ent => ent.gid !== npc.gid) // exclude itself
 
-    if (nearbyEntities.length === 0) return
+	if (nearbyEntities.length === 0) return
 
-    for (const entity of nearbyEntities) {
-        if (entity.type === ENTITY_TYPE.PLAYER) {
-            // move player away from the NPC
-            entity.control.move(DIRECTION.DOWN, timestamp)
-        }
-    }
+	for (const entity of nearbyEntities) {
+		if (entity.type === ENTITY_TYPE.PLAYER) {
+			// move player away from the NPC
+			entity.control.move(DIRECTION.DOWN, timestamp)
+		}
+	}
 }
