@@ -1,3 +1,6 @@
+import { ITEMS } from '../../../shared/data/ITEMS.js';
+import { sendItemsSold } from './sendItemsSold.js';
+
 const TAG = '[Event.onEntityPacketDialog]';
 
 /**
@@ -10,7 +13,7 @@ const TAG = '[Event.onEntityPacketDialog]';
  * @param {import("../../../client/src/events/sendDialog.js").TDialogActionPacket} data - The dialog packet from the client.
  * @param {number} timestamp - The current timestamp or performance.now().
  */
-export default function onEntityPacketDialog(entity, data, timestamp) {
+export default async function onEntityPacketDialog(entity, data, timestamp) {
 	try {
 		const ctrl = entity.control
 
@@ -26,9 +29,13 @@ export default function onEntityPacketDialog(entity, data, timestamp) {
 
 			case 'close':
 				console.log(`${TAG} "${entity.name}" stopped interacting with NPC (gid: ${data.gid})`)
-				// TODO make sure player is next to the NPC, before allowing movement
-				// this is a server side check
 				ctrl.isMovementBlocked = false
+				break;
+
+			case 'accept-sell-all':
+				console.log(`${TAG} "${entity.name}" accepted to sell all items dialog (gid: ${data.gid})`)
+				ctrl.isMovementBlocked = false
+				await sellAllItems(entity)
 				break;
 
 			default:
@@ -38,4 +45,33 @@ export default function onEntityPacketDialog(entity, data, timestamp) {
 	} catch (ex) {
 		console.error(`${TAG} ${entity.gid} error:`, ex.message || ex || '[no-code]');
 	}
+}
+
+/**
+ * Called when the player accepts to sell all items dialog
+ *
+ * TODO only sell selected items from inventory
+ *
+ * @param {import("../../../shared/models/Entity.js").Entity} entity
+ */
+async function sellAllItems(entity) {
+	console.log(`${TAG} "${entity.name}" sold all items (gid: ${entity.gid})`)
+	if (entity.inventory.length === 0) return
+	let totalSellPrice = 0
+	let totalSellAmount = 0
+
+	for (const item of entity.inventory) {
+		let meta = ITEMS[item.itemId]
+		let sellPrice = meta.sell
+		totalSellPrice += sellPrice
+		totalSellAmount += item.amount
+		entity.money += sellPrice
+	}
+	entity.inventory = []
+
+	// update the db
+	await entity.control.world.db.inventory.clear(entity.id)
+
+	// update the client
+	entity.control.socket.send(sendItemsSold(totalSellPrice, totalSellAmount))
 }

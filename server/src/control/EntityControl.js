@@ -92,36 +92,42 @@ export class EntityControl {
 	 * @param {boolean} isBinary
 	 */
 	async onSocketMessage(data, isBinary) {
-		const timestamp = performance.now()
-		if (!this._messageRateLimiter.limit(() => {
-			// This code will only execute if the message is NOT rate limited.
-			try {
-				// @ts-ignore limit the size of the message, player can send to server
-				if ((data.length || data.byteLength) > Const.SOCKET_MESSAGE_MAX_SIZE) {
-					return console.log(`[${this.constructor.name}] "${this.entity.name}" sent too large message!`);
-				}
-
-				// parse JSON sent from the player
-				const json = JSON.parse(data.toString());
-				switch (json.type) {
-					// case 'ping': onEntityPacketPing(this.entity, json); break;
-					case 'pong': onEntityPacketPong(this.entity, json, timestamp); break;
-					case 'move': onEntityPacketMove(this.entity, json, timestamp); break;
-					case 'chat': onEntityPacketChat(this.entity, json, timestamp); break;
-					case 'click': onEntityPacketTouchPosition(this.entity, json, timestamp); break;
-					case 'dialog': onEntityPacketDialog(this.entity, json, timestamp); break;
-					case 'logout': onEntityPacketLogout(this.entity, json, timestamp); break;
-					default:
-						console.log(`[${this.constructor.name}] message "${this.entity.name}":`, json)
-						break;
-				}
-			} catch (e) {
-				console.log(`[${this.constructor.name}] message "${this.entity.name}" error:`, (e.message || e), data)
-			}
-		})) {
-			// console.log(`[${this.constructor.name}] onSocketMessage "${this.entity.name}" message rate limited!`);
-			// // Optionally, send a message back to the client indicating rate limiting
+		// check if the message is rate limited
+		if (!this._messageRateLimiter.limit()) {
+			//console.log(`[${this.constructor.name}] "${this.entity.name}" message rate limited!`);
+			// Optionally, send a message back to the client indicating rate limiting
 			// this.socket.send(sendRateLimit('Too many requests.'));
+			return;
+		}
+		// check if the message is binary (not JSON)
+		if (isBinary) {
+			console.log(`[${this.constructor.name}] "${this.entity.name}" sent binary message!`);
+			return;
+		}
+		// This code will only execute if the message is NOT rate limited.
+		try {
+			// @ts-ignore limit the size of the message, player can send to server
+			if ((data.length || data.byteLength) > Const.SOCKET_MESSAGE_MAX_SIZE) {
+				console.log(`[${this.constructor.name}] "${this.entity.name}" sent too large message!`);
+				return;
+			}
+			const timestamp = performance.now()
+			// parse JSON sent from the player
+			const json = JSON.parse(data.toString());
+			switch (json.type) {
+				// case 'ping': onEntityPacketPing(this.entity, json); break;
+				case 'pong': onEntityPacketPong(this.entity, json, timestamp); break;
+				case 'move': onEntityPacketMove(this.entity, json, timestamp); break;
+				case 'chat': onEntityPacketChat(this.entity, json, timestamp); break;
+				case 'click': onEntityPacketTouchPosition(this.entity, json, timestamp); break;
+				case 'dialog': onEntityPacketDialog(this.entity, json, timestamp); break;
+				case 'logout': onEntityPacketLogout(this.entity, json, timestamp); break;
+				default:
+					console.log(`[${this.constructor.name}] message "${this.entity.name}":`, json)
+					break;
+			}
+		} catch (e) {
+			console.log(`[${this.constructor.name}] message "${this.entity.name}" error:`, (e.message || e), data)
 		}
 	}
 

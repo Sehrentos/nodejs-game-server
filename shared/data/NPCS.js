@@ -2,12 +2,12 @@ import { ENTITY_TYPE } from "../enum/Entity.js";
 
 /**
  * Database of NPCs
- * 
+ *
  * Note: the database is used to store the data of the NPCs,
  * that will be instantiated with the `Entity` class.
- * 
+ *
  * @example const npc1 = new Entity(NPCS[0]);
- * 
+ *
  * @type {Array<import("../models/Entity.js").TEntityProps>}
  */
 export const NPCS = [
@@ -48,6 +48,8 @@ export const NPCS = [
 		dialog: `<article>
 			<header>Tool dealer</header>
 			<p>Hey there! I'm the Tool dealer!</p>
+			<p>You can sell all your items to me.</p>
+			<button class="accept">Sell all</button>
 			<button class="close">X</button>
 		</article>`
 	},

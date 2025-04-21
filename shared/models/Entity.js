@@ -1,6 +1,7 @@
 import { DIRECTION, ENTITY_TYPE } from "../enum/Entity.js"
 import { ELEMENT } from "../enum/Element.js";
 import * as Const from "../Constants.js";
+import { Item } from "./Item.js";
 
 /**
  * @typedef {Object} TEntityProps
@@ -67,8 +68,8 @@ import * as Const from "../Constants.js";
  * @prop {number=} mpRecovery - Mana recovery amount. default 0
  * @prop {number=} mpRecoveryRate - Mana recovery rate.
  * @prop {number[]=} skills - Skill list.
- * @prop {number[]=} equipment - Equipment list.
- * @prop {number[]=} inventory - Inventory list.
+ * @prop {import("./Item.js").TItemProps[]=} equipment - Equipment list.
+ * @prop {import("./Item.js").TItemProps[]=} inventory - Inventory list.
  * @prop {number[]=} quests - Quest list.
  * @prop {number=} partyId - Party ID. default 0
  * @prop {string=} portalName - **Portal** destination map name.
@@ -176,8 +177,8 @@ export class Entity {
 		// #endregion
 
 		this.skills = p?.skills ?? []
-		this.equipment = p?.equipment ?? []
-		this.inventory = p?.inventory ?? []
+		this.equipment = (p?.equipment ?? []).map(i => new Item(i))
+		this.inventory = (p?.inventory ?? []).map(i => new Item(i))
 		this.quests = p?.quests ?? []
 		this.partyId = p?.partyId ?? 0
 		// TODO - move Party to world instance and just set partyId here

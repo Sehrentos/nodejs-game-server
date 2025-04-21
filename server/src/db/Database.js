@@ -2,6 +2,7 @@ import 'dotenv/config';
 import mariadb from 'mariadb';
 import { TableAccount } from './TableAccount.js';
 import { TablePlayer } from './TablePlayer.js';
+import { TableInventory } from './TableInventory.js';
 
 /**
  * @typedef {Object} TQueryResult
@@ -35,6 +36,7 @@ export class Database {
     // #region tables
     this.account = new TableAccount(this);
     this.player = new TablePlayer(this);
+	this.inventory = new TableInventory(this);
     // #endregion
   }
 
@@ -48,8 +50,8 @@ export class Database {
   }
 
   /**
-   * @param {string | mariadb.QueryOptions} sql 
-   * @param {*} params 
+   * @param {string | mariadb.QueryOptions} sql
+   * @param {*} params
    * @returns {Promise<*>}
    */
   query(sql, params) {

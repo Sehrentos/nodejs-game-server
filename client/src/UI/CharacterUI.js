@@ -42,7 +42,7 @@ export default class CharacterUI {
 							m("div", `Money: ${State.player.money}`),
 						),
 					),
-					m("div",
+					m("div.overflow",
 						m("div.equip",
 							m("div", "Equip 1"),
 							m("div", "Equip 2"),
@@ -111,6 +111,13 @@ export default class CharacterUI {
 								m("strong", "Latency"),
 								m("span", `${State.player.latency || "0"} ms`),
 							)),
+						),
+						// inventory
+						m("details",
+							m("summary", "Inventory"),
+							m("div.equip", (State.player.inventory || []).map((item, index) =>
+								m("div", { key: `${index}-${item.id}` }, `${index + 1}. ${item.name}`)
+							))
 						),
 					)
 				)

@@ -19,6 +19,19 @@ export default class RateLimiter {
         this.messageCount = 0;
     }
 
+    /**
+     * Limits the execution of a callback function based on rate and burst settings.
+     *
+     * This function checks the time since the last message and the message count
+     * against the predefined rate limit and burst limit settings. If the rate limit
+     * is exceeded and the message count is at or above the burst limit, the callback
+     * will not be executed. If the burst window has passed, the message count is reset.
+     * If not rate limited, the callback is executed.
+     *
+     * @param {Function} [callback] - optional. The callback function to execute if the rate limit allows.
+     *
+     * @returns {boolean} - Returns true if the callback was executed, false if rate limited.
+     */
     limit(callback) { // Pass a callback function to execute if not rate limited
         const now = Date.now();
         const timeSinceLastMessage = now - this.lastMessageTime;

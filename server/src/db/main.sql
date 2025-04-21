@@ -75,3 +75,18 @@ CREATE TABLE IF NOT EXISTS `player` (
   KEY `account_id` (`account_id`),
   KEY `party_id` (`party_id`)
 ) AUTO_INCREMENT=1;
+
+--
+-- Table structure for table `inventory`
+--
+CREATE TABLE IF NOT EXISTS `inventory` (
+  `id` int(11) unsigned NOT NULL auto_increment,
+  `item_id` int(11) unsigned NOT NULL default '0',
+  `player_id` int(11) unsigned NOT NULL default '0',
+  `amount` smallint(4) unsigned NOT NULL default '0',
+  `slot` smallint(4) unsigned NOT NULL default '0',
+  PRIMARY KEY  (`id`),
+  KEY `player_id` (`player_id`),
+  KEY `item_id` (`item_id`)
+) AUTO_INCREMENT=1;
+

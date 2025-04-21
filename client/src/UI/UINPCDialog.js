@@ -66,6 +66,13 @@ export default class UINPCDialog extends DialogUI {
 			return
 		}
 
+		// find the accept button
+		const acceptButton = target.closest("button.accept")
+		if (acceptButton) {
+			this.accept(currentTarget)
+			return
+		}
+
 		// TODO other actions
 		event.redraw = false
 	}
@@ -109,6 +116,21 @@ export default class UINPCDialog extends DialogUI {
 		// this will tell server that the dialog is closed
 		// and user can interact with other things or move
 		State.socket.send(sendDialog("close", this.gid, State.player.gid))
+	}
+
+	/**
+	 * @param {HTMLDivElement} currentTarget
+	 */
+	accept(currentTarget) {
+		// hide the UI etc.
+		this.close(currentTarget)
+
+		// TODO only sell selected items from inventory (UI)
+
+		// send a "accept" message to the server if it's open
+		// this will tell server that the dialog is accepted and will be closed
+		// and user can interact with other things or move
+		State.socket.send(sendDialog("accept-sell-all", this.gid, State.player.gid))
 	}
 
 	oncreate(vnode) {

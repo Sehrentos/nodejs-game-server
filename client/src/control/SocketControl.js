@@ -8,6 +8,7 @@ import { onChat } from "../events/onChat.js";
 import { onDialog } from "../events/onDialog.js";
 import { onRateLimit } from "../events/onRateLimit.js";
 import { onPlayerLeave } from "../events/onPlayerLeave.js";
+import { onItemsReceived } from "../events/onItemsReceived.js";
 
 /**
  * @class SocketControl
@@ -258,6 +259,11 @@ export default class SocketControl {
 					// optional
 					case "player-leave":
 						onPlayerLeave(this, data);
+						break;
+
+					// receive items
+					case "items-received":
+						onItemsReceived(this, data);
 						break;
 
 					default:

@@ -16,6 +16,8 @@ import MapUnderWater1 from './maps/MapUnderWater1.js';
 import MapUnderWater2 from './maps/MapUnderWater2.js';
 import { sendPlayerLeave } from './events/sendPlayerLeave.js';
 import { sendChat } from './events/sendChat.js';
+import { Item } from '../../shared/models/Item.js';
+import { ITEMS } from '../../shared/data/ITEMS.js';
 
 /**
  * @module World
@@ -229,6 +231,12 @@ export class World {
 				Object.assign(player, players[0])
 			}
 
+			// load inventory items from database
+			const items = await this.db.inventory.getItems(player.id)
+			player.inventory = items.map(item => {
+				return new Item({ ...item, name: ITEMS[item.itemId].name })
+			})
+
 			// set player controller
 			// Note: control.map will be set in onEnterMap
 			player.control = new EntityControl(player, this, ws/*, map */)
@@ -297,9 +305,16 @@ export class World {
 		await this.db.account.logout(player.aid, false);
 
 		// save player data
-		const { affectedRows } = await this.db.player.update(player)
-		const state = affectedRows > 0 ? 'saved' : 'not saved'
-		console.log(`[World] Player "${player.name}" (id:${player.id}) disconnected. State is ${state}`)
+		const playerQuery = await this.db.player.update(player)
+		// const playerState = playerQuery.affectedRows > 0 ? 'saved' : 'not saved'
+
+		if (player.inventory.length > 0) {
+			await this.db.inventory.clear(player.id)
+			const inventoryQuery = await this.db.inventory.addAll(player.id, player.inventory)
+			// const inventoryState = inventoryQuery.affectedRows > 0 ? 'saved' : 'not saved'
+		}
+
+		console.log(`[World] Player "${player.name}" (id:${player.id}) disconnected.`)
 
 		// remove player from map
 		this.maps.forEach((map) => {

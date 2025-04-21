@@ -1,13 +1,14 @@
 import { ENTITY_TYPE } from "../enum/Entity.js";
+import { ITEMS } from "./ITEMS.js";
 
 /**
  * Database of monsters
- * 
+ *
  * Note: the database is used to store the data of the monsters,
  * that will be instantiated with the `Monster` class.
- * 
+ *
  * @example const bird = new Monster(MOBS[0]);
- * 
+ *
  * @type {Array<import("../models/Entity.js").TEntityProps>}
  */
 export const MOBS = [
@@ -32,6 +33,10 @@ export const MOBS = [
 		atk: 10,
 		aspd: 1000,
 		range: 20,
+		inventory: [
+			ITEMS[6], // Stone
+			ITEMS[7], // Wood
+		],
 	},
 	{
 		id: 2,
@@ -44,6 +49,11 @@ export const MOBS = [
 		atk: 15,
 		aspd: 1000,
 		range: 12,
+		inventory: [
+			ITEMS[1], // Knife
+			ITEMS[6], // Stone
+			ITEMS[7], // Wood
+		],
 	},
 	{
 		id: 3,
@@ -68,6 +78,12 @@ export const MOBS = [
 		atk: 25,
 		aspd: 1000,
 		range: 18,
+		inventory: [
+			ITEMS[1], // Knife
+			ITEMS[2], // Sword
+			ITEMS[6], // Stone
+			ITEMS[7], // Wood
+		],
 	},
 	{
 		id: 5,
@@ -118,6 +134,10 @@ export const MOBS = [
 		atk: 30,
 		aspd: 1000,
 		range: 18,
+		inventory: [
+			ITEMS[6], // Stone
+			ITEMS[7], // Wood
+		],
 	},
 	{
 		id: 9,
@@ -130,6 +150,10 @@ export const MOBS = [
 		atk: 15,
 		aspd: 1000,
 		range: 18,
+		inventory: [
+			ITEMS[6], // Stone
+			ITEMS[7], // Wood
+		],
 	},
 	{
 		id: 10,
@@ -154,6 +178,10 @@ export const MOBS = [
 		atk: 35,
 		aspd: 1000,
 		range: 18,
+		inventory: [
+			ITEMS[6], // Stone
+			ITEMS[7], // Wood
+		],
 	},
 	{
 		id: 12,
@@ -166,6 +194,10 @@ export const MOBS = [
 		atk: 35,
 		aspd: 1000,
 		range: 18,
+		inventory: [
+			ITEMS[6], // Stone
+			ITEMS[7], // Wood
+		],
 	},
 	{
 		id: 13,
