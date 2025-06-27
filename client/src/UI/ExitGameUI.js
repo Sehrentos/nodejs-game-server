@@ -13,6 +13,9 @@ export default class ExitGameUI {
 	constructor(vnode) {
 		this.isVisible = vnode.attrs.isVisible !== false
 
+		this._onClose = this.onClose.bind(this)
+		this._onExit = this.onExit.bind(this)
+		this._onLogout = this.onLogout.bind(this)
 		this._onKeydownListener = this.onKeydownListener.bind(this)
 	}
 
@@ -29,20 +32,31 @@ export default class ExitGameUI {
 			? m("div.ui-exit-game.ontop",
 				m("div.title", "Exit Game"),
 				m("div.actions",
-					m("button", {
-						onclick: () => {
-							// send logout packet
-							State.socket.send(sendLogout());
-							// TODO await response from server before leave or trust it to handle the logout process?
-							State.socket.remove();
-							localStorage.removeItem("token");
-							window.location.href = "/";
-						}
-					}, "Exit and logout"),
-					m("button", { onclick: () => { this.isVisible = false; } }, "Cancel"),
+					m("button", { onclick: this._onExit }, "Exit"),
+					m("button", { onclick: this._onLogout }, "Exit and logout"),
+					m("button", { onclick: this._onClose }, "Cancel"),
 				),
 			)
 			: undefined
+	}
+
+	onClose() {
+		this.isVisible = false
+	}
+
+	onExit() {
+		State.socket.remove();
+		window.location.href = "/";
+	}
+
+	onLogout() {
+		// send logout packet that will remove the JWT token in server
+		State.socket.send(sendLogout());
+		// TODO await response from server before leave or trust it to handle the logout process?
+		State.socket.remove();
+		// clear token
+		localStorage.removeItem("token");
+		window.location.href = "/";
 	}
 
 	onKeydownListener(event) {

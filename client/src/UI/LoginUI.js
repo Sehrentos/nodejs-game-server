@@ -19,6 +19,7 @@ export default class LoginUI {
 		this.errorMessage = ""
 		this.nextView = vnode.attrs.nextView || "#!/game"
 		this._onSubmit = this.onSubmit.bind(this)
+		this._onLogout = this.onLogout.bind(this)
 		this._onChange = this.onChange.bind(this)
 
 		// Note: we instead store jwtToken in localstorage, instead plain username & password
@@ -27,27 +28,32 @@ export default class LoginUI {
 		// if (this.credentials.username && this.credentials.password) {
 		// 	this.isRemember = true
 
-		// auto login check if JWT token exists
-		try {
-			const jwtToken = localStorage.getItem("token") || ""
-			if (jwtToken) {
-				this.isRemember = true
-				this.isLoading = true
-				this.errorMessage = ""
-				Auth.loginToken(jwtToken, this.isRemember).then(() => {
-					// success, move to next view
-					this.isLoading = false
-					window.location.href = this.nextView
-				}).catch(e => {
-					console.log("login failed:", e.message)
-					this.isLoading = false
-					this.errorMessage = e.message
-					localStorage.removeItem("token")
-					m.redraw()
-				})
-			}
-		} catch (e) {
-			console.log("login (token) failed", e.message)
+		// optional. Do auto login when JWT token exists
+		// try {
+		// 	const jwtToken = localStorage.getItem("token") || ""
+		// 	if (jwtToken) {
+		// 		this.isRemember = true
+		// 		this.isLoading = true
+		// 		this.errorMessage = ""
+		// 		Auth.loginToken(jwtToken, this.isRemember).then(() => {
+		// 			// success, move to next view
+		// 			this.isLoading = false
+		// 			window.location.href = this.nextView
+		// 		}).catch(e => {
+		// 			console.log("login failed:", e.message)
+		// 			this.isLoading = false
+		// 			this.errorMessage = e.message
+		// 			localStorage.removeItem("token")
+		// 			m.redraw()
+		// 		})
+		// 	}
+		// } catch (e) {
+		// 	console.log("login (token) failed", e.message)
+		// }
+
+		this.jwtToken = localStorage.getItem("token") || ""
+		if (this.jwtToken) {
+			this.isRemember = true
 		}
 	}
 	view() {
@@ -59,7 +65,8 @@ export default class LoginUI {
 				m("p", "Note: This is only for testing purposes."),
 				m("p", "Register an account to play the game."),
 				m("div.response", this.isLoading ? "Loading..." : this.errorMessage),
-				m("input", {
+				// hide username field when JWT token exists
+				this.jwtToken && !this.isRegister ? null : m("input", {
 					type: "text",
 					name: "username",
 					id: "username",
@@ -68,7 +75,8 @@ export default class LoginUI {
 					required: true,
 					autofocus: true,
 				}),
-				m("input", {
+				// hide password field when JWT token exists
+				this.jwtToken && !this.isRegister ? null : m("input", {
 					type: "password",
 					name: "password",
 					id: "password",
@@ -85,10 +93,19 @@ export default class LoginUI {
 					required: this.isRegister,
 				}),
 				m("input", {
+					id: "login",
 					type: "submit",
-					value: "Submit",
+					value: this.isRegister ? "Register" : "Login",
 					disabled: this.isLoading
 				}),
+				// show logout button when JWT token exists
+				this.jwtToken && !this.isRegister ? m("input", {
+					id: "logout",
+					type: "button",
+					value: "Logout",
+					disabled: this.isLoading,
+					onclick: this._onLogout
+				}) : null,
 				m("label[for=register]", m("input", {
 					type: "checkbox",
 					id: "register",
@@ -108,8 +125,17 @@ export default class LoginUI {
 		])
 	}
 
+	onLogout() {
+		// clear JWT token
+		localStorage.removeItem("token")
+		this.jwtToken = ""
+		this.isRemember = false
+		this.errorMessage = ""
+		//m.redraw()
+	}
+
 	/**
-	 * @param {SubmitEvent} event 
+	 * @param {SubmitEvent} event
 	 */
 	async onSubmit(event) {
 		event.preventDefault()
@@ -140,6 +166,7 @@ export default class LoginUI {
 		// }
 
 		// register or login
+		this.isLoading = true
 		if (this.isRegister) {
 			try {
 				await Auth.register(username, password, email, this.isRemember)
@@ -148,19 +175,31 @@ export default class LoginUI {
 				this.errorMessage = e.message
 			}
 		} else {
-			try {
-				await Auth.login(username, password, this.isRemember)
-			} catch (e) {
-				console.log("login failed", e.message)
-				this.errorMessage = e.message
+			// do login with JWT token when it exists
+			if (this.jwtToken) {
+				try {
+					await Auth.loginToken(this.jwtToken, this.isRemember)
+				} catch (e) {
+					console.log("login (token) failed", e.message)
+					this.errorMessage = e.message
+				}
+			} else {
+				// do login with username & password
+				try {
+					await Auth.login(username, password, this.isRemember)
+				} catch (e) {
+					console.log("login failed", e.message)
+					this.errorMessage = e.message
+				}
 			}
 		}
+		this.isLoading = false
 		// success, move to next view
 		window.location.href = this.nextView
 	}
 
 	/**
-	 * @param {Event} event 
+	 * @param {Event} event
 	 */
 	onChange(event) {
 		// @ts-ignore tested, id exists
@@ -183,8 +222,8 @@ export default class LoginUI {
 	// username & password in local storage
 	// /**
 	//  * Save the username and password to local storage.
-	//  * @param {string} username 
-	//  * @param {string} password 
+	//  * @param {string} username
+	//  * @param {string} password
 	//  */
 	// saveCredentials(username, password) {
 	// 	localStorage.setItem("username", username)

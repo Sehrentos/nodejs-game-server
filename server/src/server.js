@@ -42,13 +42,17 @@ export function server() {
 	app.use(express.static('../client/dist'));
 
 	// serve all assets
-	app.use('/assets', express.static('../assets'));
+	// and cache them for 1 week and make immutable, to prevents unnecessary revalidation during reloads
+	app.use('/assets', express.static('../assets', { immutable: true, maxAge: 60 * 60 * 24 * 7 }));
 
 	// @ts-ignore serve empty favicon.ico
 	app.get('/favicon.ico', (req, res) => {
 		res.writeHead(200, {
 			'Content-Type': 'image/x-icon',
-			'Cache-control': `public, max-age=${60 * 60 * 12}`, // 12 hour cache
+			// 12 hour cache
+			// 'Cache-control': `public, max-age=${60 * 60 * 12}`,
+			// 1 week cache
+			'Cache-control': `public, max-age=${60 * 60 * 24 * 7}, immutable`,
 		});
 		return res.end();
 	});
