@@ -63,7 +63,7 @@ export default class MapCarTown extends WorldMap {
 				h: 32,
 			}),
 			// new Entity({
-			// 	...NPCS[1], // Townsfolk
+			// 	...NPCS.TOWNSFOLK,
 			// 	lastX: 960,
 			// 	lastY: 1058,
 			// 	dir: DIRECTION.UP,

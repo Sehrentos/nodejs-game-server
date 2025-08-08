@@ -60,17 +60,17 @@ export default class MapPlainFields1 extends WorldMap {
 				h: 32,
 			}),
 			// to create single monsters:
-			// new MonsterControl({ ...MOBS[1], map: this }),
-			// new MonsterControl({ ...MOBS[2], map: this }),
+			// new MonsterControl({ ...MOBS.CAT, map: this }),
+			// new MonsterControl({ ...MOBS.ORC, map: this }),
 			// multiple monsters:
-			// ...createMonster(this, 50, { ...MOBS[0] }), // Worm
-			...createMonster(this, 10, { ...MOBS[1] }), // Cat
-			...createMonster(this, 10, { ...MOBS[2] }), // Orc
-			...createMonster(this, 10, { ...MOBS[8] }), // Dino
-			...createMonster(this, 10, { ...MOBS[9] }), // Mushroom
-			...createMonster(this, 10, { ...MOBS[10] }), // Wind spirit
-			...createMonster(this, 10, { ...MOBS[11] }), // Slushie
-			...createMonster(this, 10, { ...MOBS[12] }), // Red mushroom
+			// ...createMonster(this, 50, { ...MOBS.DEFAULT }), // Worm
+			...createMonster(this, 10, { ...MOBS.CAT }),
+			...createMonster(this, 10, { ...MOBS.ORC }),
+			...createMonster(this, 10, { ...MOBS.DINOSAUR }),
+			...createMonster(this, 10, { ...MOBS.MUSHROOM }),
+			...createMonster(this, 10, { ...MOBS.WIND_SPIRIT }),
+			...createMonster(this, 10, { ...MOBS.SLUSHIE }),
+			...createMonster(this, 10, { ...MOBS.RED_MUSHROOM }),
 		]
 		// add controllers and game ids
 		this.entities.forEach((entity) => {

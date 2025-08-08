@@ -1,4 +1,4 @@
-import { ITEMS } from '../../../shared/data/ITEMS.js';
+import { getItemByItemId, ITEMS } from '../../../shared/data/ITEMS.js';
 import { sendItemsSold } from './sendItemsSold.js';
 
 const TAG = '[Event.onEntityPacketDialog]';
@@ -61,7 +61,8 @@ async function sellAllItems(entity) {
 	let totalSellAmount = 0
 
 	for (const item of entity.inventory) {
-		let meta = ITEMS[item.itemId]
+		let meta = getItemByItemId(item.itemId)
+		if (meta === undefined) continue
 		let sellPrice = meta.sell
 		totalSellPrice += sellPrice
 		totalSellAmount += item.amount

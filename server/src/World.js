@@ -17,11 +17,11 @@ import MapUnderWater2 from './maps/MapUnderWater2.js';
 import { sendPlayerLeave } from './events/sendPlayerLeave.js';
 import { sendChat } from './events/sendChat.js';
 import { Item } from '../../shared/models/Item.js';
-import { ITEMS } from '../../shared/data/ITEMS.js';
+import { getItemByItemId, ITEMS } from '../../shared/data/ITEMS.js';
 
 /**
  * @module World
- * @description World class contains the world data like maps, Players, etc.
+ * @description World class contains the world data like websocket server, database instance, maps, players, etc.
  */
 export class World {
 	/**
@@ -48,13 +48,13 @@ export class World {
 
 		/** @type {Array<WorldMap>} - Game maps */
 		this.maps = [
-			new MapLobbyTown({ world: this }), // 1
-			new MapFlowerTown({ world: this }), // 2
-			new MapCarTown({ world: this }), // 3
-			new MapUnderWater1({ world: this }), // 4
-			new MapUnderWater2({ world: this }), // 5
-			new MapPlainFields1({ world: this }), // 6
-			new MapPlainFields2({ world: this }), // 7
+			new MapLobbyTown({ world: this }),
+			new MapFlowerTown({ world: this }),
+			new MapCarTown({ world: this }),
+			new MapUnderWater1({ world: this }),
+			new MapUnderWater2({ world: this }),
+			new MapPlainFields1({ world: this }),
+			new MapPlainFields2({ world: this }),
 		]
 
 		/** @type {number} - total number of players, from server start */
@@ -76,6 +76,10 @@ export class World {
 		process.on('SIGINT', this.onExit.bind(this))
 	}
 
+	/**
+	 * SIGINT signal handler. Close all connections and exit.
+	 * @returns {Promise<void>}
+	 */
 	async onExit() {
 		this.isClosing = true
 		try {
@@ -233,8 +237,9 @@ export class World {
 
 			// load inventory items from database
 			const items = await this.db.inventory.getItems(player.id)
+			// TODO handle item amount
 			player.inventory = items.map(item => {
-				return new Item({ ...item, name: ITEMS[item.itemId].name })
+				return new Item(getItemByItemId(item.itemId))
 			})
 
 			// set player controller

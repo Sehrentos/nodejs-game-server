@@ -1,5 +1,6 @@
 import { State } from "../State.js"
 import { sendKeyboardMove } from "../events/sendKeyboardMove.js"
+import { sendSkill } from "../events/sendSkill.js"
 
 /**
  * @class KeyControl
@@ -28,11 +29,18 @@ export default class KeyControl {
 		// and update entity position
 		// then it will send an update to the client
 		// and next render cycle will update the player position
-		if (!KeyControl.KEYS_MOVE.includes(e.code)) return false
+		if (KeyControl.KEYS_MOVE.includes(e.code)) {
+			this.handleMovement(e.code)
+			return true;
+		}
 
-		// handle movement
-		this.handleMovement(e.code)
-		return true;
+		// handle skill use
+		if (KeyControl.KEYS_SKILL.includes(e.code)) {
+			this.handleSkill(e.code)
+			return true;
+		}
+
+		return false;
 	}
 
 	/**
@@ -81,5 +89,35 @@ export default class KeyControl {
 		State.socket.send(sendKeyboardMove(keyCode));
 	}
 
+	handleSkill(keyCode) {
+		console.log(`keycode: ${keyCode}`);
+		let skillId = 0
+		switch (keyCode) {
+			case "Digit1":
+			case "Numpad1":
+				skillId = 1
+				break
+			case "Digit2":
+			case "Numpad2":
+				skillId = 2
+				break
+			case "Digit3":
+			case "Numpad3":
+				skillId = 3
+				break
+			case "Digit4":
+			case "Numpad4":
+				skillId = 4
+				break
+			default:
+				break
+		}
+		if (skillId) {
+			State.socket.send(sendSkill(skillId));
+		}
+	}
+
 	static KEYS_MOVE = ["KeyA", "KeyD", "KeyW", "KeyS", "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"]
+
+	static KEYS_SKILL = ["Digit1", "Numpad1", "Digit2", "Numpad2", "Digit3", "Numpad3", "Digit4", "Numpad4"]
 }

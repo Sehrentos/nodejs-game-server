@@ -6,12 +6,11 @@ import { ENTITY_TYPE } from "../enum/Entity.js";
  * Note: the database is used to store the data of the NPCs,
  * that will be instantiated with the `Entity` class.
  *
- * @example const npc1 = new Entity(NPCS[0]);
- *
- * @type {Array<import("../models/Entity.js").TEntityProps>}
+ * @example const npc1 = new Entity(NPCS.DEFAULT);
  */
-export const NPCS = [
-	{
+//@type {{[key:string]: import("../models/Entity.js").TEntityProps}}
+export const NPCS = {
+	DEFAULT: {
 		id: 0,
 		type: ENTITY_TYPE.NPC,
 		name: "NPC",
@@ -21,7 +20,7 @@ export const NPCS = [
 			<button class="close">X</button>
 		</article>`,
 	},
-	{
+	TOWNSFOLK: {
 		id: 1,
 		type: ENTITY_TYPE.NPC,
 		name: "Townsfolk",
@@ -31,7 +30,7 @@ export const NPCS = [
 			<button class="close">X</button>
 		</article>`,
 	},
-	{
+	BLACKSMITH: {
 		id: 2,
 		type: ENTITY_TYPE.NPC,
 		name: "Blacksmith",
@@ -41,7 +40,7 @@ export const NPCS = [
 			<button class="close">X</button>
 		</article>`,
 	},
-	{
+	TOOL_DEALER: {
 		id: 3,
 		type: ENTITY_TYPE.NPC,
 		name: "Tool dealer",
@@ -53,7 +52,7 @@ export const NPCS = [
 			<button class="close">X</button>
 		</article>`
 	},
-	{
+	MERCHANT: {
 		id: 4,
 		type: ENTITY_TYPE.NPC,
 		name: "Merchant",
@@ -63,4 +62,36 @@ export const NPCS = [
 			<button class="close">X</button>
 		</article>`,
 	},
-];
+	STRANGER: {
+		id: 5,
+		type: ENTITY_TYPE.NPC,
+		name: "Stranger",
+		dialog: `<article>
+			<header>Stranger (NPC)</header>
+			<p>Hmmm...?</p>
+			<button class="next">Next</button>
+		</article>
+		<article>
+			<header>Stranger</header>
+			<p>Hmmm... ...</p>
+			<button class="next">Next</button>
+		</article>
+		<article>
+			<header>Stranger</header>
+			<p>Hmmm... ... ...</p>
+			<button class="close">X</button>
+		</article>`,
+	},
+};
+
+/**
+ * Helper to get an NPC by its `id`
+ * @param {number} id
+ * @param {boolean} useFallback use `NPCS.DEFAULT `as fallback
+ * @returns
+ */
+export const getNPCById = (id, useFallback = true) => {
+	const npc = Object.values(NPCS).find(p => p.id === id)
+	if (npc === undefined && useFallback) return NPCS.DEFAULT
+	return npc
+}

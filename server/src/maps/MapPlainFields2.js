@@ -49,20 +49,20 @@ export default class MapPlainFields1 extends WorldMap {
 				h: 32,
 			}),
 			// to create single monsters:
-			// new Entity({ ...MOBS[3] }),
-			// new Entity({ ...MOBS[4] }),
-			// new Entity({ ...MOBS[4] }),
+			// new Entity({ ...MOBS.PLANKTON }),
+			// new Entity({ ...MOBS.ORC }),
+			// new Entity({ ...MOBS.ORC2 }),
 			// multiple monsters:
-			...createMonster(this, 10, { ...MOBS[3] }), // Plankton
-			...createMonster(this, 10, { ...MOBS[4] }), // Orc with gloves?
-			...createMonster(this, 10, { ...MOBS[5] }), // The eye
-			...createMonster(this, 10, { ...MOBS[6] }), // Ladybug
-			...createMonster(this, 10, { ...MOBS[13] }), // Ladybug 2
-			...createMonster(this, 10, { ...MOBS[14] }), // Robot 1
-			...createMonster(this, 2, { ...MOBS[15] }), // Unicorn
-			...createMonster(this, 2, { ...MOBS[16] }), // Ghost
-			// ...createMonster(this, 1, { ...MOBS[7] }), // Skeleton
-			new Entity({ ...MOBS[7], lastX: (this.width / 2), lastY: (this.height / 2), dir: 0, saveX: (this.width / 2), saveY: (this.height / 2) }),
+			...createMonster(this, 10, { ...MOBS.PLANKTON }),
+			...createMonster(this, 10, { ...MOBS.ORC2 }),
+			...createMonster(this, 10, { ...MOBS.EYE }),
+			...createMonster(this, 10, { ...MOBS.LADYBUG }),
+			...createMonster(this, 10, { ...MOBS.LADYBUG2 }),
+			...createMonster(this, 10, { ...MOBS.ROBOT }),
+			...createMonster(this, 2, { ...MOBS.UNICORN }),
+			...createMonster(this, 2, { ...MOBS.GHOST }),
+			// ...createMonster(this, 1, { ...MOBS.SKELETON }),
+			new Entity({ ...MOBS.SKELETON, lastX: (this.width / 2), lastY: (this.height / 2), dir: 0, saveX: (this.width / 2), saveY: (this.height / 2) }),
 		]
 		// add controllers and game ids
 		this.entities.forEach((entity) => {

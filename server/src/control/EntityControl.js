@@ -18,6 +18,7 @@ import onEntityUpdatePortal from '../events/onEntityUpdatePortal.js';
 import onEntityPacketLogout from '../events/onEntityPacketLogout.js';
 import onEntityEnterMap from '../events/onEntityEnterMap.js';
 import onEntityLeaveMap from '../events/onEntityLeaveMap.js';
+import onEntitySkill from '../events/onEntitySkill.js';
 import Cooldown from '../utils/Cooldown.js';
 import * as Const from '../../../shared/Constants.js';
 import { sendHeartbeat } from '../events/sendHeartbeat.js';
@@ -71,6 +72,8 @@ export class EntityControl {
 		this._portalUseCd = new Cooldown()
 		this._autoRegenerateHpCd = new Cooldown()
 		this._autoRegenerateMpCd = new Cooldown()
+		this._skillHealCd = new Cooldown()
+		this._skillAttackCd = new Cooldown()
 		// #endregion
 
 		// bind WebSocket functions for Players
@@ -122,6 +125,7 @@ export class EntityControl {
 				case 'click': onEntityPacketTouchPosition(this.entity, json, timestamp); break;
 				case 'dialog': onEntityPacketDialog(this.entity, json, timestamp); break;
 				case 'logout': onEntityPacketLogout(this.entity, json, timestamp); break;
+				case 'skill': onEntitySkill(this.entity, json, timestamp); break;
 				default:
 					console.log(`[${this.constructor.name}] message "${this.entity.name}":`, json)
 					break;
@@ -343,7 +347,7 @@ export class EntityControl {
 	}
 
 	/**
-	 * Stops the entity from attacking and following a target.
+	 * Stops the entity from attacking the target entity.
 	 */
 	stopAttack() {
 		this._attacking = null
@@ -358,8 +362,9 @@ export class EntityControl {
 	 * @param {import("../../../shared/models/Entity.js").Entity} attacker - The attacking entity
 	 *        attributes such as strength (str), attack
 	 *        power (atk), and attack multiplier (atkMultiplier).
+	 * @param {number} extraMultiplyer - An extra multiplier for the damage for example skill use bonus
 	 */
-	takeDamageFrom(attacker) {
+	takeDamageFrom(attacker, extraMultiplyer = 1.0) {
 		if (this.entity.hp <= 0) return // must be alive
 		if (this.entity.type === ENTITY_TYPE.NPC) return // NPC can't take damage
 		if (this.entity.type === ENTITY_TYPE.PORTAL) return // PORTAL can't take damage
@@ -369,9 +374,9 @@ export class EntityControl {
 		// physical attacks are always neutral? what about weapons elements?
 		// TODO take defence into account
 		if (attacker.eAtk === ELEMENT.NEUTRAL) {
-			this.entity.hp -= (attacker.str + attacker.atk) * attacker.atkMultiplier;
+			this.entity.hp -= (attacker.str + attacker.atk) * attacker.atkMultiplier * extraMultiplyer;
 		} else {
-			this.entity.hp -= (attacker.int + attacker.mAtk) * attacker.mAtkMultiplier;
+			this.entity.hp -= (attacker.int + attacker.mAtk) * attacker.mAtkMultiplier * extraMultiplyer;
 		}
 
 		// if entity dies, call the onEntityKill event
@@ -583,4 +588,35 @@ export class EntityControl {
 		if (y > -1 && y > this.entity.lastY) return DIRECTION.DOWN
 	}
 
+	// TODO skill use implementation for player entity
+	// TODO skill use implementation for monster entity
+	useSkill(id, timestamp) {
+		if (this.entity.hp <= 0) return false // must be alive
+
+		// TODO check if skill is valid
+		//if (!this.entity.skills.includes(id)) return false
+		// this.entity.lastSkill = id
+
+		// TODO skill implementation
+		// hardcoded for now
+		switch (id) {
+			case 1: // Heal HP skill 20%, 10s cooldown
+				if (this._skillHealCd.isNotExpired(timestamp)) return false
+				if (this.entity.hp >= this.entity.hpMax) return false
+				this._skillHealCd.set(timestamp + 10000 - this.entity.latency)
+				this.heal(this.entity.hpMax * 0.2, 0)
+				break
+			case 2: // Attack skill 2x more damage as normal, 5s cooldown
+				if (this._attacking == null) return false
+				if (this._skillAttackCd.isNotExpired(timestamp)) return false
+				if (!Entity.inRangeOfEntity(this.entity, this._attacking)) return false // out of range
+				this._skillAttackCd.set(timestamp + 5000 - this.entity.latency)
+				this._attacking.control.takeDamageFrom(this.entity, 2.0)
+				break
+			default:
+				break
+		}
+
+		return true
+	}
 }

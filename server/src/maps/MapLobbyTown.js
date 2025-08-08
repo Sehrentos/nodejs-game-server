@@ -74,51 +74,34 @@ export default class MapLobbyTown extends WorldMap {
 				h: 32,
 			}),
 			new Entity({
-				...NPCS[1], // Townsfolk
+				...NPCS.TOWNSFOLK,
 				lastX: 960,
 				lastY: 1058,
 				dir: DIRECTION.UP,
 			}),
 			new Entity({
-				...NPCS[2], // Blacksmith
+				...NPCS.BLACKSMITH,
 				lastX: 505,
 				lastY: 665,
 				dir: DIRECTION.DOWN,
 			}),
 			new Entity({
-				...NPCS[3], // Tool dealer
+				...NPCS.TOOL_DEALER,
 				lastX: 1169,
 				lastY: 743,
 				dir: DIRECTION.DOWN,
 			}),
 			new Entity({
-				...NPCS[4], // Merchant
+				...NPCS.MERCHANT,
 				lastX: 606,
 				lastY: 698,
 				dir: DIRECTION.LEFT,
 			}),
 			new Entity({
-				id: 1, // same as Townsfolk
-				type: ENTITY_TYPE.NPC,
-				name: "Stranger",
+				...NPCS.STRANGER,
 				lastX: 1863,
 				lastY: 788,
 				dir: DIRECTION.UP,
-				dialog: `<article>
-					<header>Stranger (NPC)</header>
-					<p>Hmmm...?</p>
-					<button class="next">Next</button>
-				</article>
-				<article>
-					<header>Stranger</header>
-					<p>Hmmm... ...</p>
-					<button class="next">Next</button>
-				</article>
-				<article>
-					<header>Stranger</header>
-					<p>Hmmm... ... ...</p>
-					<button class="close">X</button>
-				</article>`,
 			}),
 		]
 		// add controllers and game ids

@@ -8,6 +8,7 @@ import UINPCDialog from "./UINPCDialog.js"
 import SocketControl from "../control/SocketControl.js"
 import DialogUI from "./DialogUI.js"
 import ExitGameUI from "./ExitGameUI.js"
+import SkillBarUI from "./SkillBarUI.js"
 
 /**
  * @class GameUI
@@ -16,7 +17,7 @@ import ExitGameUI from "./ExitGameUI.js"
  */
 export default class GameUI {
 	/**
-	 * @param {m.Vnode} vnode 
+	 * @param {m.Vnode} vnode
 	 */
 	constructor(vnode) {
 		// disable text select in UI
@@ -25,9 +26,9 @@ export default class GameUI {
 
 	/**
 	 * View method for the game UI.
-	 * 
+	 *
 	 * This method creates the game UI components, such as the canvas, character and chat.
-	 * 
+	 *
 	 * @returns {m.Vnode} The game UI vnode.
 	 */
 	view() {
@@ -37,6 +38,7 @@ export default class GameUI {
 			m(CanvasUI),
 			m(CharacterUI),
 			m(UINPCDialog),
+			m(SkillBarUI),
 			// show dialog to reconnect
 			State.socket != null && State.socket.readyState === WebSocket.CLOSED ? m(DialogUI, {
 				content: m("div",
@@ -66,9 +68,9 @@ export default class GameUI {
 
 	/**
 	 * Called when the Mithril component is created.
-	 * 
+	 *
 	 * This adds the WebSocket connection and the events to the component.
-	 * 
+	 *
 	 * @param {import("mithril").VnodeDOM} vnode - The Mithril vnode.
 	 */
 	oncreate(vnode) {
@@ -86,7 +88,7 @@ export default class GameUI {
 
 	/**
 	 * Called when the Mithril component is removed.
-	 * 
+	 *
 	 * This removes the WebSocket connection and the events from the component.
 	 */
 	onremove(vnode) {
@@ -101,7 +103,7 @@ export default class GameUI {
 
 	/**
 	 * Disable text selection in the game UI.
-	 * 
+	 *
 	 * @param {Event} event - The selectstart event.
 	 */
 	onDisableSelectStart(event) {

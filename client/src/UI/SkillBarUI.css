@@ -1,0 +1,31 @@
+/* SkillBarUI */
+.ui-skill-bar {
+	position: absolute;
+	display: flex;
+	gap: 0.25em;
+	top: 0.5em;
+	left: calc(50% - 3em);
+	box-sizing: border-box;
+	border: 1px solid #dddddd;
+	border-radius: 0.4em;
+	padding: 0.25em;
+	background-color: #f1f1f1;
+	color: #252525;
+}
+
+.ui-skill-bar button {
+	box-sizing: border-box;
+	border: 1px solid #dddddd;
+	border-radius: 0.4em;
+	padding: 0.25em;
+	background-color: #d3d3d3;
+	color: #252525;
+}
+
+@media only screen and (max-width: 600px) {
+	.ui-skill-bar {
+		flex-direction: column;
+		left: initial;
+		right: 0.5em;
+	}
+}

@@ -5,6 +5,9 @@ A NodeJS MMO Game Server
 
 Welcome to our MMO-like game server. It's for learning purpose and fun!
 
+> [!WARNING]
+> This is an **experimental** project. Expect bugs and unfinished functionality.
+
 ## Overview
 
 This project is a **test project** for learning purpose and having some fun in the process.

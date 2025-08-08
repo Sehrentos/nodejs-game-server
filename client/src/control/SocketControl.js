@@ -9,6 +9,7 @@ import { onDialog } from "../events/onDialog.js";
 import { onRateLimit } from "../events/onRateLimit.js";
 import { onPlayerLeave } from "../events/onPlayerLeave.js";
 import { onItemsReceived } from "../events/onItemsReceived.js";
+import { onSkillUse } from "../events/onSkillUse.js";
 
 /**
  * @class SocketControl
@@ -264,6 +265,11 @@ export default class SocketControl {
 					// receive items
 					case "items-received":
 						onItemsReceived(this, data);
+						break;
+
+					// receive skill
+					case "skill":
+						onSkillUse(this, data);
 						break;
 
 					default:

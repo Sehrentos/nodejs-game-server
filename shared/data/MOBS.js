@@ -7,12 +7,11 @@ import { ITEMS } from "./ITEMS.js";
  * Note: the database is used to store the data of the monsters,
  * that will be instantiated with the `Monster` class.
  *
- * @example const bird = new Monster(MOBS[0]);
- *
- * @type {Array<import("../models/Entity.js").TEntityProps>}
+ * @example const monster = new Monster(MOBS.DEFAULT);
  */
-export const MOBS = [
-	{
+//@type {{[key:string]: import("../models/Entity.js").TEntityProps}}
+export const MOBS = {
+	DEFAULT: {
 		id: 0,
 		type: ENTITY_TYPE.MONSTER,
 		name: "Worm",
@@ -22,7 +21,7 @@ export const MOBS = [
 		jobExp: 5,
 		atk: 1
 	},
-	{
+	CAT: {
 		id: 1,
 		type: ENTITY_TYPE.MONSTER,
 		name: "Cat",
@@ -34,11 +33,11 @@ export const MOBS = [
 		aspd: 1000,
 		range: 20,
 		inventory: [
-			ITEMS[6], // Stone
-			ITEMS[7], // Wood
+			ITEMS.STONE,
+			ITEMS.WOOD,
 		],
 	},
-	{
+	ORC: {
 		id: 2,
 		type: ENTITY_TYPE.MONSTER,
 		name: "Orc",
@@ -50,12 +49,12 @@ export const MOBS = [
 		aspd: 1000,
 		range: 12,
 		inventory: [
-			ITEMS[1], // Knife
-			ITEMS[6], // Stone
-			ITEMS[7], // Wood
+			ITEMS.KNIFE,
+			ITEMS.STONE,
+			ITEMS.WOOD,
 		],
 	},
-	{
+	PLANKTON: {
 		id: 3,
 		type: ENTITY_TYPE.MONSTER,
 		name: "Plankton",
@@ -67,7 +66,7 @@ export const MOBS = [
 		aspd: 1000,
 		range: 18,
 	},
-	{
+	ORC2: {
 		id: 4,
 		type: ENTITY_TYPE.MONSTER,
 		name: "Orc with gloves?",
@@ -79,13 +78,13 @@ export const MOBS = [
 		aspd: 1000,
 		range: 18,
 		inventory: [
-			ITEMS[1], // Knife
-			ITEMS[2], // Sword
-			ITEMS[6], // Stone
-			ITEMS[7], // Wood
+			ITEMS.KNIFE,
+			ITEMS.SWORD,
+			ITEMS.STONE,
+			ITEMS.WOOD,
 		],
 	},
-	{
+	EYE: {
 		id: 5,
 		type: ENTITY_TYPE.MONSTER,
 		name: "The eye",
@@ -97,7 +96,7 @@ export const MOBS = [
 		aspd: 1000,
 		range: 18,
 	},
-	{
+	LADYBUG: {
 		id: 6,
 		type: ENTITY_TYPE.MONSTER,
 		name: "Ladybug",
@@ -109,7 +108,7 @@ export const MOBS = [
 		aspd: 1000,
 		range: 18,
 	},
-	{
+	SKELETON: {
 		id: 7,
 		type: ENTITY_TYPE.MONSTER,
 		name: "Skeleton",
@@ -123,7 +122,7 @@ export const MOBS = [
 		w: 60,
 		h: 120,
 	},
-	{
+	DINOSAUR: {
 		id: 8,
 		type: ENTITY_TYPE.MONSTER,
 		name: "Dinosaur",
@@ -135,11 +134,11 @@ export const MOBS = [
 		aspd: 1000,
 		range: 18,
 		inventory: [
-			ITEMS[6], // Stone
-			ITEMS[7], // Wood
+			ITEMS.STONE,
+			ITEMS.WOOD,
 		],
 	},
-	{
+	MUSHROOM: {
 		id: 9,
 		type: ENTITY_TYPE.MONSTER,
 		name: "Mushroom",
@@ -151,11 +150,11 @@ export const MOBS = [
 		aspd: 1000,
 		range: 18,
 		inventory: [
-			ITEMS[6], // Stone
-			ITEMS[7], // Wood
+			ITEMS.STONE,
+			ITEMS.WOOD,
 		],
 	},
-	{
+	WIND_SPIRIT: {
 		id: 10,
 		type: ENTITY_TYPE.MONSTER,
 		name: "Wind spirit",
@@ -167,7 +166,7 @@ export const MOBS = [
 		aspd: 1000,
 		range: 18,
 	},
-	{
+	SLUSHIE: {
 		id: 11,
 		type: ENTITY_TYPE.MONSTER,
 		name: "Slushie",
@@ -179,11 +178,11 @@ export const MOBS = [
 		aspd: 1000,
 		range: 18,
 		inventory: [
-			ITEMS[6], // Stone
-			ITEMS[7], // Wood
+			ITEMS.STONE,
+			ITEMS.WOOD,
 		],
 	},
-	{
+	RED_MUSHROOM: {
 		id: 12,
 		type: ENTITY_TYPE.MONSTER,
 		name: "Red mushroom",
@@ -195,11 +194,11 @@ export const MOBS = [
 		aspd: 1000,
 		range: 18,
 		inventory: [
-			ITEMS[6], // Stone
-			ITEMS[7], // Wood
+			ITEMS.STONE,
+			ITEMS.WOOD,
 		],
 	},
-	{
+	LADYBUG2: {
 		id: 13,
 		type: ENTITY_TYPE.MONSTER,
 		name: "Ladybug 2",
@@ -211,7 +210,7 @@ export const MOBS = [
 		aspd: 1000,
 		range: 18,
 	},
-	{
+	ROBOT: {
 		id: 14,
 		type: ENTITY_TYPE.MONSTER,
 		name: "Robot 1",
@@ -223,7 +222,7 @@ export const MOBS = [
 		aspd: 1000,
 		range: 18,
 	},
-	{
+	UNICORN: {
 		id: 15,
 		type: ENTITY_TYPE.MONSTER,
 		name: "Unicorn",
@@ -235,7 +234,7 @@ export const MOBS = [
 		aspd: 1000,
 		range: 18,
 	},
-	{
+	GHOST: {
 		id: 16,
 		type: ENTITY_TYPE.MONSTER,
 		name: "Ghost",
@@ -247,4 +246,16 @@ export const MOBS = [
 		aspd: 1000,
 		range: 18,
 	},
-];
+};
+
+/**
+ * Helper to get a monster by its `id`
+ * @param {number} id
+ * @param {boolean} useFallback use `MOBS.DEFAULT `as fallback
+ * @returns
+ */
+export const getMobById = (id, useFallback = true) => {
+	const mob = Object.values(MOBS).find(p => p.id === id)
+	if (mob === undefined && useFallback) return MOBS.DEFAULT
+	return mob
+}
