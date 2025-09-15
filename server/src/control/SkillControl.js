@@ -1,7 +1,11 @@
+import { ENTITY_TYPE } from "../../../shared/enum/Entity.js";
 import { SKILL_ID, SKILL_STATE } from "../../../shared/enum/Skill.js";
 import { Entity } from "../../../shared/models/Entity.js";
 import { sendSkillUse } from "../events/sendSkillUse.js";
 import Cooldown from "../utils/Cooldown.js";
+import createGameId from "../utils/createGameId.js";
+import { AIPet } from "./AIPet.js";
+import { EntityControl } from "./EntityControl.js";
 
 /** Ack - no target gid is known or required, for skill use */
 const NO_GID = "";
@@ -21,6 +25,7 @@ export default class SkillControl {
 		// #region cooldowns
 		this._skillHealCd = new Cooldown()
 		this._skillAttackCd = new Cooldown()
+		this._skillTameCd = new Cooldown()
 		// #endregion
 	}
 
@@ -80,5 +85,58 @@ export default class SkillControl {
 
 		// send ACK (acknowledge) skill use success
 		socket.send(sendSkillUse(SKILL_ID.STRIKE, attacker.gid, attacking.gid, SKILL_STATE.OK))
+	}
+
+	/**
+	 * Skill this entity attempt to tame a monster to be your pet, 30s cooldown
+	 * @param {number} timestamp
+	 */
+	tame(timestamp) {
+		const tamer = this.entity
+		const socket = tamer.control.socket
+		const taming = tamer.control._follow || tamer.control._attacking
+
+		if (taming == null) {
+			socket.send(sendSkillUse(SKILL_ID.TAME, tamer.gid, NO_GID, SKILL_STATE.NO_TARGET))
+			return
+		}
+		if (tamer.hp <= 0 || taming.hp <= 0) {
+			socket.send(sendSkillUse(SKILL_ID.TAME, tamer.gid, taming.gid, SKILL_STATE.IS_DEAD))
+			return
+		}
+		if (this._skillTameCd.isNotExpired(timestamp)) {
+			socket.send(sendSkillUse(SKILL_ID.TAME, tamer.gid, taming.gid, SKILL_STATE.COOLDOWN))
+			return
+		}
+		// if (!Entity.inRangeOf(tamer, taming.lastX, taming.lastY, 50)) {
+		// 	socket.send(sendSkillUse(SKILL_ID.TAME, tamer.gid, taming.gid, SKILL_STATE.OUT_OF_RANGE))
+		// 	return
+		// }
+		// set cooldown
+		this._skillTameCd.set(timestamp + 30000 - tamer.latency)
+		// attempt to tame
+		// if (Math.random() < 0.3) { // 30% success rate
+		// if (Math.random() < 0.7) { // 70% success rate
+
+		// copy the entity and set as pet
+		const pet = new Entity({
+			...taming,
+			gid: createGameId(),
+			type: ENTITY_TYPE.PET,
+			name: `${tamer.name}'s ${taming.name}`,
+			owner: tamer,
+			speed: tamer.speed * 0.25, // set speed 25% faster than owner
+			lastMap: tamer.lastMap,
+			lastX: tamer.lastX,
+			lastY: tamer.lastY,
+			range: 100,
+		})
+		pet.control = new EntityControl(pet, tamer.control.world, null, tamer.control.map)
+		pet.control.ai = new AIPet(pet)
+		pet.control.revive()
+		tamer.control.map.entities.push(pet)
+		console.log(`[TAME]: ${pet.name} (hp:${pet.hp}, x:${pet.lastX},y:${pet.lastY},map:${pet.lastMap}) owner: ${pet.owner.name}`)
+		// send ACK (acknowledge) skill use success
+		socket.send(sendSkillUse(SKILL_ID.TAME, tamer.gid, taming.gid, SKILL_STATE.OK))
 	}
 }

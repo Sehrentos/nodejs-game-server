@@ -23,6 +23,9 @@ export default function onEntitySkill(entity, data, timestamp) {
 		case SKILL_ID.STRIKE: // Attack skill 2x more damage as normal, 5s cooldown
 			ctrl.skillControl.strike(timestamp)
 			break
+		case SKILL_ID.TAME: // Tame a monster
+			ctrl.skillControl.tame(timestamp)
+			break
 		default:
 			// send ACK (acknowledge) skill use packet back to the client as a response
 			ctrl.socket.send(sendSkillUse(data.id, null, null, SKILL_STATE.NONE))

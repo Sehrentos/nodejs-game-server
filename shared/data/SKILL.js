@@ -16,6 +16,10 @@ export const SKILL = {
 		name: "Strike",
 		desc: "Attack 2x more damage as normal, 5s cooldown.",
 	},
+	[SKILL_ID.TAME]: {
+		name: "Tame",
+		desc: "Tame a monster to be your pet, 30s cooldown.",
+	},
 }
 
 /**

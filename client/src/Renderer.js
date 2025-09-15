@@ -179,6 +179,9 @@ export default class Renderer {
 			else if (entity.type === ENTITY_TYPE.PLAYER) {
 				this.drawEntityPlayer(entity);
 			}
+			else if (entity.type === ENTITY_TYPE.PET) {
+				this.drawEntityMonster(entity);
+			}
 		}
 	}
 

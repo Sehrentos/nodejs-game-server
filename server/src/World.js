@@ -322,8 +322,10 @@ export class World {
 		console.log(`[World] Player "${player.name}" (id:${player.id}) disconnected.`)
 
 		// remove player from map
+		// remove player pets from map
 		this.maps.forEach((map) => {
 			map.entities = map.entities.filter((entity) => entity.gid !== player.gid)
+				.filter(entity => entity.type === ENTITY_TYPE.PET && entity.owner.gid !== player.gid)
 		})
 	}
 
@@ -379,6 +381,16 @@ export class World {
 
 		// remove player from old maps
 		this.removeEntityFromMaps(player)
+		// remove pet from old maps
+		const playerPets = []
+		if (oldMap != null) {
+			oldMap.entities.forEach(entity => {
+				if (entity.type === ENTITY_TYPE.PET && entity.owner.gid === player.gid) {
+					playerPets.push(entity)
+					this.removeEntityFromMaps(entity)
+				}
+			})
+		}
 
 		// IMPORTANT: update map controller
 		player.control.map = map
@@ -388,6 +400,15 @@ export class World {
 		player.lastY = y >= 0 ? y : Math.round(map.height / 2)
 		player.dir = DIRECTION.DOWN
 		map.entities.push(player)
+		// send the pets
+		playerPets.forEach(pet => {
+			pet.control.map = map
+			pet.lastMap = map.name
+			pet.lastX = player.lastX
+			pet.lastY = player.lastY
+			pet.dir = player.dir
+			map.entities.push(pet)
+		})
 
 		// entity event
 		return player.control.onEnterMap(map, oldMap)

@@ -15,6 +15,7 @@ import onEntityUpdatePlayer from '../events/onEntityUpdatePlayer.js';
 import onEntityUpdateMonster from '../events/onEntityUpdateMonster.js';
 import onEntityUpdateNPC from '../events/onEntityUpdateNPC.js';
 import onEntityUpdatePortal from '../events/onEntityUpdatePortal.js';
+import onEntityUpdatePet from '../events/onEntityUpdatePet.js';
 import onEntityPacketLogout from '../events/onEntityPacketLogout.js';
 import onEntityEnterMap from '../events/onEntityEnterMap.js';
 import onEntityLeaveMap from '../events/onEntityLeaveMap.js';
@@ -77,10 +78,8 @@ export class EntityControl {
 		this._skillAttackCd = new Cooldown()
 		// #endregion
 
-		// TODO implement skill controller
+		// skill controller
 		this.skillControl = new SkillControl(entity);
-		//this.skillControl.heal(20);
-		//this.skillControl.strike(this.entity);
 
 		// bind WebSocket functions for Players
 		if (entity.type === ENTITY_TYPE.PLAYER) {
@@ -189,6 +188,7 @@ export class EntityControl {
 			case ENTITY_TYPE.MONSTER: onEntityUpdateMonster(this.entity, timestamp); break;
 			case ENTITY_TYPE.NPC: onEntityUpdateNPC(this.entity, timestamp); break;
 			case ENTITY_TYPE.PORTAL: onEntityUpdatePortal(this.entity, timestamp); break;
+			case ENTITY_TYPE.PET: onEntityUpdatePet(this.entity, timestamp); break;
 			default: break;
 		}
 	}
@@ -594,38 +594,4 @@ export class EntityControl {
 		if (y > -1 && y > this.entity.lastY) return DIRECTION.DOWN
 	}
 
-	// TODO skill use implementation for player entity
-	// TODO skill use implementation for monster entity
-	useSkill(id, timestamp) {
-		// const ctrl = this
-		// const entity = this.entity
-		// const targetEntity = this._attacking
-		if (this.entity.hp <= 0) return false // must be alive
-
-		// TODO check if skill is valid
-		//if (!this.entity.skills.includes(id)) return false
-		// this.entity.lastSkill = id
-
-		// TODO skill implementation
-		// hardcoded for now
-		switch (id) {
-			case 1: // Heal HP skill 20%, 10s cooldown
-				if (this._skillHealCd.isNotExpired(timestamp)) return false
-				if (this.entity.hp >= this.entity.hpMax) return false
-				this._skillHealCd.set(timestamp + 10000 - this.entity.latency)
-				this.heal(this.entity.hpMax * 0.2, 0)
-				break
-			case 2: // Attack skill 2x more damage as normal, 5s cooldown
-				if (this._attacking == null) return false
-				if (this._skillAttackCd.isNotExpired(timestamp)) return false
-				if (!Entity.inRangeOfEntity(this.entity, this._attacking)) return false // out of range
-				this._skillAttackCd.set(timestamp + 5000 - this.entity.latency)
-				this._attacking.control.takeDamageFrom(this.entity, 2.0)
-				break
-			default:
-				break
-		}
-
-		return true
-	}
 }

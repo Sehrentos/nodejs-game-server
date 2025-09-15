@@ -31,7 +31,7 @@ export default class SkillBarUI {
 			? m("div.ui-skill-bar", {
 				oncreate: (vnode) => draggable(vnode.dom),
 			},
-				[SKILL_ID.HEAL, SKILL_ID.STRIKE].map((id) => m("button", {
+				[SKILL_ID.HEAL, SKILL_ID.STRIKE, SKILL_ID.TAME].map((id) => m("button", {
 					id: `skill-id-${id}`,
 					onclick: () => {
 						State.socket.send(sendSkill(id))

@@ -6,6 +6,7 @@ export const ENTITY_TYPE = {
 	PLAYER: 1,
 	MONSTER: 2,
 	PORTAL: 3,
+	PET: 4,
 }
 
 /**

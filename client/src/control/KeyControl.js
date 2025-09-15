@@ -102,10 +102,10 @@ export default class KeyControl {
 			case "Numpad2":
 				skillId = SKILL_ID.STRIKE
 				break
-			// case "Digit3":
-			// case "Numpad3":
-			// 	skillId = SKILL_ID.NONE
-			// 	break
+			case "Digit3":
+			case "Numpad3":
+				skillId = SKILL_ID.TAME
+				break
 			// case "Digit4":
 			// case "Numpad4":
 			// 	skillId = SKILL_ID.NONE
