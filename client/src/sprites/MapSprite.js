@@ -7,9 +7,9 @@ import Sprite from './Sprite.js';
 
 /**
  * @example
- * const map = new Sprite('/assets/sprites/mob_1.png')
+ * const map = new MapSprite('/assets/maps/map_1.jpg')
  * // in render
- * map.draw(this.ctx, entity)
+ * map.draw(this.ctx, worldmapData)
  */
 export default class MapSprite extends Sprite {
     constructor(src, transparencyColor) {

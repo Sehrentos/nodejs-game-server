@@ -1,0 +1,51 @@
+/* SkillTreeUI */
+.ui-skill-tree {
+	position: absolute;
+	top: .5em;
+	left: .5em;
+	box-sizing: border-box;
+	border: 1px solid #dddddd;
+	border-radius: 0.4em;
+	padding: 0.25em;
+	background-color: #f1f1f1;
+	color: #252525;
+}
+
+.ui-skill-tree .header {
+	display: flex;
+	justify-content: flex-end;
+	font-size: 120%;
+	font-weight: bold;
+	margin-bottom: 0.5em;
+}
+.ui-skill-tree .header button {
+	margin-left: 0.5em;
+	border-radius: 5em;
+}
+
+.ui-skill-tree .content {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 0.5em;
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+/* skill card */
+.ui-skill-tree .content div.skill {
+	box-sizing: border-box;
+	border: 1px solid #dddddd;
+	border-radius: 0.4em;
+	padding: 0.25em;
+	background-color: #d3d3d3;
+	color: #252525;
+}
+
+.ui-skill-tree .content div.skill .name {
+	font-size: 110%;
+	font-weight: bold;
+}
+
+.ui-skill-tree .content div.skill .desc {
+	font-size: 100%;
+}

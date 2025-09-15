@@ -1,3 +1,5 @@
+import { SKILL_ID, SKILL_STATE } from "../../../shared/enum/Skill.js";
+import { SKILL, STATE } from "../../../shared/data/SKILL.js";
 import { Entity } from "../../../shared/models/Entity.js";
 import { State } from "../State.js";
 
@@ -13,12 +15,22 @@ export function onSkillUse(socket, data) {
 	// check player state
 	if (!(State.player instanceof Entity)) return;
 
-	// merge items to player inventory
-	// const items = data.items.map(item => new Item(item));
-	// State.player.inventory = [...State.player.inventory, ...items];
+	// parse readable message from the skill use packet
+	const skill = SKILL[data.id] || SKILL[SKILL_ID.NONE];
+	const state = STATE[data.state] || STATE[SKILL_STATE.NONE];
+	const message = `Skill (${skill.name}) use ${state}!`;
 
-	// // update CharacterUI by dispatching a custom event
-	// document.dispatchEvent(new CustomEvent("ui-inventory", { detail: data.items }));
+	// send a chat message to update the chat UI
+	/** @type {import("../events/sendChat.js").TChatPacket} */
+	const chatParams = {
+		type: "chat",
+		channel: "log",
+		from: "server",
+		to: State.player.name,
+		message
+	};
+	document.dispatchEvent(new CustomEvent("ui-chat", { detail: chatParams }));
 
-	// Note: next canvas render cycle will update the game view
+	// update SkillBarUI by dispatching a custom event
+	document.dispatchEvent(new CustomEvent("ui-skill-bar", { detail: data }));
 }

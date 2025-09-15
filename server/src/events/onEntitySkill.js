@@ -1,4 +1,5 @@
-import { sendSkillUse } from "./sendSkillUse.js"
+import { SKILL_ID, SKILL_STATE } from "../../../shared/enum/Skill.js";
+import { sendSkillUse } from "./sendSkillUse.js";
 
 /**
  * Handles the "skill" packet sent by the client.
@@ -14,12 +15,19 @@ export default function onEntitySkill(entity, data, timestamp) {
 		return
 	}
 
-	if (entity.hp <= 0) return // must be alive
-
-	// start using the skill
-	if (ctrl.useSkill(data.id, timestamp)) {
-		// send the skill use received packet back to the client as a response
-		ctrl.socket.send(sendSkillUse(data.id))
-		console.log(`[Event.onEntitySkill] id:${entity.id} "${entity.name}" use skill: "${data.id}"`);
+	// map skill id to skill function
+	switch (data.id) {
+		case SKILL_ID.HEAL: // Heal HP skill 20%, 10s cooldown
+			ctrl.skillControl.heal(timestamp)
+			break
+		case SKILL_ID.STRIKE: // Attack skill 2x more damage as normal, 5s cooldown
+			ctrl.skillControl.strike(timestamp)
+			break
+		default:
+			// send ACK (acknowledge) skill use packet back to the client as a response
+			ctrl.socket.send(sendSkillUse(data.id, null, null, SKILL_STATE.NONE))
+			break
 	}
+
+	// console.log(`[Event.onEntitySkill] id:${entity.id} "${entity.name}" use skill: "${data.id}"`);
 }

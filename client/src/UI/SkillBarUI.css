@@ -21,6 +21,20 @@
 	background-color: #d3d3d3;
 	color: #252525;
 }
+.ui-skill-bar button:active {
+	background-color: #b8b8b8;
+	border-color: rgb(167, 167, 167);
+}
+
+.ui-skill-bar button.active {
+	background-color: #58bd3e;
+	border-color: #6ef74c;
+}
+
+.ui-skill-bar button.error {
+	background-color: #a80202;
+	border-color: #ff0000;
+}
 
 @media only screen and (max-width: 600px) {
 	.ui-skill-bar {

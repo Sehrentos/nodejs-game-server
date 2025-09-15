@@ -23,6 +23,7 @@ import Cooldown from '../utils/Cooldown.js';
 import * as Const from '../../../shared/Constants.js';
 import { sendHeartbeat } from '../events/sendHeartbeat.js';
 // import { sendRateLimit } from '../events/sendRateLimit.js';
+import SkillControl from './SkillControl.js';
 
 export class EntityControl {
 	/**
@@ -75,6 +76,11 @@ export class EntityControl {
 		this._skillHealCd = new Cooldown()
 		this._skillAttackCd = new Cooldown()
 		// #endregion
+
+		// TODO implement skill controller
+		this.skillControl = new SkillControl(entity);
+		//this.skillControl.heal(20);
+		//this.skillControl.strike(this.entity);
 
 		// bind WebSocket functions for Players
 		if (entity.type === ENTITY_TYPE.PLAYER) {
@@ -591,6 +597,9 @@ export class EntityControl {
 	// TODO skill use implementation for player entity
 	// TODO skill use implementation for monster entity
 	useSkill(id, timestamp) {
+		// const ctrl = this
+		// const entity = this.entity
+		// const targetEntity = this._attacking
 		if (this.entity.hp <= 0) return false // must be alive
 
 		// TODO check if skill is valid

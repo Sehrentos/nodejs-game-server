@@ -4,6 +4,7 @@ import { State } from "../State.js"
 import TabsUI from "./TabsUI.js"
 import AccordionUI from "./AccordionUI.js"
 import { EXP_BASE, EXP_JOB } from "../../../shared/Constants.js"
+import { draggable } from "../utils.js"
 
 /**
  * @example m(CharacterUI, { isVisible: true })
@@ -30,6 +31,7 @@ export default class CharacterUI {
 	view(vnode) {
 		return (this.isVisible && State.player)
 			? m("div.ui-character",
+				{ oncreate: (vnode) => draggable(vnode.dom) },
 				m(AccordionUI, { isOpen: false },
 					m("div",
 						m("div.title", { title: `Press "C" to close` }, "Character"),

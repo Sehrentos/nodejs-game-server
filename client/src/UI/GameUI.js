@@ -9,6 +9,7 @@ import SocketControl from "../control/SocketControl.js"
 import DialogUI from "./DialogUI.js"
 import ExitGameUI from "./ExitGameUI.js"
 import SkillBarUI from "./SkillBarUI.js"
+import SkillTreeUI from "./SkillTreeUI.js"
 
 /**
  * @class GameUI
@@ -39,6 +40,7 @@ export default class GameUI {
 			m(CharacterUI),
 			m(UINPCDialog),
 			m(SkillBarUI),
+			m(SkillTreeUI),
 			// show dialog to reconnect
 			State.socket != null && State.socket.readyState === WebSocket.CLOSED ? m(DialogUI, {
 				content: m("div",

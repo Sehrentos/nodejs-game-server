@@ -1,3 +1,4 @@
+import { SKILL_ID } from "../../../shared/enum/Skill.js"
 import { State } from "../State.js"
 import { sendKeyboardMove } from "../events/sendKeyboardMove.js"
 import { sendSkill } from "../events/sendSkill.js"
@@ -95,20 +96,20 @@ export default class KeyControl {
 		switch (keyCode) {
 			case "Digit1":
 			case "Numpad1":
-				skillId = 1
+				skillId = SKILL_ID.HEAL
 				break
 			case "Digit2":
 			case "Numpad2":
-				skillId = 2
+				skillId = SKILL_ID.STRIKE
 				break
-			case "Digit3":
-			case "Numpad3":
-				skillId = 3
-				break
-			case "Digit4":
-			case "Numpad4":
-				skillId = 4
-				break
+			// case "Digit3":
+			// case "Numpad3":
+			// 	skillId = SKILL_ID.NONE
+			// 	break
+			// case "Digit4":
+			// case "Numpad4":
+			// 	skillId = SKILL_ID.NONE
+			// 	break
 			default:
 				break
 		}
