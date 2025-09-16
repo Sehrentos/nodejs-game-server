@@ -15,17 +15,22 @@ import { State } from "../State.js"
 export function onUpdateMap(socket, data) {
 	const map = data.map;
 	// update map state or create new map
-	if (State.map instanceof WorldMap) {
-		Object.assign(State.map, map) // naive approach
+	if (State.map.value instanceof WorldMap) {
+		// Object.assign(State.map, map) // naive approach
+		State.map.set((current) => {
+			if (current == null) return current
+			current = Object.assign({}, current, map)
+			return current
+		})
 	} else {
-		State.map = new WorldMap(map)
+		State.map.set(new WorldMap(map))
 	}
 
 	// also update player position
-	const player = State.player
+	const player = State.player.value
 	if (player == null) return
 
-	const entity = State.map.entities.find(e => e.gid === player.gid)
+	const entity = State.map.value.entities.find(e => e.gid === player.gid)
 	if (entity == null) return
 
 	// note: updating these will help with camera and map bounds,

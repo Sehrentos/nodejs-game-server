@@ -1,6 +1,6 @@
 import m from "mithril"
 import DialogUI from "./DialogUI.js"
-import { State } from "../State.js"
+import { Events, State } from "../State.js"
 import { sendDialog } from "../events/sendDialog.js"
 
 /**
@@ -99,7 +99,7 @@ export default class UINPCDialog extends DialogUI {
 
 		// send a "next" message to the server if it's open
 		// this will tell server that the dialog is changing
-		State.socket.send(sendDialog("next", this.gid, State.player.gid))
+		State.socket.send(sendDialog("next", this.gid, State.player.value.gid))
 	}
 
 	/**
@@ -115,7 +115,7 @@ export default class UINPCDialog extends DialogUI {
 		// send a "close" message to the server if it's open
 		// this will tell server that the dialog is closed
 		// and user can interact with other things or move
-		State.socket.send(sendDialog("close", this.gid, State.player.gid))
+		State.socket.send(sendDialog("close", this.gid, State.player.value.gid))
 	}
 
 	/**
@@ -130,28 +130,23 @@ export default class UINPCDialog extends DialogUI {
 		// send a "accept" message to the server if it's open
 		// this will tell server that the dialog is accepted and will be closed
 		// and user can interact with other things or move
-		State.socket.send(sendDialog("accept-sell-all", this.gid, State.player.gid))
+		State.socket.send(sendDialog("accept-sell-all", this.gid, State.player.value.gid))
 	}
 
 	oncreate(vnode) {
-		document.addEventListener("ui-npc-dialog", this._onDOMDialogUpdate)
+		Events.on("ui-npc-dialog", this._onDOMDialogUpdate)
 	}
 
 	onremove(vnode) {
-		document.removeEventListener("ui-npc-dialog", this._onDOMDialogUpdate)
+		Events.off("ui-npc-dialog", this._onDOMDialogUpdate)
 	}
 
 	/**
 	 * Updates the dialog content and displays the dialog UI.
 	 *
-	 * @param {CustomEvent} event - The custom event containing dialog content details.
-	 *
-	 * @example document.dispatchEvent(new CustomEvent("ui-npc-dialog", { detail: "Hello World" }));
+	 * @param {TUINPCDialogProps} data - The custom event containing dialog content details.
 	 */
-	onDOMDialogUpdate(event) {
-		/** @type {TUINPCDialogProps} */
-		const data = event.detail
-
+	onDOMDialogUpdate(data) {
 		this.gid = data.gid || ""
 		this.content = data.content || ""
 		this.isVisible = data.isVisible || false
@@ -160,19 +155,8 @@ export default class UINPCDialog extends DialogUI {
 
 		// send a "open" message to the server if it's open
 		// this will tell server that the dialog is opened
-		State.socket.send(sendDialog("open", this.gid, State.player.gid))
+		State.socket.send(sendDialog("open", this.gid, State.player.value.gid))
 
 		m.redraw()
-	}
-
-	/**
-	 * Helper to dispatch a custom event to update the dialog UI.
-	 *
-	 * @param {TUINPCDialogProps} params
-	 *
-	 * @example DialogUI.emit({ content: "Hello World", isVisible: true });
-	 */
-	static emit(params) {
-		return document.dispatchEvent(new CustomEvent("ui-npc-dialog", { detail: params }));
 	}
 }

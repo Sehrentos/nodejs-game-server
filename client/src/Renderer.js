@@ -96,10 +96,10 @@ export default class Renderer {
 		this._lastFrameTimestamp = timestamp
 
 		// #region drawing
-		if (State.map != null && State.player != null) {
-			this.drawCamera(State.player)
-			this.drawMapLayout(State.map)
-			this.drawMapEntities(State.map)
+		if (State.map.value != null && State.player.value != null) {
+			this.drawCamera(State.player.value)
+			this.drawMapLayout(State.map.value)
+			this.drawMapEntities(State.map.value)
 		}
 		// #endregion
 
@@ -181,6 +181,12 @@ export default class Renderer {
 			}
 			else if (entity.type === ENTITY_TYPE.PET) {
 				this.drawEntityMonster(entity);
+			} else {
+				// unknown entity type
+				Renderer.drawCircle(this.ctx, "purple", entity.lastX, entity.lastY, entity.h / 2);
+				Renderer.drawEntityFacingDirection(this.ctx, entity, 4, "white");
+				Renderer.drawEntityName(this.ctx, entity, "purple", false);
+				console.warn(`[WARN]: Unknown entity type: ${entity.type}`, entity);
 			}
 		}
 	}

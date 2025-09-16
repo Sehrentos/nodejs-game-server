@@ -1,10 +1,10 @@
 import m from "mithril"
 import "./SkillBarUI.css"
-import { State } from "../State.js"
+import { Events, State } from "../State.js"
 import { sendSkill } from "../events/sendSkill.js"
 import { SKILL_ID, SKILL_STATE } from "../../../shared/enum/Skill.js"
 import { SKILL, STATE } from "../../../shared/data/SKILL.js"
-import { draggable } from "../utils.js"
+import draggable from "../utils/draggable.js"
 
 /**
  * @example m(SkillBarUI)
@@ -16,22 +16,23 @@ export default class SkillBarUI {
 	constructor(vnode) {
 		// custom event to update player state on the UI
 		this._onDOMUpdate = this.onDOMUpdate.bind(this)
+		this.skillList = [SKILL_ID.HEAL, SKILL_ID.STRIKE, SKILL_ID.TAME]
 	}
 
 	oncreate(vnode) {
-		document.addEventListener("ui-skill-bar", this._onDOMUpdate)
+		Events.on("ui-skill-bar", this._onDOMUpdate)
 	}
 
 	onremove(vnode) {
-		document.removeEventListener("ui-skill-bar", this._onDOMUpdate)
+		Events.off("ui-skill-bar", this._onDOMUpdate)
 	}
 
 	view() {
-		return State.player
+		return State.player.value
 			? m("div.ui-skill-bar", {
 				oncreate: (vnode) => draggable(vnode.dom),
 			},
-				[SKILL_ID.HEAL, SKILL_ID.STRIKE, SKILL_ID.TAME].map((id) => m("button", {
+				this.skillList.map((id) => m("button", {
 					id: `skill-id-${id}`,
 					onclick: () => {
 						State.socket.send(sendSkill(id))
@@ -41,19 +42,19 @@ export default class SkillBarUI {
 				}, SKILL[id].name)),
 				/** Skill Tree button */
 				m("button", {
-					onclick: () => document.dispatchEvent(new CustomEvent("ui-skill-tree", {
-						detail: { isVisible: true }
-					}))
+					onclick: () => Events.emit("ui-skill-tree", {
+						isVisible: true
+					})
 				}, "⁝⁝⁝"),
 			)
 			: undefined
 	}
-	// bind event listener to document element
-	// to receive UI updates
-	onDOMUpdate(event) {
-		/** @type import("../../../server/src/events/sendSkillUse.js").TSkillUsePacket */
-		const data = event.detail
 
+	/**
+	 * handles the custom "ui-skill-bar" event to update the skill bar UI.
+	 * @param {import("../../../server/src/events/sendSkillUse.js").TSkillUsePacket} data
+	 */
+	onDOMUpdate(data) {
 		// const skill = SKILL[data.id] || SKILL[SKILL_ID.NONE];
 		// const state = STATE[data.state] || STATE[SKILL_STATE.NONE];
 		// console.log("[DEBUG] SkillBarUI:", skill, state)
@@ -73,15 +74,9 @@ export default class SkillBarUI {
 		button.classList.remove("active", "error")
 		button.classList.add(type)
 		clearTimeout(SkillBarUI.toggleSkillBarButtonTimer)
-		SkillBarUI.toggleSkillBarButtonTimer = setTimeout(() => button.classList.remove("active", "error"), 350)
+		SkillBarUI.toggleSkillBarButtonTimer = setTimeout(() => {
+			button.classList.remove("active", "error")
+		}, 350)
 	}
 	static toggleSkillBarButtonTimer = null
-
-	/**
-	 * update the UI with optional data
-	 * @param {import("../../../server/src/events/sendSkillUse.js").TSkillUsePacket} params - Skill use packet
-	 */
-	static emit(params) {
-		return document.dispatchEvent(new CustomEvent("ui-skill-bar", { detail: params }));
-	}
 }

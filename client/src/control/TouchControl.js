@@ -46,9 +46,9 @@ export default class TouchControl {
 		event.preventDefault()
 		event.stopPropagation()
 
-		if (this.canvas == null || State.map == null || State.socket == null) return
+		if (this.canvas == null || State.map.value == null || State.socket == null) return
 		const { x, y } = this.getMousePosition(event)
-		const stack = WorldMap.findEntitiesInRadius(State.map, x, y, PLAYER_TOUCH_AREA_SIZE)
+		const stack = WorldMap.findEntitiesInRadius(State.map.value, x, y, PLAYER_TOUCH_AREA_SIZE)
 
 		// TODO remove logs, when done testing
 		console.log(x, y, stack)
@@ -69,9 +69,9 @@ export default class TouchControl {
 	 * @param {MouseEvent} event - The mouse move event.
 	 */
 	onMouseMove(event) {
-		if (this.canvas == null || State.map == null) return
+		if (this.canvas == null || State.map.value == null) return
 		const { x, y } = this.getMousePosition(event)
-		const stack = WorldMap.findEntitiesInRadius(State.map, x, y, PLAYER_TOUCH_AREA_SIZE)
+		const stack = WorldMap.findEntitiesInRadius(State.map.value, x, y, PLAYER_TOUCH_AREA_SIZE)
 
 		// change mouse cursor to pointer
 		if (stack.length) {

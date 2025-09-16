@@ -1,6 +1,6 @@
 import m from "mithril"
 import "./ChatUI.css"
-import { State } from "../State.js"
+import { Events, State } from "../State.js"
 import { sendChat } from "../events/sendChat.js"
 
 export default class ChatUI {
@@ -30,7 +30,7 @@ export default class ChatUI {
 	oncreate(vnode) {
 		vnode.dom.addEventListener("selectstart", this._onSelectStart)
 		window.addEventListener("keydown", this._onKeydownListener)
-		document.addEventListener("ui-chat", this._onDOMChat)
+		Events.on("ui-chat", this._onDOMChat)
 		vnode.dom.addEventListener("focusin", this._onFocusIn)
 		vnode.dom.addEventListener("focusout", this._onFocusOut)
 	}
@@ -39,7 +39,7 @@ export default class ChatUI {
 	onremove(vnode) {
 		vnode.dom.removeEventListener("selectstart", this._onSelectStart)
 		window.removeEventListener("keydown", this._onKeydownListener)
-		document.removeEventListener("ui-chat", this._onDOMChat)
+		Events.off("ui-chat", this._onDOMChat)
 		vnode.dom.removeEventListener("focusin", this._onFocusIn)
 		vnode.dom.removeEventListener("focusout", this._onFocusOut)
 	}
@@ -69,14 +69,14 @@ export default class ChatUI {
 						"data-active-tab": "default",
 						class: this.activeTab === "default" ? "tabcontent active" : "tabcontent",
 					},
-						State.chat.filter(p => p.channel === "default")
+						State.chat.value.filter(p => p.channel === "default")
 							.map((msg, key) => m("li", { key }, `${msg.from}: ${msg.message}`))
 					),
 					m("ul#logs-tabcontent", {
 						"data-active-tab": "log",
 						class: this.activeTab === "log" ? "tabcontent active" : "tabcontent",
 					},
-						State.chat.filter(p => p.channel === "log")
+						State.chat.value.filter(p => p.channel === "log")
 							.map((msg, key) => m("li", { key }, `${msg.from}: ${msg.message}`))
 					),
 					/** create form inputs */
@@ -178,7 +178,7 @@ export default class ChatUI {
 		event.preventDefault()
 
 		// socket and player state exists
-		if (State.socket == null || State.player == null) return
+		if (State.socket == null || State.player.value == null) return
 
 		/** @type {HTMLFormElement|null} - chat form element **/
 		// @ts-ignore
@@ -208,7 +208,7 @@ export default class ChatUI {
 		// send chat message
 		State.socket.send(sendChat(
 			this.activeTab || "default",
-			State.player.name || "unknown",
+			State.player.value.name || "unknown",
 			"any", // TODO private chat, player name goes here
 			message
 		));
@@ -266,34 +266,16 @@ export default class ChatUI {
 		event.stopPropagation()
 	}
 
-	// bind chat event listener to document element
-	// to receive chat messages from any where in the app
-	onDOMChat(event) {
-		/** @type {import("../events/sendChat.js").TChatPacket} */
-		const data = event.detail
-
-		State.chat.push({
-			timestamp: Date.now(),
-			...data,
-		})
+	/**
+	 * handle the custom "ui-chat" event to update the chat UI.
+	 * @param {import("../events/sendChat.js").TChatPacket} data
+	 */
+	onDOMChat(data) {
+		State.chat.set((current) => ([
+			...current,
+			{ timestamp: Date.now(), ...data },
+		]))
 
 		m.redraw()
-	}
-
-	/**
-	 * Adds a chat message to the chat UI.
-	 *
-	 * @param {import("../events/sendChat.js").TChatPacket} params - The chat message data.
-	 *
-	 * @example ChatUI.emit({
-	 * 	type: "chat",
-	 *  channel: "default",
-	 * 	from: "player",
-	 * 	to: "world",
-	 * 	message: "Hello World",
-	 * });
-	 */
-	static emit(params) {
-		return document.dispatchEvent(new CustomEvent("ui-chat", { detail: params }));
 	}
 }

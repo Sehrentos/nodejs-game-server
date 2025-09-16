@@ -21,7 +21,7 @@ export default class KeyControl {
 	}
 
 	onKeydown(e) {
-		if (State.player == null || State.map == null) return false
+		if (State.player.value == null || State.map.value == null) return false
 		// exclude keydown event while in any input element
 		if ((e.target?.tagName ?? "") === "INPUT") return false
 
@@ -64,7 +64,7 @@ export default class KeyControl {
 		// 	case "KeyD":
 		// 	case "ArrowRight":
 		// 		this.entity.dir = 1
-		// 		if (this.entity.lastX < State.map.width) {
+		// 		if (this.entity.lastX < State.map.value.width) {
 		// 			this.entity.lastX++
 		// 		}
 		// 		break
@@ -78,7 +78,7 @@ export default class KeyControl {
 		// 	case "KeyS":
 		// 	case "ArrowDown":
 		// 		this.entity.dir = 3
-		// 		if (this.entity.lastY < State.map.height) {
+		// 		if (this.entity.lastY < State.map.value.height) {
 		// 			this.entity.lastY++
 		// 		}
 		// 		break

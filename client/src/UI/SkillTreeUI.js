@@ -1,8 +1,9 @@
 import m from "mithril"
 import "./SkillTreeUI.css"
-import { State } from "../State.js"
+import { Events, State } from "../State.js"
 import { SKILL } from "../../../shared/data/SKILL.js"
 import { SKILL_ID } from "../../../shared/enum/Skill.js"
+import draggable from "../utils/draggable.js"
 
 /**
  * @example m(SkillTreeUI, { isVisible: true })
@@ -18,15 +19,17 @@ export default class SkillTreeUI {
 	}
 
 	oncreate(vnode) {
-		document.addEventListener("ui-skill-tree", this._onDOMUpdate)
+		Events.on("ui-skill-tree", this._onDOMUpdate)
 	}
 	onremove(vnode) {
-		document.removeEventListener("ui-skill-tree", this._onDOMUpdate)
+		Events.off("ui-skill-tree", this._onDOMUpdate)
 	}
 
-	view(vnode) {
+	view() {
 		return this.isVisible
-			? m("div.ui-skill-tree",
+			? m("div.ui-skill-tree", {
+				oncreate: (vnode) => draggable(vnode.dom),
+			},
 				m("div.header",
 					m("span", "Skill Tree"),
 					m("button", { onclick: this._onClose }, "X"),
@@ -47,8 +50,11 @@ export default class SkillTreeUI {
 	onClose() {
 		this.isVisible = false
 	}
-	/** @param {CustomEvent} event */
-	onDOMUpdate(event) {
-		this.isVisible = event.detail.isVisible
+	/**
+	 * handle the custom "ui-skill-tree" event to update the skill tree UI.
+	 * @param {{isVisible: boolean}} data
+	 */
+	onDOMUpdate(data) {
+		this.isVisible = data.isVisible
 	}
 }

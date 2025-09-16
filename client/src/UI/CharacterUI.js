@@ -1,10 +1,10 @@
 import m from "mithril"
 import "./CharacterUI.css"
-import { State } from "../State.js"
+import { Events, State } from "../State.js"
 import TabsUI from "./TabsUI.js"
 import AccordionUI from "./AccordionUI.js"
 import { EXP_BASE, EXP_JOB } from "../../../shared/Constants.js"
-import { draggable } from "../utils.js"
+import draggable from "../utils/draggable.js"
 
 /**
  * @example m(CharacterUI, { isVisible: true })
@@ -19,29 +19,31 @@ export default class CharacterUI {
 		this._onKeydownListener = this.onKeydownListener.bind(this)
 		// custom event to update player state on the UI
 		this._onDOMPlayerUpdate = this.onDOMPlayerUpdate.bind(this)
+		// TODO inventory updates from ui-inventory event
+		// this._onDOMUpdateInventory = this.onDOMUpdateInventory.bind(this)
 	}
 	oncreate(vnode) {
 		window.addEventListener("keydown", this._onKeydownListener)
-		document.addEventListener("ui-character", this._onDOMPlayerUpdate)
+		Events.on("ui-character", this._onDOMPlayerUpdate)
 	}
 	onremove(vnode) {
 		window.removeEventListener("keydown", this._onKeydownListener)
-		document.removeEventListener("ui-character", this._onDOMPlayerUpdate)
+		Events.off("ui-character", this._onDOMPlayerUpdate)
 	}
-	view(vnode) {
-		return (this.isVisible && State.player)
+	view() {
+		return (this.isVisible && State.player.value)
 			? m("div.ui-character",
 				{ oncreate: (vnode) => draggable(vnode.dom) },
 				m(AccordionUI, { isOpen: false },
 					m("div",
 						m("div.title", { title: `Press "C" to close` }, "Character"),
 						m("div.info",
-							m("div", `${State.player.name} (lv: ${State.player.level})`),
-							m("div", `Hp: ${State.player.hp}/${State.player.hpMax}`),
-							m("div", `Mp: ${State.player.mp}/${State.player.mpMax}`),
-							m("div", `Base Exp: ${State.player.baseExp}/${State.player.level * EXP_BASE}`),
-							m("div", `Job Exp: ${State.player.jobExp}/${State.player.level * EXP_JOB}`),
-							m("div", `Money: ${State.player.money}`),
+							m("div", `${State.player.value.name} (lv: ${State.player.value.level})`),
+							m("div", `Hp: ${State.player.value.hp}/${State.player.value.hpMax}`),
+							m("div", `Mp: ${State.player.value.mp}/${State.player.value.mpMax}`),
+							m("div", `Base Exp: ${State.player.value.baseExp}/${State.player.value.level * EXP_BASE}`),
+							m("div", `Job Exp: ${State.player.value.jobExp}/${State.player.value.level * EXP_JOB}`),
+							m("div", `Money: ${State.player.value.money}`),
 						),
 					),
 					m("div.overflow",
@@ -65,59 +67,59 @@ export default class CharacterUI {
 							),
 							m(".tabcontent.active", m(".stats",
 								m("strong", "Attack"),
-								m("span", State.player.atk || "1"),
+								m("span", State.player.value.atk || "1"),
 								m("strong", "Attack multiplier"),
-								m("span", State.player.atkMultiplier || "1"),
+								m("span", State.player.value.atkMultiplier || "1"),
 								m("strong", "Magic Attack"),
-								m("span", State.player.mAtk || "1"),
+								m("span", State.player.value.mAtk || "1"),
 								m("strong", "Magic multiplier"),
-								m("span", State.player.mAtkMultiplier || "1"),
+								m("span", State.player.value.mAtkMultiplier || "1"),
 								m("strong", "Hit chance"),
-								m("span", State.player.hit || "0"),
+								m("span", State.player.value.hit || "0"),
 								m("strong", "Crit change"),
-								m("span", State.player.crit || "0"),
+								m("span", State.player.value.crit || "0"),
 							)),
 							m(".tabcontent", m(".stats",
 								m("strong", "Defence"),
-								m("span", State.player.def || "0"),
+								m("span", State.player.value.def || "0"),
 								m("strong", "Defence multiplier"),
-								m("span", State.player.defMultiplier || "1"),
+								m("span", State.player.value.defMultiplier || "1"),
 								m("strong", "Magic defence"),
-								m("span", State.player.mDef || "0"),
+								m("span", State.player.value.mDef || "0"),
 								m("strong", "Magic defence multiplier"),
-								m("span", State.player.mDefMultiplier || "1"),
+								m("span", State.player.value.mDefMultiplier || "1"),
 								m("strong", "Dodge chance"),
-								m("span", State.player.dodge || "0"),
+								m("span", State.player.value.dodge || "0"),
 								m("strong", "Dodge multiplier"),
-								m("span", State.player.dodgeMultiplier || "1"),
+								m("span", State.player.value.dodgeMultiplier || "1"),
 								m("strong", "Block change"),
-								m("span", State.player.block || "0"),
+								m("span", State.player.value.block || "0"),
 								m("strong", "Block multiplier"),
-								m("span", State.player.blockMultiplier || "1"),
+								m("span", State.player.value.blockMultiplier || "1"),
 							)),
 							m(".tabcontent", m(".stats",
 								m("strong", "Str"),
-								m("span", State.player.str || "1"),
+								m("span", State.player.value.str || "1"),
 								m("strong", "Agi"),
-								m("span", State.player.agi || "1"),
+								m("span", State.player.value.agi || "1"),
 								m("strong", "Int"),
-								m("span", State.player.int || "1"),
+								m("span", State.player.value.int || "1"),
 								m("strong", "Vit"),
-								m("span", State.player.vit || "1"),
+								m("span", State.player.value.vit || "1"),
 								m("strong", "Dex"),
-								m("span", State.player.dex || "1"),
+								m("span", State.player.value.dex || "1"),
 								m("strong", "Luk"),
-								m("span", State.player.luk || "1"),
+								m("span", State.player.value.luk || "1"),
 							)),
 							m(".tabcontent", m(".stats",
 								m("strong", "Latency"),
-								m("span", `${State.player.latency || "0"} ms`),
+								m("span", `${State.player.value.latency || "0"} ms`),
 							)),
 						),
 						// inventory
 						m("details",
 							m("summary", "Inventory"),
-							m("div.equip", (State.player.inventory || []).map((item, index) =>
+							m("div.equip", (State.player.value.inventory || []).map((item, index) =>
 								m("div", { key: `${index}-${item.id}` }, `${index + 1}. ${item.name}`)
 							))
 						),
@@ -134,21 +136,16 @@ export default class CharacterUI {
 			m.redraw()
 		}
 	}
-	// bind event listener to document element
-	// to receive player updates
-	onDOMPlayerUpdate(event) {
+
+	/**
+	 * handle the custom "ui-character" event to update the character UI.
+	 * @param {any} data
+	 */
+	onDOMPlayerUpdate(data) {
 		// /** @type {import("../../src/Packets.js").TEntity} */
 		// const data = event.detail
 		// apply incomming updates
 		// see SocketControl.updatePlayer
 		m.redraw()
-	}
-
-	/**
-	 * update the character UI with optional data
-	 * @param {import("../../../shared/models/Entity").TEntityProps} params - The player data from the server.
-	 */
-	static emit(params) {
-		return document.dispatchEvent(new CustomEvent("ui-character", { detail: params }));
 	}
 }

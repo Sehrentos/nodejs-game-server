@@ -8,7 +8,7 @@ import { Auth } from "./Auth.js"
 m.route(document.body, "/login", {
 	"/game": {
 		onmatch: (args) => {
-			if (Auth.isLoggedIn) {
+			if (Auth.isLoggedIn.value) {
 				return GameUI
 			}
 			return m.route.SKIP

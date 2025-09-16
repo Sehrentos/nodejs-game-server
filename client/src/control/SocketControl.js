@@ -1,6 +1,6 @@
 import { Auth } from "../Auth.js";
 import { SOCKET_URL } from "../Settings.js";
-import { State } from "../State.js"
+import { Events, State } from "../State.js"
 import { onPing } from "../events/onPing.js";
 import { onUpdatePlayer } from "../events/onUpdatePlayer.js";
 import { onUpdateMap } from "../events/onUpdateMap.js";
@@ -24,7 +24,7 @@ export default class SocketControl {
 		this._onSocketMessage = this.onSocketMessage.bind(this)
 
 		this._socket = new WebSocket(SOCKET_URL, [
-			"ws", "wss", `Bearer.${Auth.jwtToken}`
+			"ws", "wss", `Bearer.${Auth.jwtToken.value}`
 		]);
 
 		this._socket.onopen = this._onSocketOpen
@@ -37,14 +37,15 @@ export default class SocketControl {
 
 		// update chat list, the UI might not be ready yet
 		// set chat message directly
-		State.chat.push({
+		State.chat.set((current) => ([...current, {
 			type: "chat",
 			channel: "log",
 			from: "client",
 			to: "any",
 			message: "Socket connecting",
 			timestamp: Date.now(),
-		});
+		}]));
+		console.log('SocketControl initialized.', State.chat.value);
 	}
 
 	// #region getters
@@ -99,18 +100,16 @@ export default class SocketControl {
 	 */
 	onSocketOpen(event) {
 		console.log('Socket connection opened.');
-
-		document.dispatchEvent(new CustomEvent("ui-chat", {
-			/** @type {import("../../../server/src/events/sendChat.js").TChatPacket} */
-			detail: {
-				type: "chat",
-				channel: "log",
-				from: "client",
-				to: "any",
-				message: "Socket connected",
-				timestamp: Date.now(),
-			}
-		}));
+		/** @type {import("../../../server/src/events/sendChat.js").TChatPacket} */
+		const chatParams = {
+			type: "chat",
+			channel: "log",
+			from: "client",
+			to: "any",
+			message: "Socket connected",
+			timestamp: Date.now(),
+		}
+		Events.emit("ui-chat", chatParams);
 	}
 
 	/**
@@ -121,38 +120,36 @@ export default class SocketControl {
 	onSocketError(event) {
 		console.error('Socket error:', event);
 
-		document.dispatchEvent(new CustomEvent("ui-chat", {
-			/** @type {import("../../../server/src/events/sendChat.js").TChatPacket} */
-			detail: {
-				type: "chat",
-				channel: "log",
-				from: "client",
-				to: "any",
-				message: "Socket error in connection establishment",
-				timestamp: Date.now(),
-			}
-		}));
+		/** @type {import("../../../server/src/events/sendChat.js").TChatPacket} */
+		const chatParams = {
+			type: "chat",
+			channel: "log",
+			from: "client",
+			to: "any",
+			message: "Socket error in connection establishment",
+			timestamp: Date.now(),
+		}
+		Events.emit("ui-chat", chatParams);
 	}
 
 	/**
 	 * Called when the WebSocket connection is closed.
-	 * Logs a message to the console and dispatches a chat event to update the UI.
+	 * Logs a message to the console and send a chat event to update the UI.
 	 * @param {CloseEvent} event - The WebSocket close event.
 	 */
 	onSocketClose(event) {
 		console.log('Socket connection closed.');
 
-		document.dispatchEvent(new CustomEvent("ui-chat", {
-			/** @type {import("../../../server/src/events/sendChat.js").TChatPacket} */
-			detail: {
-				type: "chat",
-				channel: "log",
-				from: "client",
-				to: "any",
-				message: "Socket closed",
-				timestamp: Date.now(),
-			}
-		}));
+		/** @type {import("../../../server/src/events/sendChat.js").TChatPacket} */
+		const chatParams = {
+			type: "chat",
+			channel: "log",
+			from: "client",
+			to: "any",
+			message: "Socket closed",
+			timestamp: Date.now(),
+		}
+		Events.emit("ui-chat", chatParams);
 	}
 
 	/**

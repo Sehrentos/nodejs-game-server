@@ -1,6 +1,8 @@
+import { Events } from "../State.js";
+
 /**
  * Handles chat updates received from the server.
- * Dispatches a custom "ui-chat" event with the chat data,
+ * Sends a custom "ui-chat" event with the chat data,
  * allowing the chat UI to update accordingly.
  *
  * @param {WebSocket|import("../control/SocketControl.js").default} socket - The WebSocket connection.
@@ -8,7 +10,5 @@
  */
 export function onChat(socket, data) {
 	console.log("Chat:", data); // DEBUG
-	document.dispatchEvent(new CustomEvent("ui-chat", {
-		detail: data
-	}));
+	Events.emit("ui-chat", data);
 }
