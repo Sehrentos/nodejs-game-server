@@ -325,7 +325,7 @@ export class World {
 		// remove player pets from map
 		this.maps.forEach((map) => {
 			map.entities = map.entities.filter((entity) => entity.gid !== player.gid)
-				.filter(entity => entity.type === ENTITY_TYPE.PET && entity.owner.gid !== player.gid)
+				.filter((entity) => !(entity.type === ENTITY_TYPE.PET && entity.owner.gid === player.gid))
 		})
 	}
 
