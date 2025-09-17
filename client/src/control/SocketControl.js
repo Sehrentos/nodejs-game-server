@@ -109,7 +109,9 @@ export default class SocketControl {
 			message: "Socket connected",
 			timestamp: Date.now(),
 		}
-		Events.emit("ui-chat", chatParams);
+		// Events.emit("ui-chat", chatParams);
+		// update chat state
+		State.chat.set((current) => ([...current, chatParams]))
 	}
 
 	/**
@@ -129,7 +131,9 @@ export default class SocketControl {
 			message: "Socket error in connection establishment",
 			timestamp: Date.now(),
 		}
-		Events.emit("ui-chat", chatParams);
+		// Events.emit("ui-chat", chatParams);
+		// update chat state
+		State.chat.set((current) => ([...current, chatParams]))
 	}
 
 	/**
@@ -149,7 +153,11 @@ export default class SocketControl {
 			message: "Socket closed",
 			timestamp: Date.now(),
 		}
-		Events.emit("ui-chat", chatParams);
+		// Events.emit("ui-chat", chatParams);
+		// update chat state
+		State.chat.set((current) => ([...current, chatParams]))
+
+		Events.emit("ui-dialog-toggle", { id: "socket-connection" })
 	}
 
 	/**
@@ -251,6 +259,7 @@ export default class SocketControl {
 
 					// NPC dialog controls
 					case "npc-dialog":
+					case "npc-dialog-open":
 						onDialog(this, data);
 						break;
 

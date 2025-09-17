@@ -174,8 +174,7 @@ open "http://127.0.0.1/"
 
 ## About the Client app
  - **The main focus here is in the server-side for now.**
- - Client here is an example. I was thinking using the Phaser library for the game client, but it's not yet implemented.
- - SPA made with [Mithril.js](https://mithril.js.org/) library.
+ - Client here is just an example. I was thinking using the Phaser library for the game client, but it's not yet implemented.
  - See the *Future Plans* section below.
 
 ## Docs

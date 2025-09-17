@@ -21,14 +21,18 @@ export function onSkillUse(socket, data) {
 	const message = `Skill (${skill.name}) use ${state}!`;
 
 	// send UI updates
-	/** @type {import("../events/sendChat.js").TChatPacket} */
+	/** @type {import("../../../server/src/events/sendChat.js").TChatPacket} */
 	const chatParams = {
 		type: "chat",
 		channel: "log",
 		from: "server",
 		to: State.player.value.name,
-		message
+		message,
+		timestamp: Date.now(),
 	};
-	Events.emit("ui-chat", chatParams);
+	// Events.emit("ui-chat", chatParams);
+	// update chat state
+	State.chat.set((current) => ([...current, chatParams]))
+	// update skill bar state
 	Events.emit("ui-skill-bar", data);
 }

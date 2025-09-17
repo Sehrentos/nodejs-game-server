@@ -1,0 +1,23 @@
+/* DialogNPC */
+.ui-dialog-npc {
+	width: fit-content;
+	height: fit-content;
+	max-height: calc(100% - 4em);
+	max-width: calc(100% - 2em);
+	padding: 0.5em 1em;
+	overflow: auto;
+	box-shadow: 0 0 0.6em rgba(0, 0, 0, 0.775);
+	user-select: text;
+}
+
+.ui-dialog-npc header {
+	border-bottom: 1px solid #cccccc;
+}
+
+.ui-dialog-npc article {
+	display: none;
+}
+
+.ui-dialog-npc article:first-child {
+	display: block;
+}

@@ -1,0 +1,31 @@
+/* CharacterUI */
+.ui-character .overflow {
+	overflow: auto;
+	max-height: 70vh;
+}
+
+.ui-character .info {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 0.25em;
+}
+
+.ui-character .equip {
+	display: grid;
+	grid-template-columns: 1fr 1fr 1fr;
+	gap: 0.5em;
+	margin: 0.5em 0;
+}
+
+.ui-character .equip div {
+	border: 1px solid #dddddd;
+	border-radius: 0.25em;
+	padding: 0.25em;
+	background-color: #f1f1f1;
+	color: #252525;
+}
+
+.ui-character .stats {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+}

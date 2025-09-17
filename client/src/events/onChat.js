@@ -1,4 +1,4 @@
-import { Events } from "../State.js";
+import { Events, State } from "../State.js";
 
 /**
  * Handles chat updates received from the server.
@@ -10,5 +10,10 @@ import { Events } from "../State.js";
  */
 export function onChat(socket, data) {
 	console.log("Chat:", data); // DEBUG
-	Events.emit("ui-chat", data);
+	// Events.emit("ui-chat", data);
+	// update chat state
+	State.chat.set((current) => ([...current, {
+		...data,
+		timestamp: Date.now()
+	}]))
 }

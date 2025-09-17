@@ -14,15 +14,13 @@
 	"author": "Niko H.",
 	"license": "MIT",
 	"dependencies": {
-		"dotenv": "^16.4.7",
-		"mithril": "^2.2.15"
+		"dotenv": "^16.4.7"
 	},
 	"engines": {
 		"npm": ">=8.0.0",
 		"node": ">=16.13.0"
 	},
 	"devDependencies": {
-		"@types/mithril": "^2.2.7",
 		"css-loader": "^7.1.2",
 		"file-loader": "^6.2.0",
 		"html-webpack-plugin": "^5.6.3",

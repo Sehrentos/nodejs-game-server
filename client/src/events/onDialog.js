@@ -9,9 +9,5 @@ import { Events } from "../State.js";
 export function onDialog(socket, data) {
 	console.log("NPC Dialog:", data); // DEBUG
 	// update the UINPCDialog
-	Events.emit("ui-npc-dialog", {
-		gid: data.gid,
-		content: data.dialog,
-		isVisible: true
-	});
+	Events.emit("ui-dialog-npc-open", data);
 }

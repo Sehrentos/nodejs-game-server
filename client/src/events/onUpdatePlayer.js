@@ -28,7 +28,8 @@ export function onUpdatePlayer(socket, data) {
 	}
 
 	// update CharacterUI
-	Events.emit("ui-character", player);
+	// note: no need to emit custom event, CharacterUI already subscribes to State.player
+	// Events.emit("ui-character", player);
 
 	// Note: next canvas render cycle will update the game view
 }

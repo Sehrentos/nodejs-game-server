@@ -1,24 +1,84 @@
 /* simple reset */
 html,
 body {
-    margin: 0;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    font-size: 1em;
-    background: #727272;
-    color: #252525;
+	margin: 0;
+	font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+	font-size: 1em;
+	background: #727272;
+	color: #252525;
 }
 
 * {
-    box-sizing: border-box;
+	box-sizing: border-box;
 }
 
 body {
-    height: 100%;
-    width: 100%;
-    overflow: hidden;
+	height: 100%;
+	width: 100%;
+	overflow: hidden;
+}
+
+.ui {
+	display: none;
+	position: absolute;
+	top: .5em;
+	left: .5em;
+	width: fit-content;
+	max-height: calc(100% - 1em);
+    max-width: calc(100% - 1em);
+	overflow: auto;
+}
+
+.ui.open {
+	display: block;
+}
+
+/** bring UI layer top */
+.ontop {
+	z-index: 1;
+}
+
+.ui header {
+	text-align: center;
+	font-weight: bold;
+	font-size: 120%;
+}
+
+.card {
+	border: 1px solid #dddddd;
+	border-radius: 0.4em;
+	padding: 0.25em;
+	background-color: #f1f1f1;
+	color: #252525;
+}
+
+.card.highlight {
+	background-color: #d3d3d3;
+}
+
+.card.highlight:active {
+	background-color: #b8b8b8;
+	border-color: rgb(167, 167, 167);
+}
+
+.grid-2 {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 0.5em;
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.flex-column {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5em;
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
 }
 
 /* utils */
-.ui-hidden {
-    display: none !important;
+.ui-hidden,
+.ui-hide {
+	display: none !important;
 }

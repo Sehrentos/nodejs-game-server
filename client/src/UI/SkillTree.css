@@ -1,24 +1,11 @@
 /* SkillTreeUI */
-.ui-skill-tree {
-	position: absolute;
-	top: .5em;
-	left: .5em;
-	box-sizing: border-box;
-	border: 1px solid #dddddd;
-	border-radius: 0.4em;
-	padding: 0.25em;
-	background-color: #f1f1f1;
-	color: #252525;
-}
-
-.ui-skill-tree .header {
+.ui-skill-tree header {
 	display: flex;
 	justify-content: flex-end;
-	font-size: 120%;
-	font-weight: bold;
 	margin-bottom: 0.5em;
 }
-.ui-skill-tree .header button {
+
+.ui-skill-tree header button {
 	margin-left: 0.5em;
 	border-radius: 5em;
 }
@@ -29,6 +16,13 @@
 	gap: 0.5em;
 	margin-top: 0.5em;
 	margin-bottom: 0.5em;
+}
+
+/* use media query on small screens to use one column layout */
+@media screen and (max-width: 600px) {
+	.ui-skill-tree .content {
+		grid-template-columns: 1fr;
+	}
 }
 
 /* skill card */

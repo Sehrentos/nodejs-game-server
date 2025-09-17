@@ -1,0 +1,7 @@
+/* ExitGameUI */
+.ui-exit-game {
+	top: calc(50% - 4em);
+	left: calc(50% - 5em);
+	height: 8em;
+	width: 10em;
+}

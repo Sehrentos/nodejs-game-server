@@ -1,0 +1,18 @@
+/* LoginUI */
+.ui-login {
+	margin: 1em auto;
+    width: fit-content;
+}
+
+.ui-login .response {
+    margin-bottom: 0.5em;
+    color: red;
+}
+
+.ui-login input[type=text],
+.ui-login input[type=password],
+.ui-login input[type=email] {
+    display: block;
+    width: 100%;
+    width: -webkit-fill-available;
+}
