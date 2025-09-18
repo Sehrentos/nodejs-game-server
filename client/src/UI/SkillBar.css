@@ -1,7 +1,6 @@
 /* SkillBarUI */
 .ui-skill-bar {
 	gap: 0.25em;
-	left: calc(50% - 3em);
 }
 
 .ui-skill-bar.open {
@@ -35,7 +34,9 @@
 @media only screen and (max-width: 600px) {
 	.ui-skill-bar {
 		flex-direction: column;
-		left: initial;
+		left: auto;
 		right: 0.5em;
+		/* reset .centered-x */
+		transform: none;
 	}
 }

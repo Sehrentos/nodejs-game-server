@@ -1,5 +1,5 @@
 import { Entity } from "../../../shared/models/Entity.js";
-import { Events, State } from "../State.js";
+import { State } from "../State.js";
 
 /**
  * Handles player updates received from the server.
@@ -29,7 +29,7 @@ export function onUpdatePlayer(socket, data) {
 
 	// update CharacterUI
 	// note: no need to emit custom event, CharacterUI already subscribes to State.player
-	// Events.emit("ui-character", player);
+	// State.events.emit("ui-character", player);
 
 	// Note: next canvas render cycle will update the game view
 }

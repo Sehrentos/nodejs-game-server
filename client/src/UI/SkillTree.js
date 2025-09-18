@@ -1,22 +1,21 @@
 import "./SkillTree.css"
 import { tags } from "./index.js"
-import { Events, State } from "../State.js"
+import { State } from "../State.js"
 import { SKILL } from "../../../shared/data/SKILL.js"
 import { SKILL_ID } from "../../../shared/enum/Skill.js"
-import draggable from "../utils/draggable.js"
 
 const { div, span, header, button } = tags
 
 /**
  * Skill tree container element (draggable)
  */
-const ui = draggable(div({ class: "ui card ui-skill-tree" },
+const ui = div({ class: "ui card ui-skill-tree", "data-draggable": "true" },
 	header(
 		span("Skill Tree"),
 		button({ class: "close" }, "X"),
 	),
 	div({ class: "content" })
-))
+)
 
 /**
  * An `.ui-skill-tree` component
@@ -25,8 +24,8 @@ export default function SkillTreeUI() {
 	ui.removeEventListener("click", onClickClose, false)
 	ui.addEventListener("click", onClickClose, false)
 
-	Events.off("ui-skill-tree-toggle", onSkillTreeToggle)
-	Events.on("ui-skill-tree-toggle", onSkillTreeToggle)
+	State.events.off("ui-skill-tree-toggle", onSkillTreeToggle)
+	State.events.on("ui-skill-tree-toggle", onSkillTreeToggle)
 
 	// TODO get list of skills from player data
 	// update skill tree data from state

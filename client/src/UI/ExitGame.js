@@ -1,6 +1,6 @@
 import "./ExitGame.css"
 import { tags } from "./index.js"
-import { Events, State } from "../State.js"
+import { State } from "../State.js"
 import { sendLogout } from "../events/sendLogout.js"
 
 const { div, button, header } = tags
@@ -11,10 +11,10 @@ const { div, button, header } = tags
  */
 export default function ExitGameUI() {
 	// listen for event to toggle visibility
-	Events.off("ui-exit-game-toggle", toggle); // prevent duplicate listeners
-	Events.on("ui-exit-game-toggle", toggle);
+	State.events.off("ui-exit-game-toggle", toggle); // prevent duplicate listeners
+	State.events.on("ui-exit-game-toggle", toggle);
 
-	return div({ class: "ui card ui-exit-game ontop" },
+	return div({ class: "ui card centered ui-exit-game ontop" },
 		header("Exit Game"),
 		div({ class: "flex-column" },
 			button({ onclick: onExit }, "Exit"),
@@ -40,9 +40,9 @@ function onLogout() {
 }
 
 function close() {
-	document.querySelector(".ui-exit-game")?.classList.remove("open");
+	document.querySelector(".ui-exit-game")?.classList?.remove("open");
 }
 
 function toggle() {
-	document.querySelector(".ui-exit-game")?.classList.toggle("open");
+	document.querySelector(".ui-exit-game")?.classList?.toggle("open");
 }

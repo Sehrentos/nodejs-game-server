@@ -1,6 +1,6 @@
 import "./Chat.css"
 import { tags } from "./index.js"
-import { Events, State } from "../State.js"
+import { State } from "../State.js"
 import { sendChat } from "../events/sendChat.js"
 import Observable from "../utils/Observable.js"
 
@@ -118,14 +118,14 @@ export default function render() {
 	ui.addEventListener("selectstart", onSelectStart)
 	ui.addEventListener("focusin", onFocusIn)
 	ui.addEventListener("focusout", onFocusOut)
-	// Events.on("ui-chat", onDOMChat)
+	// State.events.on("ui-chat", onDOMChat)
 	return ui
 }
 
 // function onremove(vnode) {
 // 	vnode.dom.removeEventListener("selectstart", onSelectStart)
 // 	window.removeEventListener("keydown", onKeydownListener)
-// 	Events.off("ui-chat", onDOMChat)
+// 	State.events.off("ui-chat", onDOMChat)
 // 	vnode.dom.removeEventListener("focusin", onFocusIn)
 // 	vnode.dom.removeEventListener("focusout", onFocusOut)
 // }

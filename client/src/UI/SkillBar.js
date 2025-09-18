@@ -1,17 +1,16 @@
 import "./SkillBar.css"
 import { tags } from "./index.js"
-import { Events, State } from "../State.js"
+import { State } from "../State.js"
 import { sendSkill } from "../events/sendSkill.js"
 import { SKILL_ID, SKILL_STATE } from "../../../shared/enum/Skill.js"
 import { SKILL, STATE } from "../../../shared/data/SKILL.js"
-import draggable from "../utils/draggable.js"
 
 const { div, button } = tags
 
 /**
  * Container `.ui-skill-bar` element (draggable)
  */
-const ui = draggable(div({ class: "ui card ui-skill-bar open" }))
+const ui = div({ class: "ui card ui-skill-bar centered-x open", "data-draggable": "true" })
 
 // TODO get these from State.player.value.skills
 const skillList = [SKILL_ID.HEAL, SKILL_ID.STRIKE, SKILL_ID.TAME]
@@ -22,8 +21,8 @@ let toggleSkillBarButtonTimer = null
  * An `.ui-skill-bar` component
  */
 export default function SkillBarUI() {
-	Events.off("ui-skill-bar", onDOMUpdate)
-	Events.on("ui-skill-bar", onDOMUpdate)
+	State.events.off("ui-skill-bar", onDOMUpdate)
+	State.events.on("ui-skill-bar", onDOMUpdate)
 
 	// update skillbar data from player state
 	const unsubscribe = State.player.subscribe((player) => {
@@ -55,7 +54,7 @@ function update() {
 	}, SKILL[id].name)),
 		/** open skill tree button */
 		button({
-			onclick: () => Events.emit("ui-skill-tree-toggle", {
+			onclick: () => State.events.emit("ui-skill-tree-toggle", {
 				source: "skillbar"
 			})
 		}, "⁝⁝⁝")

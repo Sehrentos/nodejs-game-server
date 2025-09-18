@@ -1,93 +1,63 @@
 import "./style.css"
-import { tags } from "./UI/index.js"
 import { Auth } from "./Auth.js"
 import { State } from "./State.js"
 import SocketControl from "./control/SocketControl.js"
-import LoginUI from "./UI/Login.js"
+import onPreventDefault from "./events/onPreventDefault.js"
+import { addDraggableEventListeners } from "./utils/draggable.js"
+import CanvasUI from "./UI/Canvas.js"
 import CharacterUI from "./UI/Character.js"
 import ChatUI from "./UI/Chat.js"
-import CanvasUI from "./UI/Canvas.js"
+import DialogConnectionClosed from "./UI/DialogConnectionClosed.js"
 import DialogNPC from "./UI/DialogNPC.js"
-import DialogUI from "./UI/Dialog.js"
 import ExitGameUI from "./UI/ExitGame.js"
+import LoginUI from "./UI/Login.js"
 import SkillBarUI from "./UI/SkillBar.js"
 import SkillTreeUI from "./UI/SkillTree.js"
 
-const { fragment, div, h1, p, button } = tags
+// Get the root element, where to render the UI
 const root = document.body
 
-// show dialog to reconnect
-const connectionClosedDialog = () => DialogUI({
-	id: "socket-connection",
-	isVisible: State.socket != null && State.socket.readyState === WebSocket.CLOSED,
-	isBackdropVisible: true,
-	isBackdropClose: false
-},
-	h1("Connection closed"),
-	p("The web socket connection has been closed."),
-	p("Click the button below to log in again."),
-	button({
-		type: "button",
-		//class: "btn btn-primary",
-		onclick: () => {
-			// it's probably better to reload the page
-			// clean up the state etc.
-			window.location.reload()
-			// navigate to login UI
-			// window.location.href = "/#!/login"
-		}
-	}, "Go to login")
-)
-
-// Render the appropriate UI based on the authentication state
+// Subscribe to changes in the authentication state
+// and render the UI accordingly
 Auth.isLoggedIn.subscribe((isLoggedIn) => {
-	if (isLoggedIn) {
-		// disable select event
-		root.addEventListener("selectstart", onDisableSelectStart)
-		// render the game UI
-		root.replaceChildren(fragment(
-			CanvasUI(), // where the game is rendered
-			ChatUI(),
-			CharacterUI(),
-			SkillBarUI(),
-			SkillTreeUI(),
-			DialogNPC(),
-			// Note: keep these at the end
-			ExitGameUI(),
-			connectionClosedDialog(),
-		))
-
-		// close any previous socket
-		if (State.socket) State.socket.remove()
-		// initialize the web socket
-		State.socket = new SocketControl()
-	} else {
+	if (!isLoggedIn) {
+		// show login UI
 		root.replaceChildren(LoginUI())
-		// enable select event
-		root.removeEventListener("selectstart", onDisableSelectStart)
+		root.removeEventListener("selectstart", onPreventDefault)
+		return
+	}
+	// show game UI
+	root.replaceChildren(
+		CanvasUI(), // where the game is rendered
+		CharacterUI(),
+		ChatUI(),
+		SkillBarUI(),
+		SkillTreeUI(),
+		DialogNPC(),
+		// Note: keep these at the end to ensure they are rendered on top
+		ExitGameUI(),
+		DialogConnectionClosed(),
+	)
+	// disable selectstart event to disable text selection in the game UI
+	root.addEventListener("selectstart", onPreventDefault)
+})
+
+// Subscribe to changes in the JWT token
+// and initialize the web socket
+// without a token, the web socket cant be initialized
+Auth.jwtToken.subscribe((token) => {
+	// close any previous socket
+	State.socket?.remove()
+	if (token) {
+		// initialize the web socket
+		State.socket = new SocketControl(token)
 	}
 })
 
-// Initial render
-document.body.appendChild(LoginUI())
+// Initial render, possibly showing loader/landing page
+root.appendChild(LoginUI())
 
-// Window resize event handler
-// remove top left position attributes from styled elements
-let resizeTimeout;
-function onResize() {
-	if (resizeTimeout) return
-	resizeTimeout = setTimeout(() => resizeTimeout = null, 100)
-	document.querySelectorAll(".ui").forEach((/** @type {HTMLElement} */ui) => {
-		ui.style.top = ui.style.left = ""
-	})
-}
-window.addEventListener("resize", onResize)
+// add document event listeners for [data-draggable="true"] support
+addDraggableEventListeners({ resetOnResize: true })
 
-/**
- * Disable text selection in the game UI.
- *
- * @param {Event} event - The selectstart event.
- */
-function onDisableSelectStart(event) {
-	event.preventDefault()
-}
+console.log(`App started in ${process.env.NODE_ENV} mode.`)

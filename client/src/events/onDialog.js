@@ -1,4 +1,4 @@
-import { Events } from "../State.js";
+import { State } from "../State.js";
 
 /**
  * Handles NPC dialog updates received from the server.
@@ -9,5 +9,5 @@ import { Events } from "../State.js";
 export function onDialog(socket, data) {
 	console.log("NPC Dialog:", data); // DEBUG
 	// update the UINPCDialog
-	Events.emit("ui-dialog-npc-open", data);
+	State.events.emit("ui-dialog-npc-open", data);
 }

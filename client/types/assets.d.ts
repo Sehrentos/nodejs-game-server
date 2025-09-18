@@ -10,3 +10,4 @@ declare module "*.fnt"; // same as xml
 declare module "*.xml";
 declare module "*.mp3";
 declare module "*.wav";
+declare module "*.json";

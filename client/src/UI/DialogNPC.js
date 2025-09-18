@@ -1,15 +1,14 @@
 import "./DialogNPC.css"
 import { tags } from "./index.js"
-import { Events, State } from "../State.js"
+import { State } from "../State.js"
 import { sendDialog } from "../events/sendDialog.js"
-import draggable from "../utils/draggable.js"
 
 const { div } = tags
 
 /**
  * Dialog container element (draggable)
  */
-const ui = draggable(div({ class: "ui card ui-dialog-npc" }))
+const ui = div({ class: "ui card ui-dialog-npc centered", "data-draggable": "true" })
 
 /** @type {string} - NPC's gid, what the player is interacting with */
 let gid = ""
@@ -26,11 +25,11 @@ export default function DialogNPC() {
 	ui.addEventListener("click", onclick, false)
 
 	// bind data listeners
-	// Events.emit("ui-dialog-npc-toggle");
-	Events.off("ui-dialog-npc-open", onDOMDialogUpdate)
-	Events.on("ui-dialog-npc-open", onDOMDialogUpdate)
-	Events.off("ui-dialog-npc-toggle", toggle)
-	Events.on("ui-dialog-npc-toggle", toggle)
+	// State.events.emit("ui-dialog-npc-toggle");
+	State.events.off("ui-dialog-npc-open", onDOMDialogUpdate)
+	State.events.on("ui-dialog-npc-open", onDOMDialogUpdate)
+	State.events.off("ui-dialog-npc-toggle", toggle)
+	State.events.on("ui-dialog-npc-toggle", toggle)
 
 	return ui
 }

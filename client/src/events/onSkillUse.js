@@ -1,7 +1,7 @@
 import { SKILL_ID, SKILL_STATE } from "../../../shared/enum/Skill.js";
 import { SKILL, STATE } from "../../../shared/data/SKILL.js";
 import { Entity } from "../../../shared/models/Entity.js";
-import { Events, State } from "../State.js";
+import { State } from "../State.js";
 
 /**
  * Skill use received from the server.
@@ -30,9 +30,9 @@ export function onSkillUse(socket, data) {
 		message,
 		timestamp: Date.now(),
 	};
-	// Events.emit("ui-chat", chatParams);
+	// State.events.emit("ui-chat", chatParams);
 	// update chat state
 	State.chat.set((current) => ([...current, chatParams]))
 	// update skill bar state
-	Events.emit("ui-skill-bar", data);
+	State.events.emit("ui-skill-bar", data);
 }

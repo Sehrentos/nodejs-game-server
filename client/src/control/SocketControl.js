@@ -1,6 +1,5 @@
-import { Auth } from "../Auth.js";
 import { SOCKET_URL } from "../Settings.js";
-import { Events, State } from "../State.js"
+import { State } from "../State.js"
 import { onPing } from "../events/onPing.js";
 import { onUpdatePlayer } from "../events/onUpdatePlayer.js";
 import { onUpdateMap } from "../events/onUpdateMap.js";
@@ -16,7 +15,7 @@ import { onSkillUse } from "../events/onSkillUse.js";
  * @description Handles WebSocket controls
  */
 export default class SocketControl {
-	constructor() {
+	constructor(jwtToken = "") {
 		// binds methods to the `this` context
 		this._onSocketOpen = this.onSocketOpen.bind(this)
 		this._onSocketClose = this.onSocketClose.bind(this)
@@ -24,7 +23,7 @@ export default class SocketControl {
 		this._onSocketMessage = this.onSocketMessage.bind(this)
 
 		this._socket = new WebSocket(SOCKET_URL, [
-			"ws", "wss", `Bearer.${Auth.jwtToken.value}`
+			"ws", "wss", `Bearer.${jwtToken}`
 		]);
 
 		this._socket.onopen = this._onSocketOpen
@@ -109,7 +108,7 @@ export default class SocketControl {
 			message: "Socket connected",
 			timestamp: Date.now(),
 		}
-		// Events.emit("ui-chat", chatParams);
+		// State.events.emit("ui-chat", chatParams);
 		// update chat state
 		State.chat.set((current) => ([...current, chatParams]))
 	}
@@ -131,7 +130,7 @@ export default class SocketControl {
 			message: "Socket error in connection establishment",
 			timestamp: Date.now(),
 		}
-		// Events.emit("ui-chat", chatParams);
+		// State.events.emit("ui-chat", chatParams);
 		// update chat state
 		State.chat.set((current) => ([...current, chatParams]))
 	}
@@ -153,11 +152,11 @@ export default class SocketControl {
 			message: "Socket closed",
 			timestamp: Date.now(),
 		}
-		// Events.emit("ui-chat", chatParams);
+		// State.events.emit("ui-chat", chatParams);
 		// update chat state
 		State.chat.set((current) => ([...current, chatParams]))
 
-		Events.emit("ui-dialog-toggle", { id: "socket-connection" })
+		State.events.emit("ui-dialog-toggle", { id: "socket-connection" })
 	}
 
 	/**

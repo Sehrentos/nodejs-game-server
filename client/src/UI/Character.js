@@ -1,54 +1,58 @@
 import "./Character.css"
 import { tags } from "./index.js"
-import { Events, State } from "../State.js"
-import { Tabs, TabsGroup, TabsLink, TabsContent } from "./Tabs.js"
+import { State } from "../State.js"
+import { Tabs, TabLinks, TabLink, TabContent } from "./Tabs.js"
 import AccordionUI from "./Accordion.js"
 import { EXP_BASE, EXP_JOB } from "../../../shared/Constants.js"
-import draggable from "../utils/draggable.js"
 
 const { div, header, details, summary, strong, span } = tags
 
+//#region Observable subsriptions containers
+// the contents of these containers will be updated
 const headerName = header("Character")
 const headerDetails = div({ class: "info" })
 const equipmentGrid = div({ class: "equip" })
 
-const tabAttack = TabsContent({ active: true })
-const tabDefence = TabsContent()
-const tabStats = TabsContent()
-const tabNetwork = TabsContent()
+const tabAttack = TabContent({ active: true })
+const tabDefence = TabContent()
+const tabStats = TabContent()
+const tabNetwork = TabContent()
 
 const inventoryList = div({ class: "equip" })
+//#endregion
 
 /**
- * Character UI container element (draggable)
+ * An `.ui-character` component
  */
-const ui = draggable(div({ class: "ui card ui-character open" },
-	AccordionUI({ id: "character", isOpen: false },
-		div(
-			headerName,
-			headerDetails,
-		),
-		div({ class: "overflow" },
-			equipmentGrid,
-			Tabs(
-				TabsGroup(
-					TabsLink({ active: true }, "Attack"),
-					TabsLink({ active: false }, "Defence"),
-					TabsLink({ active: false }, "Stats"),
-					TabsLink({ active: false }, "Network"),
-				),
-				tabAttack,
-				tabDefence,
-				tabStats,
-				tabNetwork
+export default function Character() {
+	return div({ class: "ui card ui-character open", "data-draggable": "true" },
+		AccordionUI({ id: "character", isOpen: false },
+			div(
+				headerName,
+				headerDetails,
 			),
-			details(
-				summary("Inventory"),
-				inventoryList,
+			div({ class: "overflow" },
+				equipmentGrid,
+				Tabs(
+					TabLinks(
+						TabLink({ active: true }, "Attack"),
+						TabLink({ active: false }, "Defence"),
+						TabLink({ active: false }, "Stats"),
+						TabLink({ active: false }, "Network"),
+					),
+					tabAttack,
+					tabDefence,
+					tabStats,
+					tabNetwork
+				),
+				details(
+					summary("Inventory"),
+					inventoryList,
+				)
 			)
 		)
 	)
-))
+}
 
 // subscribe to player changes for updates, when player data changes
 const unsubscribe = State.player.subscribe((player) => {
@@ -145,7 +149,7 @@ const unsubscribe = State.player.subscribe((player) => {
 })
 
 // listen for ui update events
-Events.on("ui-character-toggle", onUiCharacterToggle)
+State.events.on("ui-character-toggle", onUiCharacterToggle)
 
 /**
  * handle the custom "ui-character" event to toggle the character UI.
@@ -153,11 +157,7 @@ Events.on("ui-character-toggle", onUiCharacterToggle)
  */
 function onUiCharacterToggle(data) {
 	// console.log("[DEBUG] CharacterUI: onUiCharacterToggle", data)
-	document.querySelector(".ui-character")?.classList.toggle("open")
+	document.querySelector(".ui-character")?.classList?.toggle("open")
 }
 
-/**
- * An `.ui-character` component
- */
-export default function CharacterUI() { return ui }
-export { ui as Character, unsubscribe }
+export { Character, unsubscribe }

@@ -2,15 +2,12 @@ import EventEmitter from "./utils/EventEmitter.js";
 import Observable from "./utils/Observable.js";
 
 /**
- * Global event emitter for client-side events.
- * Used for communication between different parts of the client application.
- */
-export const Events = new EventEmitter();
-
-/**
  * Global game state
  */
 export const State = {
+	/** @type {import("./locale/locale.js").TLocale|null} */
+	locale: null,
+
 	/** @type {import("./control/SocketControl.js").default|null} - WebSocket state */
 	socket: null,
 
@@ -29,5 +26,11 @@ export const State = {
 		message: `Move with WASD or Arrow keys. Press "C" to toggle character info. Type "/help" for commands. Press "Escape" to open exit menu.`,
 		timestamp: Date.now()
 	}]),
+
+	/**
+	 * Global event emitter for client-side events.
+	 * Used for communication between different parts of the UI.
+	 */
+	events: new EventEmitter(),
 }
 

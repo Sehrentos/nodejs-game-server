@@ -25,7 +25,7 @@ body {
 	left: .5em;
 	width: fit-content;
 	max-height: calc(100% - 1em);
-    max-width: calc(100% - 1em);
+	max-width: calc(100% - 1em);
 	overflow: auto;
 }
 
@@ -81,4 +81,23 @@ body {
 .ui-hidden,
 .ui-hide {
 	display: none !important;
+}
+
+.centered {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+}
+
+.centered-x {
+	position: absolute;
+	left: 50%;
+	transform: translateX(-50%);
+}
+
+.centered-y {
+	position: absolute;
+	top: 50%;
+	transform: translateY(-50%);
 }

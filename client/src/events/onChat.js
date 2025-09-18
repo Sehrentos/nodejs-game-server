@@ -1,4 +1,4 @@
-import { Events, State } from "../State.js";
+import { State } from "../State.js";
 
 /**
  * Handles chat updates received from the server.
@@ -9,8 +9,7 @@ import { Events, State } from "../State.js";
  * @param {import("../../../server/src/events/sendChat.js").TChatPacket} data - The chat packet from the server.
  */
 export function onChat(socket, data) {
-	console.log("Chat:", data); // DEBUG
-	// Events.emit("ui-chat", data);
+	// console.log("Chat:", data);
 	// update chat state
 	State.chat.set((current) => ([...current, {
 		...data,

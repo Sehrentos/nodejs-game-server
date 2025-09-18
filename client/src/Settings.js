@@ -1,7 +1,8 @@
-/*
+/**
  * global settings for the client side
+ *
+ * Note: process.env properties are exposed by webpack
  */
-console.log("webpack exposed:", process)
 export const DEBUG = true
 
 /** @type {string} - Host address */

@@ -5,7 +5,7 @@ import Observable from "./utils/Observable.js";
  */
 export const Auth = {
 	isLoggedIn: new Observable(false),
-	jwtToken: new Observable(""),
+	jwtToken: new Observable(localStorage.getItem("token") || ""),
 
 	/**
 	 * Logs into the game server with the given username and password.
@@ -135,4 +135,13 @@ export const Auth = {
 		Auth.isLoggedIn.set(true)
 		return true
 	},
+
+	/**
+	 * Clears the JWT token and sets the logged in state to false.
+	 */
+	reset: () => {
+		localStorage.removeItem("token")
+		Auth.jwtToken.set("")
+		Auth.isLoggedIn.set(false)
+	}
 }

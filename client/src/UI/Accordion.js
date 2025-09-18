@@ -1,6 +1,6 @@
 import "./Accordion.css"
 import { tags } from "./index.js"
-import { Events } from "../State.js"
+import { State } from "../State.js"
 
 const { div } = tags
 
@@ -14,7 +14,7 @@ const { div } = tags
  * It listens for the `ui-accordion-toggle` event to toggle its visibility.
  * Usage:
  * ```js
- * Events.emit("ui-accordion-toggle", { id: "myId" });
+ * State.events.emit("ui-accordion-toggle", { id: "myId" });
  * ```
  *
  * @param {Object} props - The properties for the accordion.
@@ -25,9 +25,9 @@ export default function Accordion(props = {}, ...children) {
 	const key = props.id || String(performance.now()).replace(".", "-")
 
 	// listen for event to toggle visibility
-	// Events.emit("ui-accordion-toggle", { id: "myId" });
-	Events.off("ui-accordion-toggle", toggle); // prevent duplicate listeners
-	Events.on("ui-accordion-toggle", toggle);
+	// State.events.emit("ui-accordion-toggle", { id: "myId" });
+	State.events.off("ui-accordion-toggle", toggle); // prevent duplicate listeners
+	State.events.on("ui-accordion-toggle", toggle);
 
 	return div({ class: "ui-accordion", id: "ui-accordion-" + key, onclick },
 		div({
@@ -55,5 +55,5 @@ function onclick(e) {
  * @returns
  */
 function toggle(props = {}) {
-	document.querySelector(`#ui-accordion-${props.id} div.content`)?.classList.toggle("open")
+	document.querySelector(`#ui-accordion-${props.id} div.content`)?.classList?.toggle("open")
 }

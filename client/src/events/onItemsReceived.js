@@ -1,6 +1,6 @@
 import { Entity } from "../../../shared/models/Entity.js";
 import { Item } from "../../../shared/models/Item.js";
-import { Events, State } from "../State.js";
+import { State } from "../State.js";
 
 /**
  * Items received from the server.
@@ -24,7 +24,7 @@ export function onItemsReceived(socket, data) {
 	});
 
 	// update CharacterUI
-	Events.emit("ui-inventory", data.items);
+	State.events.emit("ui-inventory", data.items);
 
 	// Note: next canvas render cycle will update the game view
 }

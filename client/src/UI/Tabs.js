@@ -6,7 +6,23 @@ const { div } = tags
 /**
  * A tabbed interface component that allows switching between different content panels.
  *
- * @example TabsUI(
+ * Examples:
+ * ```js
+ * import { Tabs, TabLinks, TabLink, TabContent } from "./Tabs.js"
+ * Tabs(
+ *   TabLinks(
+ *     TabLink({ active: true }, "Tab 1"),
+ *     TabLink("Tab 2"),
+ *     TabLink("Tab 3"),
+ *     TabLink("Tab 4"),
+ *   ),
+ *   TabContent({ active: true }, "Tab 1 content"),
+ *   TabContent("Tab 2 content"),
+ *   TabContent("Tab 3 content"),
+ *   TabContent("Tab 4 content"),
+ * )
+ * // or with divs
+ * Tabs(
  *   div({ class: "tab" },
  *     div({ class: "tablink active"}, "Tab 1"),
  *     div({ class: "tablink"}, "Tab 2"),
@@ -14,6 +30,8 @@ const { div } = tags
  *   div({ class: "tabcontent.active", div({ class:"stats" }, "My tab content 1")),
  *   div({ class: "tabcontent", div({ class:"stats" }, "My tab content 2")),
  * )
+ * ```
+ * @returns {HTMLElement}
  */
 export default function Tabs(...children) {
 	return div({ class: "ui-tabs", onclick }, ...children)
@@ -65,38 +83,35 @@ function onclick(event) {
 	// Show the current tab, and add an "active" class
 	targetTablink.classList.add("active")
 	targetTabContent.classList.add("active")
-
-	// if you notice UI update issues, uncomment this
-	// m.redraw()
 }
 
 /**
  * Helper function to create a group of tab links.
  * @param  {...any} children - The tab link elements.
- * @example TabsGroup(
- *   TabsLink({ active: true }, "Tab 1"),
- *   TabsLink({}, "Tab 2"),
+ * @example TabLinks(
+ *   TabLink({ active: true }, "Tab 1"),
+ *   TabLink({}, "Tab 2"),
  * )
  * @returns {HTMLElement}
  */
-export const TabsGroup = (...children) => div({ class: "tab" }, ...children)
+export const TabLinks = (...children) => div({ class: "tab" }, ...children)
 
 /**
  * Helper function to create a single tab link.
  * @param {Object} props
  * @param {boolean} [props.active] - Whether this tab link is active.
  * @param  {...any} children - The content of the tab link.
- * @example TabsLink({ active: true }, "Tab 1")
+ * @example TabLink({ active: true }, "Tab 1")
  * @returns {HTMLElement}
  */
-export const TabsLink = (props = {}, ...children) => div({ class: `tablink ${props.active ? "active" : ""}` }, ...children)
+export const TabLink = (props = {}, ...children) => div({ class: `tablink ${props.active ? "active" : ""}` }, ...children)
 
 /**
  * Helper function to create a tab content panel.
  * @param {Object} props
  * @param {boolean} [props.active] - Whether this tab content is active.
  * @param  {...any} children - The content of the tab panel.
- * @example TabsContent({ active: true }, div({ class:"stats" }, "My tab content 1"))
+ * @example TabContent({ active: true }, div({ class:"stats" }, "My tab content 1"))
  * @returns
  */
-export const TabsContent = (props = {}, ...children) => div({ class: `tabcontent ${props.active ? "active" : ""}` }, ...children)
+export const TabContent = (props = {}, ...children) => div({ class: `tabcontent ${props.active ? "active" : ""}` }, ...children)

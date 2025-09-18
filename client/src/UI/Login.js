@@ -3,41 +3,68 @@ import { tags } from "./index.js"
 import { Auth } from "../Auth.js"
 import Observable from "../utils/Observable.js"
 
-const { main, form, div, p, input, label } = tags
+const { main, form, div, p, header, input, label } = tags
 
 const isRegister = new Observable(false)
 const isLoading = new Observable(false)
-const errorMessage = new Observable("")
-const jwtToken = new Observable(localStorage.getItem("token") || "")
-const isRemember = new Observable(jwtToken ? true : false)
+const stateMessage = new Observable("")
+const isRemember = new Observable(localStorage.getItem("remember") === "true" ? true : false)
 
-const container = main({ class: "card ui-login" })
-const render = () => container.replaceChildren(isRegister.value ? registerView() : loginView())
+const stateMessageView = div({ class: "response" }, stateMessage.value)
+const container = main({ class: "ui card ui-login centered open" }, LoginForm())
 
-export default function LoginUI(props = {}) {
-	// initial render
-	render()
-	// subscribe to changes for re-render
-	// isRemember.subscribe(() => render())
-	isRegister.subscribe(() => render())
-	isLoading.subscribe(() => render())
-	errorMessage.subscribe(() => render())
+// subscribe to state changes for UI updates
+isRegister.subscribe((value) => {
+	container.replaceChildren(value ? RegisterForm() : LoginForm())
+})
+
+isLoading.subscribe((value) => {
+	container.querySelectorAll("input").forEach((button) => button.disabled = value)
+})
+
+stateMessage.subscribe((message) => {
+	stateMessageView.replaceChildren(message)
+})
+
+// Auth.jwtToken.subscribe((token) => refresh())
+
+/**
+ * Renders the UI based on the current state of the isRegister observable.
+ * @returns {void}
+ */
+const refresh = () => container.replaceChildren(isRegister.value ? RegisterForm() : LoginForm())
+
+/**
+ * An Login or Register UI component
+ * @returns {HTMLElement}
+ */
+export default function LoginUI() {
+	if (isRegister.value) {
+		// swapt to register
+		container.replaceChildren(RegisterForm())
+	}
 	return container
 }
 
-function loginView() {
+/**
+ * A LoginForm component to render a login form.
+ * If a JWT token exists, hides the username and password fields and shows a logout button.
+ * If no JWT token exists, shows the username and password fields.
+ * @returns {HTMLElement} - The rendered form element
+ */
+function LoginForm() {
 	return form(
 		{
 			name: "login",
 			autocomplete: "off",
 			onsubmit: onSubmit,
 		},
-		div({ class: "header" }, "Login"),
+		header("Login"),
 		p("Note: This is only for testing purposes."),
 		p("Login with your account to play the game."),
-		div({ class: "response" }, isLoading.value ? "Loading..." : errorMessage.value),
+		stateMessageView,
 		// hide username field when JWT token exists
-		jwtToken.value ? null : input({
+		Auth.jwtToken.value ? null : input({
 			type: "text",
 			name: "username",
 			id: "username",
@@ -47,7 +74,7 @@ function loginView() {
 			autofocus: true,
 		}),
 		// hide password field when JWT token exists
-		jwtToken.value ? null : input({
+		Auth.jwtToken.value ? null : input({
 			type: "password",
 			name: "password",
 			id: "password",
@@ -58,11 +85,11 @@ function loginView() {
 		input({
 			id: "login",
 			type: "submit",
-			value: "Login",
+			value: Auth.jwtToken.value ? "Start Game" : "Login",
 			disabled: isLoading.value
 		}),
 		// show logout button when JWT token exists
-		jwtToken.value ? input({
+		Auth.jwtToken.value ? input({
 			id: "logout",
 			type: "button",
 			value: "Logout",
@@ -86,17 +113,24 @@ function loginView() {
 	)
 }
 
-function registerView() {
+/**
+ * Returns a form element with inputs for username, password, and email,
+ * a submit button with the label "Register", and checkboxes for "Register" and "Remember".
+ * The form is submitted to the onSubmit function and has its autocomplete set to "off".
+ * The form also shows a state message view.
+ * @returns {HTMLElement} - The form element.
+ */
+function RegisterForm() {
 	return form(
 		{
 			name: "register",
 			autocomplete: "off",
 			onsubmit: onSubmit,
 		},
-		div({ class: "header" }, "Register"),
+		header("Register"),
 		p("Note: This is only for testing purposes."),
 		p("Register an account to play the game."),
-		div({ class: "response" }, isLoading.value ? "Loading..." : errorMessage.value),
+		stateMessageView,
 		input({
 			type: "text",
 			name: "username",
@@ -144,13 +178,14 @@ function registerView() {
 	)
 }
 
+/**
+ * Resets the JWT token and logged in state, and sets the remember checkbox to false.
+ * It also clears the state message.
+ */
 function onLogout() {
-	// clear JWT token
-	localStorage.removeItem("token")
-	jwtToken.set("")
-	isRemember.set(false)
-	errorMessage.set("")
-	//m.redraw()
+	Auth.reset() // clear JWT token & logged in state
+	stateMessage.set("")
+	refresh()
 }
 
 /**
@@ -159,8 +194,8 @@ function onLogout() {
 async function onSubmit(event) {
 	event.preventDefault()
 
-	// reset error message
-	errorMessage.set("")
+	// reset state message
+	stateMessage.set("")
 
 	// check is loading already
 	if (isLoading.value) return
@@ -176,44 +211,43 @@ async function onSubmit(event) {
 
 	formElement.reset()
 
-	// save credentials to local storage
-	// if (isRemember) {
-	// 	saveCredentials(username, password)
-	// } else {
-	// 	removeCredentials()
-	// }
-
-	// register or login
+	// update state
 	isLoading.set(true)
+	let message = "Loading..."
+	stateMessage.set(message)
+
+	// do register or login
 	if (isRegister.value) {
 		try {
 			await Auth.register(username, password, email, isRemember.value)
+			message = "Registration successful"
 		} catch (e) {
 			console.log("register failed", e.message)
-			errorMessage.set(e.message)
+			message = e.message
 		}
 	} else {
 		// do login with JWT token when it exists
-		if (jwtToken.value) {
+		if (Auth.jwtToken.value) {
 			try {
-				await Auth.loginToken(jwtToken.value, isRemember.value)
+				await Auth.loginToken(Auth.jwtToken.value, isRemember.value)
+				message = "Login successful"
 			} catch (e) {
 				console.log("login (token) failed", e.message)
-				errorMessage.set(e.message)
+				message = e.message
 			}
 		} else {
 			// do login with username & password
 			try {
 				await Auth.login(username, password, isRemember.value)
+				message = "Login successful"
 			} catch (e) {
 				console.log("login failed", e.message)
-				errorMessage.set(e.message)
+				message = e.message
 			}
 		}
 	}
 	isLoading.set(false)
-	// success, move to next view
-	// window.location.href = nextView
+	stateMessage.set(message)
 }
 
 /**
@@ -225,45 +259,15 @@ function onChange(event) {
 		case "register":
 			// @ts-ignore tested, checked exists
 			isRegister.set(event.target.checked)
-			errorMessage.set("") // reset error message
-			// m.redraw()
+			stateMessage.set("") // reset error message
 			break;
 		case "remember":
 			// @ts-ignore tested, checked exists
 			isRemember.set(event.target.checked)
+			localStorage.setItem("remember", isRemember.value.toString())
 			break;
 		default:
 			break;
 	}
 }
-
-// username & password in local storage
-// /**
-//  * Save the username and password to local storage.
-//  * @param {string} username
-//  * @param {string} password
-//  */
-// saveCredentials(username, password) {
-// 	localStorage.setIteusername", username)
-// 	localStorage.setItepassword", password)
-// }
-
-// /**
-//  * Removes the saved username and password from local storage.
-//  */
-// removeCredentials() {
-// 	localStorage.removeIteusername")
-// 	localStorage.removeItepassword")
-// }
-
-// /**
-//  * Get the saved username and password from local storage.
-//  * @returns {{username: string, password: string}} - The saved credentials.
-//  */
-// getCredentials() {
-// 	return {
-// 		username: localStorage.getIteusername") || "",
-// 		password: localStorage.getItepassword") || "",
-// 	}
-// }
 

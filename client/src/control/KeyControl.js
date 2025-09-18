@@ -1,5 +1,5 @@
 import { SKILL_ID } from "../../../shared/enum/Skill.js"
-import { Events, State } from "../State.js"
+import { State } from "../State.js"
 import { sendKeyboardMove } from "../events/sendKeyboardMove.js"
 import { sendSkill } from "../events/sendSkill.js"
 
@@ -38,14 +38,14 @@ export default class KeyControl {
 
 		// handle skill use
 		if (KeyControl.KEYS_SKILL.includes(e.code)) {
-			// TODO use Events.emit("ui-skill-use", { source: "KeyControl", key: e.code });
+			// TODO use State.events.emit("ui-skill-use", { source: "KeyControl", key: e.code });
 			this.handleSkill(e.code)
 			return true;
 		}
 
 		// Exit game UI
 		if (e.code === "Escape") {
-			Events.emit("ui-exit-game-toggle", { source: "KeyControl", key: e.code });
+			State.events.emit("ui-exit-game-toggle", { source: "KeyControl", key: e.code });
 			return true;
 		}
 
@@ -54,10 +54,10 @@ export default class KeyControl {
 		// C to toggle accordion open/close
 		if (e.code === "KeyC") {
 			if (e.altKey) {
-				Events.emit("ui-character-toggle", { source: "KeyControl", key: e.code });
+				State.events.emit("ui-character-toggle", { source: "KeyControl", key: e.code });
 				return true;
 			}
-			Events.emit("ui-accordion-toggle", { id: "character", source: "KeyControl", key: e.code });
+			State.events.emit("ui-accordion-toggle", { id: "character", source: "KeyControl", key: e.code });
 			return true;
 		}
 
