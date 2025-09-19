@@ -83,6 +83,7 @@ function onclick(event) {
 	// Show the current tab, and add an "active" class
 	targetTablink.classList.add("active")
 	targetTabContent.classList.add("active")
+	return true
 }
 
 /**

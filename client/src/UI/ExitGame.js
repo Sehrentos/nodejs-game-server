@@ -25,15 +25,15 @@ export default function ExitGameUI() {
 }
 
 function onExit() {
-	State.socket.remove();
+	State.socket?.remove();
 	window.location.href = "/";
 }
 
 function onLogout() {
 	// send logout packet that will remove the JWT token in server
-	State.socket.send(sendLogout());
+	State.socket?.send(sendLogout());
 	// TODO await response from server before leave or trust it to handle the logout process?
-	State.socket.remove();
+	State.socket?.remove();
 	// clear token
 	localStorage.removeItem("token");
 	window.location.href = "/";

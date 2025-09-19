@@ -1,5 +1,6 @@
 {
 	"compilerOptions": {
+		"strict": false,
 		"allowJs": true,
 		"checkJs": true,
 		"noEmit": true,
@@ -8,6 +9,7 @@
 		"moduleResolution": "bundler",
 		"noImplicitAny": false,
 		"resolveJsonModule": false,
+		"noImplicitReturns": true,
 		"typeRoots": [
 			"./node_modules/@types",
 			"./types",

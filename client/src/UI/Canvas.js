@@ -51,9 +51,9 @@ export default function CanvasUI() {
  * Removes all event listeners and releases any resources used by the game UI.
  */
 export function remove() {
-	_renderer.remove()
-	_keyControl.remove()
-	_touchControl.remove()
+	_renderer?.remove()
+	_keyControl?.remove()
+	_touchControl?.remove()
 
 	// remove event listeners
 	window.removeEventListener("resize", onResize)

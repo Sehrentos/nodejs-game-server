@@ -47,7 +47,7 @@ function update() {
 	ui.replaceChildren(...skillList.map((id) => button({
 		id: `skill-id-${id}`,
 		onclick: () => {
-			State.socket.send(sendSkill(id))
+			State.socket?.send(sendSkill(id))
 			toggleSkillBarButton(id, "active")
 		},
 		title: SKILL[id].desc,
@@ -81,6 +81,7 @@ function onDOMUpdate(data) {
  */
 function toggleSkillBarButton(id, type) {
 	const btn = document.getElementById(`skill-id-${id}`)
+	if (!btn) return
 	// remove previous active classes
 	btn.classList.remove("active", "error")
 	btn.classList.add(type)

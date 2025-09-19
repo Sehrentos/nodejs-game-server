@@ -96,9 +96,7 @@ export default class Sprite {
 	 * If the sprite image is not loaded, it will be loaded and the method will return without drawing.
 	 * If the sprite frames are given, it will draw the sprite portion from the image.
 	 * If no sprite frames are given, it will draw the full sprite image.
-	 * @param {CanvasRenderingContext2D} ctx - The canvas rendering context.
-	 * @param {import("../../../shared/models/Entity.js").TEntityProps} entity - The entity to draw the sprite for.
-	 * @param {number} [frame=0] - The frame number of the sprite to draw. Default is 0.
+	 * @param {...any} args - The arguments can be either: CanvasRenderingContext2D, Entity, FrameNumber
 	 * @returns {void}
 	 *
 	 * @example
@@ -106,7 +104,22 @@ export default class Sprite {
 	 * // in render
 	 * mob.draw(this.ctx, entity)
 	 */
-	draw(ctx, entity, frame = 0) {
+	draw(...args) {
+		const [
+			/** @type {CanvasRenderingContext2D} */ctx,
+			/** @type {import("../../../shared/models/Entity.js").Entity} */entity,
+			/** @type {number} */frame
+		] = args;
+
+		// default frame to 0
+		const frameIndex = (typeof frame === 'number' && frame >= 0) ? frame : 0
+
+		// sanity check for frame index
+		if (this.frames.length > 0 && frameIndex >= this.frames.length) {
+			console.warn(`[${this.constructor.name}] draw: frame index ${frameIndex} is out of bounds, max is ${this.frames.length - 1}`)
+			return
+		}
+
 		// check if the sprite image is loaded
 		if (!this.isLoaded) {
 			if (!this.isLoading) {
@@ -136,7 +149,7 @@ export default class Sprite {
 			)
 		} else {
 			// draw the sprite portion from the image
-			const [frameWidth, frameHeight, row, column] = this.frames[frame]
+			const [frameWidth, frameHeight, row, column] = this.frames[frameIndex]
 			const dx = entity.lastX - (entity.w / 2)
 			const dy = entity.lastY - (entity.h / 2)
 			ctx.drawImage(
@@ -162,7 +175,7 @@ export default class Sprite {
 	 * Helper to draw sprite name to the canvas
 	 *
 	 * @param {CanvasRenderingContext2D} ctx
-	 * @param {import("../../../shared/models/Entity.js").TEntityProps} entity
+	 * @param {import("../../../shared/models/Entity.js").Entity} entity
 	 * @param {string} color
 	 * @param {boolean} showHp
 	 */
@@ -201,6 +214,10 @@ export default class Sprite {
 	 */
 	static addImageTransparency(img, red = 255, green = 0, blue = 255) {
 		let canvas = Sprite.Canvas, ctx = Sprite.Context, i = 0, n, imgData;
+		if (!canvas || !ctx) {
+			console.error("Sprite.addImageTransparency: Canvas or Context is not available");
+			return;
+		}
 		canvas.width = img.width || img.clientWidth;
 		canvas.height = img.height || img.clientHeight;
 		// ctx = canvas.getContext('2d', {
@@ -222,8 +239,8 @@ export default class Sprite {
 		ctx.putImageData(imgData, 0, 0);
 		// replace the existing source image with the new one
 		img.src = canvas.toDataURL();
-		// clean up
-		i = n = ctx = imgData = undefined;
+		// clean up, what you can
+		n = imgData = undefined;
 	}
 	// Note use new OffscreenCanvas(width, height) instead?
 	static Canvas = document.createElement('canvas')

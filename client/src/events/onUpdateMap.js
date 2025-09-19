@@ -30,7 +30,7 @@ export function onUpdateMap(socket, data) {
 	const player = State.player.value
 	if (player == null) return
 
-	const entity = State.map.value.entities.find(e => e.gid === player.gid)
+	const entity = State.map.value?.entities.find(e => e.gid === player.gid)
 	if (entity == null) return
 
 	// note: updating these will help with camera and map bounds,

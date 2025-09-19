@@ -137,6 +137,7 @@ export default function render() {
 function setScroll() {
 	try {
 		const activeList = document.querySelector(`div.ui-chat ul[data-active-tab="${activeTab.value}"]`)
+		if (activeList == null) return
 		activeList.scrollTop = activeList.scrollHeight // update scroll position
 	} catch (e) {
 		// silent

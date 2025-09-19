@@ -98,8 +98,10 @@ export default class Renderer {
 		// #region drawing
 		if (State.map.value != null && State.player.value != null) {
 			this.drawCamera(State.player.value)
-			this.drawMapLayout(State.map.value)
-			this.drawMapEntities(State.map.value)
+			if (State.map.value != null) {
+				this.drawMapLayout(State.map.value)
+				this.drawMapEntities(State.map.value)
+			}
 		}
 		// #endregion
 
@@ -110,7 +112,7 @@ export default class Renderer {
 	/**
 	 * Draws the camera view to the world bounds.
 	 *
-	 * @param {import("../../shared/models/Entity.js").TEntityProps} player - The player entity.
+	 * @param {import("../../shared/models/Entity.js").Entity} player - The player entity.
 	 */
 	drawCamera(player) {
 		const cvs = this.canvas
@@ -146,7 +148,7 @@ export default class Renderer {
 	/**
 	 * Draws the map layout on the canvas.
 	 *
-	 * @param {import("../../shared/models/WorldMap.js").TWorldMapProps} map - The map to draw, including its dimensions.
+	 * @param {import("../../shared/models/WorldMap.js").WorldMap} map - The map to draw, including its dimensions.
 	 */
 	drawMapLayout(map) {
 		// draw map by sprite
@@ -236,7 +238,7 @@ export default class Renderer {
 
 	/**
 	 * Draws a player entity on the canvas.
-	 * @param {import("../../shared/models/Entity.js").TEntityProps} entity - The player entity to draw.
+	 * @param {import("../../shared/models/Entity.js").Entity} entity - The player entity to draw.
 	 */
 	drawEntityPlayer(entity) {
 		// draw player by sprite

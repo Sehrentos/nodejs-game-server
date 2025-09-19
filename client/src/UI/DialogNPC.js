@@ -95,6 +95,7 @@ function onclick(event) {
  * toggles the visibility of the next article element
  */
 function showNextArticle() {
+	if (!State.player.value || !State.socket) return
 	const articles = ui.querySelectorAll("article")
 	if (currentArticle >= articles.length) {
 		currentArticle = articles.length - 1
@@ -119,9 +120,10 @@ function showNextArticle() {
  * Close UI and send close ACT
  */
 function close() {
+	if (!State.player.value || !State.socket) return
 	toggle()
 	currentArticle = 0
-	ui.innerHTML = null
+	ui.innerHTML = ""
 	// const articles = currentTarget.querySelectorAll("article")
 	// for (let i = 0; i < articles.length; i++) {
 	// 	articles[i].removeAttribute("style")
@@ -137,6 +139,7 @@ function close() {
  * Accept and send sell all ACT
  */
 function accept() {
+	if (!State.player.value || !State.socket) return
 	close()
 
 	// TODO only sell selected items from inventory (UI)
@@ -155,6 +158,7 @@ function accept() {
  * @param {import("../../../server/src/events/sendDialog.js").TDialogPacket} data - The dialog packet from the server.
  */
 function onDOMDialogUpdate(data) {
+	if (!State.player.value || !State.socket) return
 	gid = data.gid || ""
 	setContent(data.dialog || "")
 	toggle(true)

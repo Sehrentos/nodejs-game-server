@@ -107,7 +107,7 @@ export default class KeyControl {
 		// }
 
 		// send websocket if it's open
-		State.socket.send(sendKeyboardMove(keyCode));
+		State.socket?.send(sendKeyboardMove(keyCode));
 	}
 
 	handleSkill(keyCode) {
@@ -134,7 +134,7 @@ export default class KeyControl {
 				break
 		}
 		if (skillId) {
-			State.socket.send(sendSkill(skillId));
+			State.socket?.send(sendSkill(skillId));
 		}
 	}
 

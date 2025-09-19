@@ -19,6 +19,5 @@ export function getTextOffsetSize(text, fontSize = "10px", fontFamily = "Arial")
 	width = span.offsetWidth
 	height = span.offsetHeight
 	document.body.removeChild(span)
-	span = null
 	return { width, height }
 }

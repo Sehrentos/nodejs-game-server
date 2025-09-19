@@ -19,10 +19,13 @@ isRegister.subscribe((value) => {
 })
 
 isLoading.subscribe((value) => {
+	if (value == null) return
+	// disable all buttons and inputs while loading
 	container.querySelectorAll("input").forEach((button) => button.disabled = value)
 })
 
 stateMessage.subscribe((message) => {
+	if (message == null) return
 	stateMessageView.replaceChildren(message)
 })
 

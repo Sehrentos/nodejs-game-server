@@ -46,7 +46,7 @@ export default function SkillTreeUI() {
  */
 function update() {
 	// map skill data to the ui
-	ui.querySelector("div.content").replaceChildren(
+	ui.querySelector("div.content")?.replaceChildren(
 		...Object.keys(SKILL).filter(id => id != SKILL_ID.NONE.toString())
 			.map((key) => div({ class: "skill" },
 				div({ class: "name" }, SKILL[key].name),

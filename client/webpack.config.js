@@ -9,6 +9,14 @@ const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 export default {
 	mode: 'development',
 	entry: './src/index.js',
+	output: {
+		filename: 'bundle.js',
+		path: path.resolve(__dirname, 'dist'),
+		clean: true,
+	},
+	resolve: {
+		extensions: ['.js', '.mjs'],
+	},
 	plugins: [
 		new webpack.DefinePlugin({
 			'process': {
@@ -54,10 +62,5 @@ export default {
 				loader: 'file-loader'
 			},
 		],
-	},
-	output: {
-		filename: 'bundle.js',
-		path: path.resolve(__dirname, 'dist'),
-		clean: true,
 	},
 }
