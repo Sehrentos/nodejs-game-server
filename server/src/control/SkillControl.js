@@ -1,6 +1,7 @@
 import { ENTITY_TYPE } from "../../../shared/enum/Entity.js";
 import { SKILL_ID, SKILL_STATE } from "../../../shared/enum/Skill.js";
 import { Entity } from "../../../shared/models/Entity.js";
+import addPet from "../actions/addPet.js";
 import { sendSkillUse } from "../events/sendSkillUse.js";
 import Cooldown from "../utils/Cooldown.js";
 import createGameId from "../utils/createGameId.js";
@@ -100,6 +101,11 @@ export default class SkillControl {
 			socket.send(sendSkillUse(SKILL_ID.TAME, tamer.gid, NO_GID, SKILL_STATE.NO_TARGET))
 			return
 		}
+		// must be monster type
+		if (taming.type !== ENTITY_TYPE.MONSTER) {
+			socket.send(sendSkillUse(SKILL_ID.TAME, tamer.gid, taming.gid, SKILL_STATE.INVALID_TARGET))
+			return
+		}
 		if (tamer.hp <= 0 || taming.hp <= 0) {
 			socket.send(sendSkillUse(SKILL_ID.TAME, tamer.gid, taming.gid, SKILL_STATE.IS_DEAD))
 			return
@@ -118,23 +124,11 @@ export default class SkillControl {
 		// if (Math.random() < 0.3) { // 30% success rate
 		// if (Math.random() < 0.7) { // 70% success rate
 
-		// copy the entity and set as pet
-		const pet = new Entity({
-			...taming,
-			gid: createGameId(),
-			type: ENTITY_TYPE.PET,
-			name: `${tamer.name}'s ${taming.name}`,
-			owner: tamer,
-			speed: tamer.speed * 0.25, // set speed 25% faster than owner
-			lastMap: tamer.lastMap,
-			lastX: tamer.lastX,
-			lastY: tamer.lastY,
-			range: 100,
-		})
-		pet.control = new EntityControl(pet, tamer.control.world, null, tamer.control.map)
-		pet.control.ai = new AIPet(pet)
-		pet.control.revive()
-		tamer.control.map.entities.push(pet)
+		// add the pet to the world and owned by the tamer
+		const pet = addPet(tamer, Number(taming.id))
+		// optional. remove the tamed monster from the map
+		// taming.control.die()
+
 		console.log(`[TAME]: ${pet.name} (hp:${pet.hp}, x:${pet.lastX},y:${pet.lastY},map:${pet.lastMap}) owner: ${pet.owner.name}`)
 		// send ACK (acknowledge) skill use success
 		socket.send(sendSkillUse(SKILL_ID.TAME, tamer.gid, taming.gid, SKILL_STATE.OK))

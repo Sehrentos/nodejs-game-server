@@ -8,6 +8,7 @@ export const SKILL_STATE = {
 	IS_DEAD: 3,
 	OUT_OF_RANGE: 4,
 	NO_TARGET: 5,
+	INVALID_TARGET: 6,
 }
 
 /**

@@ -3,6 +3,8 @@ import { ENTITY_TYPE } from '../../../shared/enum/Entity.js'
 import { WorldMap } from '../../../shared/models/WorldMap.js'
 import { EntityControl } from '../control/EntityControl.js'
 import createGameId from '../utils/createGameId.js'
+import createMonster from '../utils/createMonster.js'
+import { MOBS } from '../../../shared/data/MOBS.js'
 
 // create map
 export default class MapUnderWater2 extends WorldMap {
@@ -48,6 +50,8 @@ export default class MapUnderWater2 extends WorldMap {
 				w: 32,
 				h: 32,
 			}),
+			...createMonster(this, 10, { ...MOBS.PLANKTON }),
+			...createMonster(this, 10, { ...MOBS.FROG }),
 		]
 		// add controllers and game ids
 		this.entities.forEach((entity) => {

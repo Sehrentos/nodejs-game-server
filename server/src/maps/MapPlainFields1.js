@@ -71,6 +71,7 @@ export default class MapPlainFields1 extends WorldMap {
 			...createMonster(this, 10, { ...MOBS.WIND_SPIRIT }),
 			...createMonster(this, 10, { ...MOBS.SLUSHIE }),
 			...createMonster(this, 10, { ...MOBS.RED_MUSHROOM }),
+			...createMonster(this, 5, { ...MOBS.SNAKE }),
 		]
 		// add controllers and game ids
 		this.entities.forEach((entity) => {

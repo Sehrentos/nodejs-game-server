@@ -1,7 +1,7 @@
 import { State } from "./State.js"
 import * as Settings from "./Settings.js"
 import { DIRECTION, ENTITY_TYPE } from "../../shared/enum/Entity.js"
-import { Sprites } from "./sprites/Sprites.js"
+import { MAP, PLAYER, NPC, MOB } from "./sprites/Sprites.js"
 
 /**
  * @class Renderer
@@ -152,9 +152,9 @@ export default class Renderer {
 	 */
 	drawMapLayout(map) {
 		// draw map by sprite
-		const sprite = Sprites.map[map.id]
+		const sprite = MAP[map.id]
 		if (sprite) {
-			sprite.draw(this.ctx, map)
+			Renderer.drawMapSprite(sprite, this.ctx, map)
 		} else {
 			Renderer.drawRect(this.ctx, "#6F9D62", 0, 0, map.width, map.height);
 		}
@@ -200,9 +200,9 @@ export default class Renderer {
 	 */
 	drawEntityNPC(entity) {
 		// @ts-ignore BigInt|Int|String - draw npc by sprite
-		const sprite = Sprites.npc[entity.id]
+		const sprite = NPC[entity.id]
 		if (sprite) {
-			sprite.draw(this.ctx, entity)
+			Renderer.drawEntitySprite(sprite, this.ctx, entity, 0);
 		} else {
 			Renderer.drawCircle(this.ctx, "black", entity.lastX, entity.lastY, entity.h / 2);
 			Renderer.drawEntityFacingDirection(this.ctx, entity, 4, "white");
@@ -226,9 +226,16 @@ export default class Renderer {
 	 */
 	drawEntityMonster(entity) {
 		// @ts-ignore BigInt|Int|String - draw mob by sprite
-		const sprite = Sprites.mob[entity.id]
+		const sprite = MOB[entity.id]
 		if (sprite) {
-			sprite.draw(this.ctx, entity, entity.dir === 2 ? 1 : 0)
+			// Renderer.drawEntitySprite(sprite, this.ctx, entity, entity.dir === 2 ? 1 : 0)
+			// 0: Left (x--), 1: Right (x++), 2: Up (y--), 3: Down (y++). default 0
+			switch (entity.dir) {
+				case 0: Renderer.drawEntitySprite(sprite, this.ctx, entity, 2); break; // left
+				case 1: Renderer.drawEntitySprite(sprite, this.ctx, entity, 3); break; // right
+				case 2: Renderer.drawEntitySprite(sprite, this.ctx, entity, 1); break; // back
+				default: Renderer.drawEntitySprite(sprite, this.ctx, entity, 0); break; // front
+			}
 		} else {
 			Renderer.drawCircle(this.ctx, "red", entity.lastX, entity.lastY, entity.h / 2);
 			Renderer.drawEntityFacingDirection(this.ctx, entity, entity.range, "black");
@@ -242,17 +249,17 @@ export default class Renderer {
 	 */
 	drawEntityPlayer(entity) {
 		// draw player by sprite
-		const spriteId = 0 // TODO entity.spr = SpriteID
-		const sprite = Sprites.player[spriteId]
+		const spriteId = 1 // TODO entity.spr = SpriteID
+		const sprite = PLAYER[spriteId]
 		if (sprite) {
 			// 0: Left (x--), 1: Right (x++), 2: Up (y--), 3: Down (y++). default 0
 			switch (entity.dir) {
-				case 0: sprite.draw(this.ctx, entity, 2); break; // left
-				case 1: sprite.draw(this.ctx, entity, 3); break; // right
-				case 2: sprite.draw(this.ctx, entity, 1); break; // back
-				default: sprite.draw(this.ctx, entity, 0); break; // front
+				case 0: Renderer.drawEntitySprite(sprite, this.ctx, entity, 2); break; // left
+				case 1: Renderer.drawEntitySprite(sprite, this.ctx, entity, 3); break; // right
+				case 2: Renderer.drawEntitySprite(sprite, this.ctx, entity, 1); break; // back
+				default: Renderer.drawEntitySprite(sprite, this.ctx, entity, 0); break; // front
 			}
-			// sprite.draw(this.ctx, entity, entity.dir === 2 ? 1 : 0)
+			// Renderer.drawEntitySprite(sprite, this.ctx, entity, entity.dir === 2 ? 1 : 0)
 		} else {
 			// fallback
 			// draw current player's melee attack radius
@@ -333,25 +340,162 @@ export default class Renderer {
 	}
 
 	/**
+	 * Draws the map sprite on the canvas.
+	 * If the sprite image is not loaded, it will be loaded and a placeholder will be drawn instead.
+	 *
+	 * @param {import("./sprites/Sprite").default} sprite
+	 * @param {CanvasRenderingContext2D} ctx
+	 * @param {import("../../shared/models/WorldMap.js").WorldMap} map
+	 * @returns
+	 */
+	static drawMapSprite(sprite, ctx, map) {
+		// check if the sprite image is loaded
+		if (!sprite.isLoaded) {
+			if (!sprite.isLoading) {
+				sprite.isLoading = true
+				sprite.load()
+			}
+			// draw something to indicate that the sprite is loading
+			ctx.save()
+			ctx.beginPath()
+			ctx.rect(0, 0, map.width, map.height)
+			ctx.fillStyle = "#6F9D62"
+			ctx.fill()
+			ctx.restore()
+			return
+		}
+		// draw the sprite
+		ctx.save()
+		ctx.drawImage(
+			sprite.image,
+			0, // dx
+			0, // dy
+			map.width, // dw
+			map.height // dh
+		)
+		ctx.restore()
+	}
+
+	/**
+	 * Draws the sprite image on the given canvas context at the given entity's last position.
+	 * If the sprite image is not loaded, it will be loaded and the method will return without drawing.
+	 * If the sprite frames are given, it will draw the sprite portion from the image.
+	 * If no sprite frames are given, it will draw the full sprite image.
+	 *
+	 * @param {import("./sprites/Sprite").default} sprite - The sprite to draw.
+	 * @param {CanvasRenderingContext2D} ctx - The canvas rendering context.
+	 * @param {import("../../shared/models/Entity.js").TEntityProps} entity - The entity to use.
+	 * @param {number} [frame] - The frame number to draw. Default is 0.
+	 *
+	 * @returns {void}
+	 */
+	static drawEntitySprite(sprite, ctx, entity, frame) {
+		// default frame to 0
+		let frameIndex = (typeof frame === 'number' && frame >= 0) ? frame : 0
+
+		// sanity check for frame index
+		if (sprite.frames.length > 0 && frameIndex >= sprite.frames.length) {
+			// fallback to useing the last frame
+			frameIndex = sprite.frames.length - 1
+			// or just return
+			// return console.warn(`[${sprite.constructor.name}] draw: frame index ${frameIndex} is out of bounds, max is ${sprite.frames.length - 1}`)
+		}
+
+		// check if the sprite image is loaded
+		if (!sprite.isLoaded) {
+			if (!sprite.isLoading) {
+				sprite.isLoading = true
+				sprite.load()
+			}
+			// draw something to indicate that the sprite is loading
+			ctx.save()
+			ctx.beginPath()
+			ctx.rect(entity.lastX - (entity.w / 2), entity.lastY - (entity.h / 2), entity.w, entity.h)
+			ctx.fillStyle = "green"
+			ctx.fill()
+			Renderer.drawEntityName(ctx, entity, "white", true);
+			ctx.restore()
+			return
+		}
+		// draw the sprite
+		ctx.save()
+		if (sprite.frames.length === 0) {
+			// draw the full sprite image
+			ctx.drawImage(
+				sprite.image,
+				entity.lastX - (entity.w / 2), // dx
+				entity.lastY - (entity.h / 2), // dy
+				entity.w, // dw
+				entity.h // dh
+			)
+		} else {
+			// draw the sprite portion from the image
+			const [frameWidth, frameHeight, row, column] = sprite.frames[frameIndex]
+			const dx = entity.lastX - (entity.w / 2)
+			const dy = entity.lastY - (entity.h / 2)
+			ctx.drawImage(
+				sprite.image,
+				column * frameWidth, // sx
+				row * frameHeight, // sy
+				frameWidth, // sw
+				frameHeight, // sh
+				dx,
+				dy,
+				// frameWidth, // dw
+				// frameHeight // dh
+				entity.w, // dw
+				entity.h // dh
+			);
+		}
+		// draw the entity name
+		Renderer.drawEntityName(ctx, entity, "white", true);
+		ctx.restore()
+	}
+
+	/**
 	 * Draws the name of the entity on the canvas at the given position.
 	 * @param {CanvasRenderingContext2D} ctx - The canvas rendering context.
 	 * @param {import("../../shared/models/Entity.js").TEntityProps} entity - The entity to draw the name for.
 	 * @param {string} color - The color to draw the name. default: "white"
-	 * @param {boolean} showHp - Whether to show the entity's health. Default false.
+	 * @param {boolean} showHp - Whether to show the entity's health. Default true.
 	 */
-	static drawEntityName(ctx, entity, color = "white", showHp = false) {
+	static drawEntityName(ctx, entity, color = "white", showHp = true) {
+		// ctx.save();
+		// ctx.beginPath();
+		// let text = entity.name || "Unknown";
+		// if (showHp) {
+		// 	text += ` (${entity.hp}/${entity.hpMax})`
+		// }
+		// // calculate the x position to center the text
+		// let _x = entity.lastX - (text.length / 2) * (Settings.FONT_SIZE * Settings.FONT_WIDTH_RATIO)
+		// let _y = entity.lastY - (entity.h || 1)
+		// ctx.fillStyle = color;
+		// ctx.font = `${Settings.FONT_SIZE}px ${Settings.FONT_FAMILY}`;
+		// ctx.fillText(text, _x, _y);
+		// ctx.restore();
+
 		ctx.save();
 		ctx.beginPath();
+		const marginTop = 4 // add some space between sprite and name
 		let text = entity.name || "Unknown";
-		if (showHp) {
+		if (showHp && entity.type != ENTITY_TYPE.NPC) {
 			text += ` (${entity.hp}/${entity.hpMax})`
 		}
+
 		// calculate the x position to center the text
 		let _x = entity.lastX - (text.length / 2) * (Settings.FONT_SIZE * Settings.FONT_WIDTH_RATIO)
-		let _y = entity.lastY - (entity.h || 1)
+		let _y = entity.lastY - (entity.h / 2) - marginTop
+		let textWidth = ctx.measureText(text).width
+
+		// draw black background rectangle
+		ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
+		ctx.fillRect(_x - 2, _y - Settings.FONT_SIZE, textWidth + 4, Settings.FONT_SIZE + 4);
+
 		ctx.fillStyle = color;
 		ctx.font = `${Settings.FONT_SIZE}px ${Settings.FONT_FAMILY}`;
 		ctx.fillText(text, _x, _y);
+		// optional. autoshink text if it's too long
+		// ctx.fillText(text, _x, _y, entity.w);
 		ctx.restore();
 	}
 

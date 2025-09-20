@@ -32,4 +32,5 @@ export const STATE = {
 	[SKILL_STATE.IS_DEAD]: "Dead",
 	[SKILL_STATE.OUT_OF_RANGE]: "Out of range",
 	[SKILL_STATE.NO_TARGET]: "No target",
+	[SKILL_STATE.INVALID_TARGET]: "Invalid target",
 }

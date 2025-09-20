@@ -77,6 +77,7 @@ import { Item } from "./Item.js";
  * @prop {number=} portalY - **Portal** destination Y position.
  * @prop {string=} dialog - **NPC** dialog text
  * @prop {Entity=} owner - **PET** Owner entity
+ * @prop {number[]=} pets - **Player** Pet entity IDs.
  * @prop {import("../../server/src/control/EntityControl.js").EntityControl=} control - **CONTROL** controller instance
  */
 
@@ -202,6 +203,8 @@ export class Entity {
 		// #region PET
 		/** @type {Entity} - Owner entity */
 		this.owner = p?.owner ?? null
+		/** @type {number[]} - **Player** Pet entity IDs. */
+		this.pets = p?.pets ?? []
 		// #endregion
 
 		// #region control

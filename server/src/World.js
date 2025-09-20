@@ -18,6 +18,7 @@ import { sendPlayerLeave } from './events/sendPlayerLeave.js';
 import { sendChat } from './events/sendChat.js';
 import { Item } from '../../shared/models/Item.js';
 import { getItemByItemId, ITEMS } from '../../shared/data/ITEMS.js';
+import addPet from './actions/addPet.js';
 
 /**
  * @module World
@@ -249,12 +250,24 @@ export class World {
 			console.log(`[World] Player "${player.name}" (id:${player.id} aid:${player.aid} lastLogin:${player.lastLogin}) connection established.`)
 
 			// make the player join map and update entity map property
-			this.joinMap(
+			const map = await this.joinMap(
 				player,
 				player.lastMap || 'Lobby town',
 				player.lastX || -1,
 				player.lastY || -1
 			)
+			if (map) {
+				// send welcome message
+				ws.send(sendChat(
+					'default',
+					'Server',
+					player.name,
+					`Welcome to the server, ${player.name}! You are in "${map.name}".`
+				));
+				// TODO load pets from database and set player.pets = [1,2,3]
+				// then load the pets entities after player is added to the map
+				addPet(player, 19) // TODO improve, test only
+			}
 		} catch (err) {
 			console.log('[World] Error', err.message, err.code || '')
 			ws.close(4401, 'Invalid credentials')
