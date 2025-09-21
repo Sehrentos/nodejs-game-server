@@ -1,7 +1,7 @@
 import { ENTITY_TYPE } from "../../../shared/enum/Entity.js";
 import { SKILL_ID, SKILL_STATE } from "../../../shared/enum/Skill.js";
 import { Entity } from "../../../shared/models/Entity.js";
-import addPet from "../actions/addPet.js";
+import * as PetAction from "../actions/pet.js";
 import { sendSkillUse } from "../events/sendSkillUse.js";
 import Cooldown from "../utils/Cooldown.js";
 import createGameId from "../utils/createGameId.js";
@@ -125,11 +125,13 @@ export default class SkillControl {
 		// if (Math.random() < 0.7) { // 70% success rate
 
 		// add the pet to the world and owned by the tamer
-		const pet = addPet(tamer, Number(taming.id))
+		const pets = PetAction.createPetEntity(tamer, taming.id)
 		// optional. remove the tamed monster from the map
 		// taming.control.die()
+		for (const pet of pets) {
+			console.log(`[TAME]: ${pet.name} (hp:${pet.hp}, x:${pet.lastX},y:${pet.lastY},map:${pet.lastMap}) owner: ${pet.owner.name}`)
+		}
 
-		console.log(`[TAME]: ${pet.name} (hp:${pet.hp}, x:${pet.lastX},y:${pet.lastY},map:${pet.lastMap}) owner: ${pet.owner.name}`)
 		// send ACK (acknowledge) skill use success
 		socket.send(sendSkillUse(SKILL_ID.TAME, tamer.gid, taming.gid, SKILL_STATE.OK))
 	}

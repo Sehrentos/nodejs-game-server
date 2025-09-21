@@ -1,0 +1,34 @@
+/**
+ * @file Enum for sprite IDs.
+ */
+export const SPRITE = {
+	PLAYER1: 1,
+	PLAYER2: 2,
+	// NPCs
+	TOWNSFOLK: 3,
+	BLACKSMITH: 4,
+	TOOL_DEALER: 5,
+	MERCHANT: 6,
+	STRANGER: 7,
+	// Mobs
+	CAT: 8,
+	ORC: 9,
+	ORC2: 10,
+	PLANKTON: 11,
+	EYE: 12,
+	LADYBUG: 13,
+	LADYBUG2: 14,
+	SKELETON: 15,
+	DINOSAUR: 16,
+	MUSHROOM: 17,
+	WIND_SPIRIT: 19,
+	SLUSHIE: 19,
+	RED_MUSHROOM: 20,
+	ROBOT: 21,
+	UNICORN: 22,
+	GHOST: 23,
+	SNAKE: 24,
+	CAT2: 25,
+	DOG: 26,
+	FROG: 27,
+}

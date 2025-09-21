@@ -1,4 +1,5 @@
 import { ENTITY_TYPE } from "../enum/Entity.js";
+import { SPRITE as SPR } from "../enum/Sprite.js";
 import { ITEMS } from "./ITEMS.js";
 
 /**
@@ -11,18 +12,9 @@ import { ITEMS } from "./ITEMS.js";
  */
 //@type {{[key:string]: import("../models/Entity.js").TEntityProps}}
 export const MOBS = {
-	DEFAULT: {
-		id: 0,
-		type: ENTITY_TYPE.MONSTER,
-		name: "Worm",
-		hp: 5,
-		hpMax: 5,
-		baseExp: 5,
-		jobExp: 5,
-		atk: 1
-	},
 	CAT: {
 		id: 1,
+		spriteId: SPR.CAT,
 		type: ENTITY_TYPE.MONSTER,
 		name: "Cat",
 		hp: 25,
@@ -39,6 +31,7 @@ export const MOBS = {
 	},
 	ORC: {
 		id: 2,
+		spriteId: SPR.ORC,
 		type: ENTITY_TYPE.MONSTER,
 		name: "Orc",
 		hp: 35,
@@ -56,6 +49,7 @@ export const MOBS = {
 	},
 	PLANKTON: {
 		id: 3,
+		spriteId: SPR.PLANKTON,
 		type: ENTITY_TYPE.MONSTER,
 		name: "Plankton",
 		hp: 500,
@@ -68,6 +62,7 @@ export const MOBS = {
 	},
 	ORC2: {
 		id: 4,
+		spriteId: SPR.ORC2,
 		type: ENTITY_TYPE.MONSTER,
 		name: "Orc with gloves?",
 		hp: 500,
@@ -86,6 +81,7 @@ export const MOBS = {
 	},
 	EYE: {
 		id: 5,
+		spriteId: SPR.EYE,
 		type: ENTITY_TYPE.MONSTER,
 		name: "The eye",
 		hp: 1000,
@@ -98,6 +94,7 @@ export const MOBS = {
 	},
 	LADYBUG: {
 		id: 6,
+		spriteId: SPR.LADYBUG,
 		type: ENTITY_TYPE.MONSTER,
 		name: "Ladybug",
 		hp: 1000,
@@ -110,6 +107,7 @@ export const MOBS = {
 	},
 	SKELETON: {
 		id: 7,
+		spriteId: SPR.SKELETON,
 		type: ENTITY_TYPE.MONSTER,
 		name: "Skeleton",
 		hp: 5000,
@@ -124,6 +122,7 @@ export const MOBS = {
 	},
 	DINOSAUR: {
 		id: 8,
+		spriteId: SPR.DINOSAUR,
 		type: ENTITY_TYPE.MONSTER,
 		name: "Dinosaur",
 		hp: 100,
@@ -140,6 +139,7 @@ export const MOBS = {
 	},
 	MUSHROOM: {
 		id: 9,
+		spriteId: SPR.MUSHROOM,
 		type: ENTITY_TYPE.MONSTER,
 		name: "Mushroom",
 		hp: 90,
@@ -156,6 +156,7 @@ export const MOBS = {
 	},
 	WIND_SPIRIT: {
 		id: 10,
+		spriteId: SPR.WIND_SPIRIT,
 		type: ENTITY_TYPE.MONSTER,
 		name: "Wind spirit",
 		hp: 150,
@@ -168,6 +169,7 @@ export const MOBS = {
 	},
 	SLUSHIE: {
 		id: 11,
+		spriteId: SPR.SLUSHIE,
 		type: ENTITY_TYPE.MONSTER,
 		name: "Slushie",
 		hp: 150,
@@ -184,6 +186,7 @@ export const MOBS = {
 	},
 	RED_MUSHROOM: {
 		id: 12,
+		spriteId: SPR.RED_MUSHROOM,
 		type: ENTITY_TYPE.MONSTER,
 		name: "Red mushroom",
 		hp: 150,
@@ -200,6 +203,7 @@ export const MOBS = {
 	},
 	LADYBUG2: {
 		id: 13,
+		spriteId: SPR.LADYBUG2,
 		type: ENTITY_TYPE.MONSTER,
 		name: "Ladybug 2",
 		hp: 150,
@@ -212,6 +216,7 @@ export const MOBS = {
 	},
 	ROBOT: {
 		id: 14,
+		spriteId: SPR.ROBOT,
 		type: ENTITY_TYPE.MONSTER,
 		name: "Robot 1",
 		hp: 150,
@@ -224,6 +229,7 @@ export const MOBS = {
 	},
 	UNICORN: {
 		id: 15,
+		spriteId: SPR.UNICORN,
 		type: ENTITY_TYPE.MONSTER,
 		name: "Unicorn",
 		hp: 1500,
@@ -236,6 +242,7 @@ export const MOBS = {
 	},
 	GHOST: {
 		id: 16,
+		spriteId: SPR.GHOST,
 		type: ENTITY_TYPE.MONSTER,
 		name: "Ghost",
 		hp: 1500,
@@ -248,6 +255,7 @@ export const MOBS = {
 	},
 	SNAKE: {
 		id: 17,
+		spriteId: SPR.SNAKE,
 		type: ENTITY_TYPE.MONSTER,
 		name: "Snake",
 		hp: 1500,
@@ -260,6 +268,7 @@ export const MOBS = {
 	},
 	CAT2: {
 		id: 18,
+		spriteId: SPR.CAT2,
 		type: ENTITY_TYPE.MONSTER,
 		name: "Dallas",
 		hp: 1500,
@@ -272,6 +281,7 @@ export const MOBS = {
 	},
 	DOG: {
 		id: 19,
+		spriteId: SPR.DOG,
 		type: ENTITY_TYPE.MONSTER,
 		name: "Santtu",
 		hp: 1500,
@@ -284,6 +294,7 @@ export const MOBS = {
 	},
 	FROG: {
 		id: 20,
+		spriteId: SPR.FROG,
 		type: ENTITY_TYPE.MONSTER,
 		name: "Frog",
 		hp: 1500,
@@ -296,6 +307,9 @@ export const MOBS = {
 	},
 };
 
+const MOB_KEYS = Object.keys(MOBS)
+const MOB_VALUES = Object.values(MOBS)
+
 /**
  * Helper to get a monster by its `id`
  * @param {number} id
@@ -303,7 +317,7 @@ export const MOBS = {
  * @returns
  */
 export const getMobById = (id, useFallback = true) => {
-	const mob = Object.values(MOBS).find(p => p.id === id)
+	const mob = MOB_VALUES.find(p => p.id === id)
 	if (mob === undefined && useFallback) return MOBS.DEFAULT
 	return mob
 }

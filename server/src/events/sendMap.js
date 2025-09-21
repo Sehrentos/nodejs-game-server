@@ -22,45 +22,67 @@ export function sendMap(player, map) {
 			name: map.name,
 			width: map.width,
 			height: map.height,
-			// @ts-ignore filtered on purpose, so the client does not know everything
+			// @ts-ignore filtered on purpose, so the client does not know everything. also to reduce packet size
 			entities: map.entities.filter(PLAYER_VIEW_AREA_SIZE === 0
 				? (entity) => entity.visible && entity.hp > 0
 				: (entity) => entity.visible && entity.hp > 0 && Entity.inRangeOf(player, entity.lastX, entity.lastY, PLAYER_VIEW_AREA_SIZE)
-			).map((entity) => (entity.type === ENTITY_TYPE.PORTAL ? {
-				id: typeof entity.id === "bigint" ? entity.id.toString() : entity.id,
-				gid: entity.gid,
-				type: entity.type,
-				name: entity.name,
-				lastX: entity.lastX,
-				lastY: entity.lastY,
-				w: entity.w,
-				h: entity.h,
-				range: entity.range,
-				dir: entity.dir,
-				hp: entity.hp,
-				hpMax: entity.hpMax,
-				mp: entity.mp,
-				mpMax: entity.mpMax,
-				// portal only
-				portalName: entity.portalName,
-				portalX: entity.portalX,
-				portalY: entity.portalY,
-			} : {
-				id: typeof entity.id === "bigint" ? entity.id.toString() : entity.id,
-				gid: entity.gid,
-				type: entity.type,
-				name: entity.name,
-				lastX: entity.lastX,
-				lastY: entity.lastY,
-				w: entity.w,
-				h: entity.h,
-				range: entity.range,
-				dir: entity.dir,
-				hp: entity.hp,
-				hpMax: entity.hpMax,
-				mp: entity.mp,
-				mpMax: entity.mpMax,
-			}))
+			).map((entity) => {
+				if (entity.type === ENTITY_TYPE.PORTAL) {
+					return {
+						id: entity.id,
+						gid: entity.gid,
+						spriteId: entity.spriteId,
+						type: entity.type,
+						lastX: entity.lastX,
+						lastY: entity.lastY,
+						w: entity.w,
+						h: entity.h,
+						range: entity.range,
+						dir: entity.dir,
+						hp: entity.hp,
+						hpMax: entity.hpMax,
+						mp: entity.mp,
+						mpMax: entity.mpMax,
+						// portal only
+						portalName: entity.portalName,
+						portalX: entity.portalX,
+						portalY: entity.portalY,
+					}
+				}
+				if (entity.type === ENTITY_TYPE.PLAYER) {
+					// entity is other player
+					return {
+						id: entity.id,
+						gid: entity.gid,
+						spriteId: entity.spriteId,
+						type: entity.type,
+						name: entity.name,
+						lastX: entity.lastX,
+						lastY: entity.lastY,
+						w: entity.w,
+						h: entity.h,
+						range: entity.range,
+						dir: entity.dir,
+						hp: entity.hp,
+						hpMax: entity.hpMax,
+						mp: entity.mp,
+						mpMax: entity.mpMax,
+					}
+				}
+				return {
+					id: entity.id,
+					gid: entity.gid,
+					spriteId: entity.spriteId,
+					type: entity.type,
+					lastX: entity.lastX,
+					lastY: entity.lastY,
+					dir: entity.dir,
+					hp: entity.hp,
+					hpMax: entity.hpMax,
+					mp: entity.mp,
+					mpMax: entity.mpMax,
+				}
+			})
 		}
 	})
 }

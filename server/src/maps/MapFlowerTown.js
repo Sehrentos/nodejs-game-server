@@ -1,6 +1,5 @@
 import { Entity } from '../../../shared/models/Entity.js'
-import { NPCS } from '../../../shared/data/NPCS.js'
-import { DIRECTION, ENTITY_TYPE } from '../../../shared/enum/Entity.js'
+import { ENTITY_TYPE } from '../../../shared/enum/Entity.js'
 import { WorldMap } from '../../../shared/models/WorldMap.js'
 import { EntityControl } from '../control/EntityControl.js'
 import createGameId from '../utils/createGameId.js'

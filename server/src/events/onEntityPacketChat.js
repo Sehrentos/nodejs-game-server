@@ -147,4 +147,21 @@ CMD['/changemap'] = async (entity, data, params) => {
 	}
 }
 
+// TODO implement disguise command to show different sprite
+CMD['/disguise'] = async (entity, data, params) => {
+	try {
+		const ctrl = entity.control
+		const name = params.join(' ');
+		const sprite = name === '' ? 0 : parseInt(name, 10);
+		if (isNaN(sprite) || sprite < 0 || sprite > 100) {
+			ctrl.socket.send(sendChat("default", "Server", entity.name, "Disguise invalid format. Use /disguise <spriteId>"))
+			return
+		}
+		entity.spriteId = sprite
+		ctrl.socket.send(sendChat("default", "Server", entity.name, `Disguise changed to spriteId:${sprite}`))
+	} catch (error) {
+		console.log(`[Event.onChatCommand] error changing disguise.`, error)
+	}
+}
+
 // #endregion

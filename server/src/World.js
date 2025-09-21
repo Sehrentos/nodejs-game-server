@@ -17,8 +17,8 @@ import MapUnderWater2 from './maps/MapUnderWater2.js';
 import { sendPlayerLeave } from './events/sendPlayerLeave.js';
 import { sendChat } from './events/sendChat.js';
 import { Item } from '../../shared/models/Item.js';
-import { getItemByItemId, ITEMS } from '../../shared/data/ITEMS.js';
-import addPet from './actions/addPet.js';
+import { getItemByItemId } from '../../shared/data/ITEMS.js';
+import { createPetEntity } from './actions/pet.js';
 
 /**
  * @module World
@@ -211,7 +211,7 @@ export class World {
 			// set default values
 			player = new Entity({
 				type: ENTITY_TYPE.PLAYER,
-				aid: account.id,
+				aid: Number(account.id),
 				gid: createGameId(), // generate unique id for player
 				name: `player-${this.playersCountTotal}`, // initial name
 				// saveMap: 'Lobby town',
@@ -228,9 +228,9 @@ export class World {
 			// create new player if not found
 			if (players.length === 0) {
 				// Note: insertId can be BigInt or Number
-				// JSON.stringify can't convert BigInt
+				// JSON.stringify can't convert BigInt, so convert to string
 				let { insertId } = await this.db.player.add(player)
-				player.id = insertId // update player id
+				player.id = Number(insertId) // update player id
 			} else {
 				// merge existing player data from db
 				Object.assign(player, players[0])
@@ -266,7 +266,8 @@ export class World {
 				));
 				// TODO load pets from database and set player.pets = [1,2,3]
 				// then load the pets entities after player is added to the map
-				addPet(player, 19) // TODO improve, test only
+				// createPetEntity(player, 18) // TODO improve, test only (Dallas)
+				createPetEntity(player, 19) // TODO improve, test only (Santtu)
 			}
 		} catch (err) {
 			console.log('[World] Error', err.message, err.code || '')

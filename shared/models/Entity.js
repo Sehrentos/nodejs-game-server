@@ -5,9 +5,10 @@ import { Item } from "./Item.js";
 
 /**
  * @typedef {Object} TEntityProps
- * @prop {bigint|number|string=} id - Database ID. Note: use type `string` if `bigint` (MariaDB int(11) auto_increment)
+ * @prop {number=} id - Database ID.
  * @prop {string=} gid - Game ID.
- * @prop {bigint|number|string=} aid - Account ID. Note: use type `string` if `bigint` (MariaDB int(11) auto_increment)
+ * @prop {number=} aid - Account ID.
+ * @prop {number=} spriteId - Sprite ID.
  * @prop {string=} name - Visual name.
  * @prop {number=} type - Entity type. default ENTITY_TYPE.NPC
  * @prop {string=} lastMap - Current map name.
@@ -91,12 +92,14 @@ export class Entity {
 	 * @param {TEntityProps} p
 	 */
 	constructor(p) {
-		/** @type {bigint|number|string=} Database ID. Note: use type `string` if `bigint` (JSON serialization) */
+		/** @type {number=} Database ID. default: 0 */
 		this.id = p?.id ?? 0
-		/** @type {string} Game ID */
+		/** @type {string} Game ID. default: '' */
 		this.gid = p?.gid ?? ''
-		/** @type {bigint|number|string=} AccountID. Note: use type `string` if `bigint` (JSON serialization) */
+		/** @type {number=} Account ID. default: 0 */
 		this.aid = p?.aid ?? 0
+		/** @type {number} Sprite ID. default: 0 */
+		this.spriteId = p?.spriteId ?? 0
 		this.type = p?.type ?? ENTITY_TYPE.NPC
 		this.name = p?.name ?? ''
 

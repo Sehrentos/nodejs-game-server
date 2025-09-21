@@ -40,6 +40,8 @@ Auth.isLoggedIn.subscribe((isLoggedIn) => {
 	)
 	// disable selectstart event to disable text selection in the game UI
 	root.addEventListener("selectstart", onPreventDefault)
+	// disable context menu to disable right click menu in the game UI
+	root.addEventListener("contextmenu", onPreventDefault)
 })
 
 // Subscribe to changes in the JWT token

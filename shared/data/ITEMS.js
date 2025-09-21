@@ -94,6 +94,9 @@ export const ITEMS = {
 	},
 };
 
+const ITEM_KEYS = Object.keys(ITEMS)
+const ITEM_VALUES = Object.values(ITEMS)
+
 /**
  * Helper to get an item by its `itemId`
  * @param {number} itemId
@@ -101,7 +104,7 @@ export const ITEMS = {
  * @returns
  */
 export const getItemByItemId = (itemId, useFallback = true) => {
-	const item = Object.values(ITEMS).find(p => p.itemId === itemId)
+	const item = ITEM_VALUES.find(p => p.itemId === itemId)
 	if (item === undefined && useFallback) return ITEMS.DEFAULT
 	return item
 }
