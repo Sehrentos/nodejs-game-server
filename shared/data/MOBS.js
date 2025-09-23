@@ -1,5 +1,5 @@
 import { ENTITY_TYPE } from "../enum/Entity.js";
-import { SPRITE as SPR } from "../enum/Sprite.js";
+import { SPR_ID as SPR } from "../enum/Sprite.js";
 import { ITEMS } from "./ITEMS.js";
 
 /**
@@ -14,7 +14,7 @@ import { ITEMS } from "./ITEMS.js";
 export const MOBS = {
 	CAT: {
 		id: 1,
-		spriteId: SPR.CAT,
+		spriteId: SPR.MOB_CAT,
 		type: ENTITY_TYPE.MONSTER,
 		name: "Cat",
 		hp: 25,
@@ -31,7 +31,7 @@ export const MOBS = {
 	},
 	ORC: {
 		id: 2,
-		spriteId: SPR.ORC,
+		spriteId: SPR.MOB_ORC,
 		type: ENTITY_TYPE.MONSTER,
 		name: "Orc",
 		hp: 35,
@@ -49,7 +49,7 @@ export const MOBS = {
 	},
 	PLANKTON: {
 		id: 3,
-		spriteId: SPR.PLANKTON,
+		spriteId: SPR.MOB_PLANKTON,
 		type: ENTITY_TYPE.MONSTER,
 		name: "Plankton",
 		hp: 500,
@@ -62,7 +62,7 @@ export const MOBS = {
 	},
 	ORC2: {
 		id: 4,
-		spriteId: SPR.ORC2,
+		spriteId: SPR.MOB_ORC2,
 		type: ENTITY_TYPE.MONSTER,
 		name: "Orc with gloves?",
 		hp: 500,
@@ -81,7 +81,7 @@ export const MOBS = {
 	},
 	EYE: {
 		id: 5,
-		spriteId: SPR.EYE,
+		spriteId: SPR.MOB_EYE,
 		type: ENTITY_TYPE.MONSTER,
 		name: "The eye",
 		hp: 1000,
@@ -94,7 +94,7 @@ export const MOBS = {
 	},
 	LADYBUG: {
 		id: 6,
-		spriteId: SPR.LADYBUG,
+		spriteId: SPR.MOB_LADYBUG,
 		type: ENTITY_TYPE.MONSTER,
 		name: "Ladybug",
 		hp: 1000,
@@ -107,7 +107,7 @@ export const MOBS = {
 	},
 	SKELETON: {
 		id: 7,
-		spriteId: SPR.SKELETON,
+		spriteId: SPR.MOB_SKELETON,
 		type: ENTITY_TYPE.MONSTER,
 		name: "Skeleton",
 		hp: 5000,
@@ -122,7 +122,7 @@ export const MOBS = {
 	},
 	DINOSAUR: {
 		id: 8,
-		spriteId: SPR.DINOSAUR,
+		spriteId: SPR.MOB_DINOSAUR,
 		type: ENTITY_TYPE.MONSTER,
 		name: "Dinosaur",
 		hp: 100,
@@ -139,7 +139,7 @@ export const MOBS = {
 	},
 	MUSHROOM: {
 		id: 9,
-		spriteId: SPR.MUSHROOM,
+		spriteId: SPR.MOB_MUSHROOM,
 		type: ENTITY_TYPE.MONSTER,
 		name: "Mushroom",
 		hp: 90,
@@ -156,7 +156,7 @@ export const MOBS = {
 	},
 	WIND_SPIRIT: {
 		id: 10,
-		spriteId: SPR.WIND_SPIRIT,
+		spriteId: SPR.MOB_WIND_SPIRIT,
 		type: ENTITY_TYPE.MONSTER,
 		name: "Wind spirit",
 		hp: 150,
@@ -169,7 +169,7 @@ export const MOBS = {
 	},
 	SLUSHIE: {
 		id: 11,
-		spriteId: SPR.SLUSHIE,
+		spriteId: SPR.MOB_SLUSHIE,
 		type: ENTITY_TYPE.MONSTER,
 		name: "Slushie",
 		hp: 150,
@@ -186,7 +186,7 @@ export const MOBS = {
 	},
 	RED_MUSHROOM: {
 		id: 12,
-		spriteId: SPR.RED_MUSHROOM,
+		spriteId: SPR.MOB_RED_MUSHROOM,
 		type: ENTITY_TYPE.MONSTER,
 		name: "Red mushroom",
 		hp: 150,
@@ -203,7 +203,7 @@ export const MOBS = {
 	},
 	LADYBUG2: {
 		id: 13,
-		spriteId: SPR.LADYBUG2,
+		spriteId: SPR.MOB_LADYBUG2,
 		type: ENTITY_TYPE.MONSTER,
 		name: "Ladybug 2",
 		hp: 150,
@@ -216,7 +216,7 @@ export const MOBS = {
 	},
 	ROBOT: {
 		id: 14,
-		spriteId: SPR.ROBOT,
+		spriteId: SPR.MOB_ROBOT,
 		type: ENTITY_TYPE.MONSTER,
 		name: "Robot 1",
 		hp: 150,
@@ -229,7 +229,7 @@ export const MOBS = {
 	},
 	UNICORN: {
 		id: 15,
-		spriteId: SPR.UNICORN,
+		spriteId: SPR.MOB_UNICORN,
 		type: ENTITY_TYPE.MONSTER,
 		name: "Unicorn",
 		hp: 1500,
@@ -242,7 +242,7 @@ export const MOBS = {
 	},
 	GHOST: {
 		id: 16,
-		spriteId: SPR.GHOST,
+		spriteId: SPR.MOB_GHOST,
 		type: ENTITY_TYPE.MONSTER,
 		name: "Ghost",
 		hp: 1500,
@@ -255,7 +255,7 @@ export const MOBS = {
 	},
 	SNAKE: {
 		id: 17,
-		spriteId: SPR.SNAKE,
+		spriteId: SPR.MOB_SNAKE,
 		type: ENTITY_TYPE.MONSTER,
 		name: "Snake",
 		hp: 1500,
@@ -268,7 +268,7 @@ export const MOBS = {
 	},
 	CAT2: {
 		id: 18,
-		spriteId: SPR.CAT2,
+		spriteId: SPR.MOB_CAT2,
 		type: ENTITY_TYPE.MONSTER,
 		name: "Dallas",
 		hp: 1500,
@@ -281,7 +281,7 @@ export const MOBS = {
 	},
 	DOG: {
 		id: 19,
-		spriteId: SPR.DOG,
+		spriteId: SPR.MOB_DOG,
 		type: ENTITY_TYPE.MONSTER,
 		name: "Santtu",
 		hp: 1500,
@@ -294,7 +294,7 @@ export const MOBS = {
 	},
 	FROG: {
 		id: 20,
-		spriteId: SPR.FROG,
+		spriteId: SPR.MOB_FROG,
 		type: ENTITY_TYPE.MONSTER,
 		name: "Frog",
 		hp: 1500,

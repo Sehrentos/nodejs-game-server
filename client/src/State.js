@@ -1,36 +1,78 @@
-import EventEmitter from "./utils/EventEmitter.js";
 import Observable from "./utils/Observable.js";
 
 /**
- * Global game state
+ * Game state constainer
  */
-export const State = {
-	/** @type {import("./locale/locale.js").TLocale|null} */
-	locale: null,
+export class State {
+	constructor() {
+		// /** @type {import("./locale/locale.js").TLocale|null} */
+		// this.locale= null
 
-	/** @type {import("./control/SocketControl.js").default|null} - WebSocket state */
-	socket: null,
+		/**
+		 * Game canvas element
+		 * @type {null|HTMLCanvasElement}
+		 */
+		this.canvas = null
 
-	/** @type {Observable<null|import("../../shared/models/Entity.js").Entity>} - player entity state */
-	player: new Observable(null),
+		/**
+		 * The renderer for the game
+		 * @type {import("./Renderer.js").default|null}
+		 */
+		this.renderer = null
 
-	/** @type {Observable<null|import("../../shared/models/WorldMap.js").WorldMap>} - world map state */
-	map: new Observable(null),
+		/**
+		 * The key control for the game
+		 * @type {import("./control/KeyControl.js").default|null}
+		 */
+		this.keyControl = null
 
-	/** @type {Observable<Array<import("../../server/src/events/sendChat.js").TChatPacket>>} - chat state */
-	chat: new Observable([{
-		type: "chat",
-		channel: "default",
-		from: "info",
-		to: "world",
-		message: `Move with WASD or Arrow keys. Press "C" to toggle character info. Type "/help" for commands. Press "Escape" to open exit menu.`,
-		timestamp: Date.now()
-	}]),
+		/**
+		 * The touch control for the game
+		 * @type {import("./control/TouchControl.js").default|null}
+		 */
+		this.touchControl = null
 
-	/**
-	 * Global event emitter for client-side events.
-	 * Used for communication between different parts of the UI.
-	 */
-	events: new EventEmitter(),
+		/**
+		 * WebSocket controller
+		 * @type {import("./control/SocketControl.js").default|null}
+		 */
+		this.socket = null
+
+		/**
+		 * Player state
+		 * @type {Observable<null|import("../../shared/models/Entity.js").Entity>}
+		 */
+		this.player = new Observable(null)
+
+		/**
+		 * Player controller
+		 * @type {import("./control/PlayerControl.js").default|null}
+		 */
+		this.playerControl = null
+
+		/**
+		 * World map state
+		 * @type {Observable<null|import("../../shared/models/WorldMap.js").WorldMap>}
+		 */
+		this.map = new Observable(null)
+
+		/**
+		 * Chat state
+		 * @type {Observable<import("../../server/src/events/sendChat.js").TChatPacket[]>}
+		 */
+		this.chat = new Observable([{
+			type: "chat",
+			channel: "default",
+			from: "info",
+			to: "world",
+			message: `Move with WASD or Arrow keys. Press "C" to toggle character info. Type "/help" for commands. Press "Escape" to open exit menu.`,
+			timestamp: Date.now()
+		}])
+	}
 }
 
+/**
+ * Singleton instance of the game state
+ */
+const state = new State();
+export default state

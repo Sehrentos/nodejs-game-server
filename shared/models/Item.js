@@ -2,16 +2,17 @@ import { ITEM_TYPE } from "../enum/Item.js"
 
 /**
  * @typedef {Object} TItemProps
- * @prop {number|BigInt=} id - database id.
- * @prop {number=} itemId - Item id.
- * @prop {number|BigInt=} playerId - Player id.
+ * @prop {number=} _id - **DB row id** (if item was loaded from DB)
+ * @prop {number=} _owner - **DB entity ID who owns the item** (if item was loaded from DB)
+ * @prop {number=} id - Item id.
  * @prop {string=} name - Visual name of the item.
  * @prop {number=} type - Item type. default ITEM_TYPE.ETC
  * @prop {number=} amount - Amount. default 1
+ * @prop {number=} slot - Equipment slot where it can be equipped. default 0
+ * @prop {boolean=} isEquipped - Whether the item is currently equipped. default false
+ * @prop {number=} dropChange - Drop chance 0-100 %. default 0
  * @prop {number=} buy - Buy price. default 0
  * @prop {number=} sell - Sell price. default 0
- * @prop {number=} slot - Equipment slot. default 0
- * @prop {number=} dropChange - Drop chance 0-100 %. default 0
  * @prop {number=} aspd - Attack speed. default 0
  * @prop {number=} cspd - Cast speed. default 0
  * @prop {number=} atk - Attack. default 0
@@ -30,16 +31,22 @@ export class Item {
 	 * @param {TItemProps} p - Object that contains the properties to be set.
 	 */
 	constructor(p) {
+		/** @type {number} - DB row id (if item was loaded from DB) */
+		this._id = p?._id ?? 0
+		/** @type {number} - DB entity ID who owns the item (if item was loaded from DB) */
+		this._owner = p?._owner ?? 0
+
 		this.id = p?.id ?? 0
-		this.itemId = p?.itemId ?? 0
-		this.playerId = p?.playerId ?? 0
 		this.name = p?.name ?? "Unknown"
 		this.type = p?.type ?? ITEM_TYPE.ETC
 		this.amount = p?.amount ?? 1
+		/** @type {number} - Slot where it can be equipped */
+		this.slot = p?.slot ?? 0
+		/** @type {boolean} - Whether the item is currently equipped */
+		this.isEquipped = p?.isEquipped ?? false
+		this.dropChange = p?.dropChange ?? 0
 		this.buy = p?.buy ?? 0
 		this.sell = p?.sell ?? 0
-		this.slot = p?.slot ?? 0
-		this.dropChange = p?.dropChange ?? 0
 		// this.aspd = p?.aspd ?? 0
 		// this.cspd = p?.cspd ?? 0
 		// this.atk = p?.atk ?? 0

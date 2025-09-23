@@ -1,6 +1,6 @@
 import "./Chat.css"
 import { tags } from "./index.js"
-import { State } from "../State.js"
+import state from "../State.js"
 import { sendChat } from "../events/sendChat.js"
 import Observable from "../utils/Observable.js"
 
@@ -41,7 +41,7 @@ const createChannel = (channel = "default") => ul(
  * @param {string} channel
  * @returns
  */
-const createChannelItem = (channel = "default") => State.chat.value
+const createChannelItem = (channel = "default") => state.chat.value
 	.filter(p => p.channel === channel)
 	.map((p) => li(`${p.from}: ${p.message}`))
 
@@ -54,7 +54,7 @@ const logTab = createTab("log", "Logs")
 const logChannel = createChannel("log")
 
 // subscribe to chat changes for updates
-State.chat.subscribe((current) => {
+state.chat.subscribe((current) => {
 	console.log("[DEBUG] ChatUI: chat state updated", current)
 	defaultChannel.replaceChildren(...createChannelItem("default"))
 	logChannel.replaceChildren(...createChannelItem("log"))
@@ -221,7 +221,7 @@ function onsubmit(event) {
 	event.preventDefault()
 
 	// socket and player state exists
-	if (State.socket == null || State.player.value == null) return
+	if (state.socket == null || state.player.value == null) return
 
 	/** @type {HTMLFormElement|null} - chat form element **/
 	// @ts-ignore
@@ -249,9 +249,9 @@ function onsubmit(event) {
 	formElement.reset()
 
 	// send chat message
-	State.socket.send(sendChat(
+	state.socket.send(sendChat(
 		activeTab.value || "default",
-		State.player.value.name || "unknown",
+		state.player.value.name || "unknown",
 		"any", // TODO private chat, player name goes here
 		message
 	));

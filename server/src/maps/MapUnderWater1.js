@@ -5,6 +5,7 @@ import { EntityControl } from '../control/EntityControl.js'
 import createGameId from '../utils/createGameId.js'
 import createMonster from '../utils/createMonster.js'
 import { MOBS } from '../../../shared/data/MOBS.js'
+import { SPR_ID } from '../../../shared/enum/Sprite.js'
 
 // create map
 export default class MapUnderWater1 extends WorldMap {
@@ -12,6 +13,7 @@ export default class MapUnderWater1 extends WorldMap {
 	constructor(props = {}) {
 		super({
 			id: 4,
+			spriteId: SPR_ID.MAP_UNDER_WATER_1,
 			name: "Under water 1",
 			width: 2000,
 			height: 1400,

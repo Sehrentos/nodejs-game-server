@@ -1,11 +1,12 @@
 import "./Character.css"
 import { tags } from "./index.js"
-import { State } from "../State.js"
 import { Tabs, TabLinks, TabLink, TabContent } from "./Tabs.js"
 import AccordionUI from "./Accordion.js"
 import { EXP_BASE, EXP_JOB } from "../../../shared/Constants.js"
+import state from "../State.js"
+import Events from "../Events.js"
 
-const { div, header, details, summary, strong, span } = tags
+const { div, header, /*details, summary, */strong, span } = tags
 
 //#region Observable subsriptions containers
 // the contents of these containers will be updated
@@ -18,7 +19,7 @@ const tabDefence = TabContent()
 const tabStats = TabContent()
 const tabNetwork = TabContent()
 
-const inventoryList = div({ class: "equip" })
+// const inventoryList = div({ class: "equip" })
 //#endregion
 
 /**
@@ -45,17 +46,17 @@ export default function Character() {
 					tabStats,
 					tabNetwork
 				),
-				details(
-					summary("Inventory"),
-					inventoryList,
-				)
+				// details(
+				// 	summary("Inventory"),
+				// 	inventoryList,
+				// )
 			)
 		)
 	)
 }
 
 // subscribe to player changes for updates, when player data changes
-const unsubscribe = State.player.subscribe((player) => {
+const unsubscribe = state.player.subscribe((player) => {
 	if (player == null) return
 
 	// character name
@@ -143,13 +144,15 @@ const unsubscribe = State.player.subscribe((player) => {
 	))
 
 	// update inventory
-	inventoryList.replaceChildren(...(player.inventory || []).map((item, index) =>
-		div({ key: `${index}-${item.id}` }, `${index + 1}. ${item.name}`)
-	))
+	// updateInventoryItems()
+	// inventoryList.replaceChildren(...(player.inventory || []).map((item, index) =>
+	// 	div({ key: `${index}-${item.id}` }, `${index + 1}. ${item.name}`)
+	// ))
 })
 
 // listen for ui update events
-State.events.on("ui-character-toggle", onUiCharacterToggle)
+Events.on("ui-character-toggle", onUiCharacterToggle)
+// Events.on("ui-inventory", updateInventoryItems)
 
 /**
  * handle the custom "ui-character" event to toggle the character UI.
@@ -159,5 +162,35 @@ function onUiCharacterToggle(data) {
 	// console.log("[DEBUG] CharacterUI: onUiCharacterToggle", data)
 	document.querySelector(".ui-character")?.classList?.toggle("open")
 }
+
+// /**
+//  * update the inventory list
+//  */
+// function updateInventoryItems() {
+// 	const inventory = State.player.value?.inventory ?? []
+// 	// create list items
+// 	// group together same items and show amount
+// 	// e.g. Potion (x10) - Sell: 50z
+// 	//  or add a input number field to select amount to sell
+// 	const groupList = {}
+// 	inventory.forEach(item => {
+// 		if (groupList[item.id]) {
+// 			groupList[item.id].amount++
+// 		} else {
+// 			groupList[item.id] = { ...item, amount: 1 }
+// 		}
+// 	})
+// 	console.log(`[DEBUG] CharacterUI: updateInventoryItems`, groupList)
+// 	// sort by name
+// 	inventoryList.replaceChildren(
+// 		...Object.values(groupList).sort((a, b) => {
+// 			if (a.name < b.name) return -1
+// 			if (a.name > b.name) return 1
+// 			return 0
+// 		}).map(item => {
+// 			return div(`${item.name} (x${item.amount})`)
+// 		})
+// 	)
+// }
 
 export { Character, unsubscribe }

@@ -1,5 +1,5 @@
 import { tags } from "./index.js"
-import { State } from "../State.js"
+import state from "../State.js"
 import DialogUI from "./Dialog.js"
 
 const { h1, p, button } = tags
@@ -11,7 +11,7 @@ const { h1, p, button } = tags
 export default function DialogConnectionClosed() {
 	return DialogUI({
 		id: "socket-connection",
-		isVisible: State.socket != null && State.socket.readyState === WebSocket.CLOSED,
+		isVisible: state.socket != null && state.socket.readyState === WebSocket.CLOSED,
 		isBackdropVisible: true,
 		isBackdropClose: false
 	},

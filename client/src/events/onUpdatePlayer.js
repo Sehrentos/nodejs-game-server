@@ -1,5 +1,5 @@
 import { Entity } from "../../../shared/models/Entity.js";
-import { State } from "../State.js";
+import state from "../State.js";
 
 /**
  * Handles player updates received from the server.
@@ -13,23 +13,11 @@ import { State } from "../State.js";
  * @param {import("../../../server/src/events/sendPlayer.js").TPlayerPacket} data - The player packet from the server.
  */
 export function onUpdatePlayer(socket, data) {
-	const player = data.player;
-	// console.log("Player:", player);
-	// update player state
-	if (State.player.value instanceof Entity) {
-		// Object.assign(State.player, player) // naive approach
-		State.player.set((current) => {
-			if (current == null) return current
-			current = Object.assign({}, current, player)
-			return current
-		})
-	} else {
-		State.player.set(new Entity(player));
+	// update player state or merge existing data
+	if (state.player.value instanceof Entity) {
+		state.player.set((player) => Object.assign(player, data.player));
+		return
 	}
-
-	// update CharacterUI
-	// note: no need to emit custom event, CharacterUI already subscribes to State.player
-	// State.events.emit("ui-character", player);
-
-	// Note: next canvas render cycle will update the game view
+	// instantiate the player entity
+	state.player.set(new Entity(data.player));
 }

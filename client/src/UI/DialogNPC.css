@@ -21,3 +21,32 @@
 .ui-dialog-npc article:first-child {
 	display: block;
 }
+
+/* Sell list as grid */
+.ui-dialog-npc .sell-list-items {
+	list-style: none;
+	display: grid;
+	grid-template-columns: 1fr 1fr 1fr;
+	padding: 0;
+	margin: 0.5em 0;
+	gap: 0.25em;
+}
+
+.ui-dialog-npc .sell-list-items li {
+	border: 1px solid #dddddd;
+	border-radius: 0.25em;
+	padding: 0.25em;
+	cursor: pointer;
+	background-color: #ffffff;
+	transition: background-color 0.2s ease-in-out;
+}
+
+.ui-dialog-npc .sell-list-items li:hover,
+.ui-dialog-npc .sell-list-items li:active {
+	background-color: #80fc7075;
+}
+
+.ui-dialog-npc .sell-list-items li .selected-item-amount {
+	font-size: 80%;
+	color: #777777;
+}

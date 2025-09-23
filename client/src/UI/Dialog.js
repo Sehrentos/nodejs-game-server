@@ -1,6 +1,6 @@
 import "./Dialog.css"
 import { tags } from "./index.js"
-import { State } from "../State.js"
+import Events from "../Events.js"
 
 const { div } = tags
 
@@ -56,9 +56,9 @@ export default function DialogUI(props = {}, ...children) {
 	}
 
 	// listen for event to toggle visibility
-	// State.events.emit("ui-dialog-toggle", { id: "myDialogId" });
-	State.events.off("ui-dialog-toggle", toggle); // prevent duplicate listeners
-	State.events.on("ui-dialog-toggle", toggle);
+	// Events.emit("ui-dialog-toggle", { id: "myDialogId" });
+	Events.off("ui-dialog-toggle", toggle); // prevent duplicate listeners
+	Events.on("ui-dialog-toggle", toggle);
 
 	if (isBackdropVisible) {
 		return div({

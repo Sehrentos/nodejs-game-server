@@ -1,4 +1,40 @@
 // database class for controlling players
+const DB_CREATE = `CREATE TABLE IF NOT EXISTS \`player\` (
+  \`id\` int(11) unsigned NOT NULL auto_increment,
+  \`account_id\` int(11) unsigned NOT NULL default '0',
+  \`sprite_id\` int(11) unsigned NOT NULL default '0',
+  \`name\` varchar(30) NOT NULL DEFAULT '',
+  \`base_level\` smallint(6) unsigned NOT NULL default '1',
+  \`base_exp\` int(11) unsigned NOT NULL default '0',
+  \`job\` smallint(6) unsigned NOT NULL default '0',
+  \`job_level\` smallint(6) unsigned NOT NULL default '1',
+  \`job_exp\` int(11) unsigned NOT NULL default '0',
+  \`money\` int(11) unsigned NOT NULL default '0',
+  \`str\` smallint(4) unsigned NOT NULL default '0',
+  \`agi\` smallint(4) unsigned NOT NULL default '0',
+  \`vit\` smallint(4) unsigned NOT NULL default '0',
+  \`int\` smallint(4) unsigned NOT NULL default '0',
+  \`dex\` smallint(4) unsigned NOT NULL default '0',
+  \`luk\` smallint(4) unsigned NOT NULL default '0',
+  \`hp\` int(11) unsigned NOT NULL default '0',
+  \`hp_max\` int(11) unsigned NOT NULL default '0',
+  \`mp\` int(11) unsigned NOT NULL default '0',
+  \`mp_max\` int(11) unsigned NOT NULL default '0',
+  \`party_id\` int(11) unsigned NOT NULL default '0',
+  \`last_map\` varchar(50) NOT NULL default '',
+  \`last_x\` smallint(4) unsigned NOT NULL default '0',
+  \`last_y\` smallint(4) unsigned NOT NULL default '0',
+  \`save_map\` varchar(50) NOT NULL default '',
+  \`save_x\` smallint(4) unsigned NOT NULL default '0',
+  \`save_y\` smallint(4) unsigned NOT NULL default '0',
+  \`sex\` smallint(1) unsigned NOT NULL default '0',
+  \`last_login\` datetime DEFAULT NULL,
+  PRIMARY KEY  (\`id\`),
+  UNIQUE KEY \`name_key\` (\`name\`),
+  KEY \`account_id\` (\`account_id\`),
+  KEY \`party_id\` (\`party_id\`)
+) AUTO_INCREMENT=1;`;
+
 export class TablePlayer {
 	/**
 	 * @constructor
@@ -7,6 +43,18 @@ export class TablePlayer {
 	constructor(db) {
 		/** @type {import("./Database.js").Database} */
 		this.db = db
+
+		// create the database
+		this.create();
+	}
+
+	/**
+	 * Creates the table in the database if it doesn't already exist.
+	 *
+	 * @returns {Promise<import("./Database.js").TQueryResult>} - The result of the create query
+	 */
+	create() {
+		return this.db.query(DB_CREATE);
 	}
 
 	/**
@@ -19,7 +67,8 @@ export class TablePlayer {
 		// map player object to database columns
 		const params = {
 			// aid string can be number or bigint in the database
-			account_id: Number(player.aid),
+			account_id: player.aid,
+			sprite_id: player.spriteId,
 			name: player.name,
 			base_level: player.level,
 			job_level: player.jobLevel,
@@ -63,6 +112,7 @@ export class TablePlayer {
 	update(player) {
 		// map player object to database columns
 		const params = {
+			sprite_id: player.spriteId,
 			name: player.name,
 			base_level: player.level,
 			job_level: player.jobLevel,
@@ -115,6 +165,7 @@ export class TablePlayer {
 				// Note: id | account_id can be number or bigint (MariaDB int(11) auto_increment)
 				id: Number(row.id),
 				aid: Number(row.account_id),
+				spriteId: Number(row.sprite_id),
 				name: row.name,
 				level: row.base_level,
 				jobLevel: row.job_level,
@@ -164,5 +215,13 @@ export class TablePlayer {
 		// trim name to 30, if too long
 		if (name.length > 30) name = name.slice(0, 30)
 		return this.db.query(`UPDATE player SET name=? WHERE id=?`, [name, id])
+	}
+
+	/**
+	 * Drop the table, removing all associated data.
+	 * @returns {Promise<import("./Database.js").TQueryResult>} - The result of the drop query
+	 */
+	drop() {
+		return this.db.query(`DROP TABLE IF EXISTS player`)
 	}
 }

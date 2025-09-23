@@ -1,5 +1,4 @@
 import { SOCKET_URL } from "../Settings.js";
-import { State } from "../State.js"
 import { onPing } from "../events/onPing.js";
 import { onUpdatePlayer } from "../events/onUpdatePlayer.js";
 import { onUpdateMap } from "../events/onUpdateMap.js";
@@ -9,13 +8,23 @@ import { onRateLimit } from "../events/onRateLimit.js";
 import { onPlayerLeave } from "../events/onPlayerLeave.js";
 import { onItemsReceived } from "../events/onItemsReceived.js";
 import { onSkillUse } from "../events/onSkillUse.js";
+import Events from "../Events.js";
 
 /**
  * @class SocketControl
  * @description Handles WebSocket controls
  */
 export default class SocketControl {
-	constructor(jwtToken = "") {
+	/**
+	 * @param {import("../State.js").State} state
+	 * @param {import("../Auth.js").Auth} auth
+	 */
+	constructor(state, auth) {
+		/** @type {import("../State.js").State} */
+		this.state = state
+		/** @type {import("../Auth.js").Auth} */
+		this.auth = auth
+
 		// binds methods to the `this` context
 		this._onSocketOpen = this.onSocketOpen.bind(this)
 		this._onSocketClose = this.onSocketClose.bind(this)
@@ -23,7 +32,7 @@ export default class SocketControl {
 		this._onSocketMessage = this.onSocketMessage.bind(this)
 
 		this._socket = new WebSocket(SOCKET_URL, [
-			"ws", "wss", `Bearer.${jwtToken}`
+			"ws", "wss", `Bearer.${auth.jwtToken.value}`
 		]);
 
 		this._socket.onopen = this._onSocketOpen
@@ -36,7 +45,7 @@ export default class SocketControl {
 
 		// update chat list, the UI might not be ready yet
 		// set chat message directly
-		State.chat.set((current) => ([...current, {
+		this.state.chat.set((current) => ([...current, {
 			type: "chat",
 			channel: "log",
 			from: "client",
@@ -44,7 +53,7 @@ export default class SocketControl {
 			message: "Socket connecting",
 			timestamp: Date.now(),
 		}]));
-		console.log('SocketControl initialized.', State.chat.value);
+		console.log('SocketControl initialized.', this.state.chat.value);
 	}
 
 	// #region getters
@@ -108,9 +117,8 @@ export default class SocketControl {
 			message: "Socket connected",
 			timestamp: Date.now(),
 		}
-		// State.events.emit("ui-chat", chatParams);
 		// update chat state
-		State.chat.set((current) => ([...current, chatParams]))
+		this.state.chat.set((current) => ([...current, chatParams]))
 	}
 
 	/**
@@ -130,9 +138,9 @@ export default class SocketControl {
 			message: "Socket error in connection establishment",
 			timestamp: Date.now(),
 		}
-		// State.events.emit("ui-chat", chatParams);
+		// Events.emit("ui-chat", chatParams);
 		// update chat state
-		State.chat.set((current) => ([...current, chatParams]))
+		this.state.chat.set((current) => ([...current, chatParams]))
 	}
 
 	/**
@@ -152,11 +160,11 @@ export default class SocketControl {
 			message: "Socket closed",
 			timestamp: Date.now(),
 		}
-		// State.events.emit("ui-chat", chatParams);
+		// Events.emit("ui-chat", chatParams);
 		// update chat state
-		State.chat.set((current) => ([...current, chatParams]))
+		this.state.chat.set((current) => ([...current, chatParams]))
 
-		State.events.emit("ui-dialog-toggle", { id: "socket-connection" })
+		Events.emit("ui-dialog-toggle", { id: "socket-connection" })
 	}
 
 	/**
@@ -221,74 +229,68 @@ export default class SocketControl {
 			// Message is non-binary data
 
 			// Check if the received data is a string
-			if (typeof event.data === "string") {
-				///** @type {{type?: string, [key: string]: any}} */
-				const data = JSON.parse(event.data);
+			if (typeof event.data !== "string") return
 
-				if (!data.type) {
-					console.log("[SocketControl]: Message has no type");
-					return;
-				}
+			// parse JSON sent from the server
+			const data = JSON.parse(event.data);
 
-				switch (data.type) {
-					// heartbeat (ping/pong) for latency measurement
-					case "ping":
-						onPing(this, data);
-						break;
+			if (!data.type) {
+				console.log("[SocketControl]: Message has no type");
+				return;
+			}
 
-					// rate limiter client send too many messages in short time
-					case "rate-limit":
-						onRateLimit(this, data);
-						break;
+			switch (data.type) {
+				// heartbeat (ping/pong) for latency measurement
+				case "ping":
+					onPing(this, data);
+					break;
 
-					// update player
-					case "player":
-						onUpdatePlayer(this, data);
-						break;
+				// rate limiter client send too many messages in short time
+				case "rate-limit":
+					onRateLimit(this, data);
+					break;
 
-					// update map
-					case "map":
-						onUpdateMap(this, data);
-						break;
+				// update player state (all or specific properties)
+				case "player":
+					onUpdatePlayer(this, data);
+					break;
 
-					// chat controls
-					case "chat":
-						onChat(this, data);
-						break;
+				// update map
+				case "map":
+					onUpdateMap(this, data);
+					break;
 
-					// NPC dialog controls
-					case "npc-dialog":
-					case "npc-dialog-open":
-						onDialog(this, data);
-						break;
+				// chat controls
+				case "chat":
+					onChat(this, data);
+					break;
 
-					// optional
-					case "player-leave":
-						onPlayerLeave(this, data);
-						break;
+				// NPC dialog controls
+				case "npc-dialog":
+				case "npc-dialog-open":
+					onDialog(this, data);
+					break;
 
-					// receive items
-					case "items-received":
-						onItemsReceived(this, data);
-						break;
+				// optional
+				case "player-leave":
+					onPlayerLeave(this, data);
+					break;
 
-					// receive skill
-					case "skill":
-						onSkillUse(this, data);
-						break;
+				// receive items
+				case "items-received":
+					onItemsReceived(this, data);
+					break;
 
-					default:
-						console.log("[SocketControl]: Unknown message:", data);
-				}
+				// receive skill
+				case "skill":
+					onSkillUse(this, data);
+					break;
+
+				default:
+					console.log("[SocketControl]: Unknown message:", data);
 			}
 		} catch (error) {
 			console.error("Error parsing socket message:", error);
 		}
 	}
-
-	// TODO does the updatePlayer handler need to be splitted into multiple handlers?
-	//   whould it be better?
-	//   skills, equipment, inventory, quests for example, does not need to be updated so frequently.
-	// TODO implement player stats update handler, for more frequent updates
-
 }

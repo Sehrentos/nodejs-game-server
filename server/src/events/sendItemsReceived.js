@@ -1,7 +1,7 @@
 /**
  * Creates a items received packet.
  *
- * @param {import("../../../shared/models/Item.js").Item[]} items - The items.
+ * @param {import("../../../shared/models/Item.js").TItemProps[]} items - The items.
  * @returns {string} The JSON stringified packet.
  *
  * @typedef {Object} TItemsReceivedPacket - Items received packet sent from the server

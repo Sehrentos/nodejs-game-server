@@ -22,7 +22,7 @@ export const COOLDOWN_SOCKET_SEND_MAP = 60
 /**
  * The update frequency in milliseconds for the server to send player entity updates to the client.
  */
-export const COOLDOWN_SOCKET_SEND_PLAYER = 5000
+export const COOLDOWN_SOCKET_SEND_PLAYER = 10000
 /**
  * Cooldown time in milliseconds for the player to use a portal again.
  */
@@ -37,8 +37,8 @@ export const ENTITY_AUTO_REVIVE_TIME = 5 * 60 * 1000 // 5 minutes
  */
 export const ENTITY_AI_IDDLE_TIME = 5000 // 5 seconds
 /**
- * **Monster** The max distance in pixels from 
- * the original position that the entity can move. 
+ * **Monster** The max distance in pixels from
+ * the original position that the entity can move.
  * While idle.
  */
 export const ENTITY_AI_IDDLE_MOVE_MAX = 30 // pixels
@@ -73,10 +73,10 @@ export const PLAYER_TOUCH_AREA_SIZE = 25
  * --
  * The view area size (in pixels) to find entities.
  * Only the found entities will be sent to the client.
- * 
- * This will limit how far the player can see entities 
+ *
+ * This will limit how far the player can see entities
  * and how much data is sent to the client on each update/tick.
- * 
+ *
  * Use `0` for no limit.
  */
 export const PLAYER_VIEW_AREA_SIZE = 600

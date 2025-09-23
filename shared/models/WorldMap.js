@@ -2,6 +2,7 @@
  * @typedef {Object} TWorldMapProps
  * @prop {import("../../server/src/World.js").World=} world - **Server** world instance.
  * @prop {number=} id - The id of the map.
+ * @prop {number=} spriteId - The sprite ID of the map.
  * @prop {string=} name - The name of the map.
  * @prop {number=} width - The width of the map.
  * @prop {number=} height - The height of the map.
@@ -27,6 +28,8 @@ export class WorldMap {
 		this.world = p?.world ?? null
 		/** @type {number} */
 		this.id = p?.id ?? 0
+		/** @type {number} */
+		this.spriteId = p?.spriteId ?? 0
 		/** @type {string} */
 		this.name = p?.name ?? ""
 		/** @type {number} */

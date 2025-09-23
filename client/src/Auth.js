@@ -3,9 +3,11 @@ import Observable from "./utils/Observable.js";
 /**
  * Authentication module to handle user login, registration, and token management.
  */
-export const Auth = {
-	isLoggedIn: new Observable(false),
-	jwtToken: new Observable(localStorage.getItem("token") || ""),
+export class Auth {
+	constructor() {
+		this.isLoggedIn = new Observable(false)
+		this.jwtToken = new Observable(localStorage.getItem("token") || "")
+	}
 
 	/**
 	 * Logs into the game server with the given username and password.
@@ -17,8 +19,8 @@ export const Auth = {
 	 * @throws {Error} If the game is already running or if the login fails.
 	 * @returns {Promise<boolean>} - True if the login was successful, false otherwise.
 	 */
-	login: async (username = "", password = "", saveCredentials = false) => {
-		if (Auth.isLoggedIn.value) {
+	async login(username = "", password = "", saveCredentials = false) {
+		if (this.isLoggedIn.value) {
 			throw new Error("Already logged in.");
 		}
 		// sent the POST /login request,
@@ -44,10 +46,10 @@ export const Auth = {
 			localStorage.removeItem("token")
 		}
 
-		Auth.jwtToken.set(data.token)
-		Auth.isLoggedIn.set(true)
+		this.jwtToken.set(data.token)
+		this.isLoggedIn.set(true)
 		return true
-	},
+	}
 
 	/**
 	 * Logs into the game server with the given JWT token.
@@ -58,8 +60,8 @@ export const Auth = {
 	 * @throws {Error} If the game is already running or if the login fails.
 	 * @returns {Promise<boolean>} - True if the login was successful, false otherwise.
 	 */
-	loginToken: async (token = "", saveCredentials = false) => {
-		if (Auth.isLoggedIn.value) {
+	async loginToken(token = "", saveCredentials = false) {
+		if (this.isLoggedIn.value) {
 			throw new Error("Already logged in.");
 		}
 		// sent the POST /login/token request,
@@ -89,10 +91,10 @@ export const Auth = {
 			localStorage.removeItem("token")
 		}
 
-		Auth.jwtToken.set(data.token)
-		Auth.isLoggedIn.set(true)
+		this.jwtToken.set(data.token)
+		this.isLoggedIn.set(true)
 		return true
-	},
+	}
 
 	/**
 	 * Registers a new user with the given username, password and email.
@@ -104,8 +106,8 @@ export const Auth = {
 	 * @throws {Error} If the game is already running or if the registration fails.
 	 * @returns {Promise<boolean>} - True if the registration was successful, false otherwise.
 	 */
-	register: async (username = "", password = "", email = "", saveCredentials = false) => {
-		if (Auth.isLoggedIn.value) {
+	async register(username = "", password = "", email = "", saveCredentials = false) {
+		if (this.isLoggedIn.value) {
 			throw new Error("Already logged in.");
 		}
 		// sent the POST /register request,
@@ -131,17 +133,23 @@ export const Auth = {
 			localStorage.removeItem("token")
 		}
 
-		Auth.jwtToken.set(data.token)
-		Auth.isLoggedIn.set(true)
+		this.jwtToken.set(data.token)
+		this.isLoggedIn.set(true)
 		return true
-	},
+	}
 
 	/**
 	 * Clears the JWT token and sets the logged in state to false.
 	 */
-	reset: () => {
+	reset() {
 		localStorage.removeItem("token")
-		Auth.jwtToken.set("")
-		Auth.isLoggedIn.set(false)
+		this.jwtToken.set("")
+		this.isLoggedIn.set(false)
 	}
 }
+
+/**
+ * Singleton instance of the Auth class.
+ */
+const auth = new Auth()
+export default auth

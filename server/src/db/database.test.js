@@ -7,9 +7,9 @@ import { Database } from "./Database.js";
 
     const db = new Database();
 
-    let conn;
+    // let conn;
     try {
-        conn = await db.connect();
+        // conn = await db.connect();
         const res = await db.query("SELECT username from account");
         console.log('query:', res);
 
@@ -27,9 +27,9 @@ import { Database } from "./Database.js";
 
     } catch (err) {
         console.log(err);
-    } finally {
+    }/* finally {
         if (conn) conn.end();
-    }
+    }*/
 
     db.close();
 

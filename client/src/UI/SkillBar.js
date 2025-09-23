@@ -1,9 +1,10 @@
 import "./SkillBar.css"
 import { tags } from "./index.js"
-import { State } from "../State.js"
+import state from "../State.js"
 import { sendSkill } from "../events/sendSkill.js"
 import { SKILL_ID, SKILL_STATE } from "../../../shared/enum/Skill.js"
 import { SKILL, STATE } from "../../../shared/data/SKILL.js"
+import Events from "../Events.js"
 
 const { div, button } = tags
 
@@ -21,11 +22,11 @@ let toggleSkillBarButtonTimer = null
  * An `.ui-skill-bar` component
  */
 export default function SkillBarUI() {
-	State.events.off("ui-skill-bar", onDOMUpdate)
-	State.events.on("ui-skill-bar", onDOMUpdate)
+	Events.off("ui-skill-bar", onDOMUpdate)
+	Events.on("ui-skill-bar", onDOMUpdate)
 
 	// update skillbar data from player state
-	const unsubscribe = State.player.subscribe((player) => {
+	const unsubscribe = state.player.subscribe((player) => {
 		if (!player) return
 		update()
 		unsubscribe()
@@ -47,14 +48,14 @@ function update() {
 	ui.replaceChildren(...skillList.map((id) => button({
 		id: `skill-id-${id}`,
 		onclick: () => {
-			State.socket?.send(sendSkill(id))
+			state.socket?.send(sendSkill(id))
 			toggleSkillBarButton(id, "active")
 		},
 		title: SKILL[id].desc,
 	}, SKILL[id].name)),
 		/** open skill tree button */
 		button({
-			onclick: () => State.events.emit("ui-skill-tree-toggle", {
+			onclick: () => Events.emit("ui-skill-tree-toggle", {
 				source: "skillbar"
 			})
 		}, "⁝⁝⁝")

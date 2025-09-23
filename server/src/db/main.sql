@@ -85,6 +85,7 @@ CREATE TABLE IF NOT EXISTS `inventory` (
   `player_id` int(11) unsigned NOT NULL default '0',
   `amount` smallint(4) unsigned NOT NULL default '0',
   `slot` smallint(4) unsigned NOT NULL default '0',
+  `is_equipped` tinyint(1) unsigned NOT NULL default '0',
   PRIMARY KEY  (`id`),
   KEY `player_id` (`player_id`),
   KEY `item_id` (`item_id`)

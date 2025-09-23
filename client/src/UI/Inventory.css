@@ -1,0 +1,39 @@
+.ui-inventory header {
+	border-bottom: 1px solid #cccccc;
+}
+
+.ui-inventory ul {
+	list-style: none;
+	display: grid;
+	grid-template-columns: 1fr 1fr 1fr;
+	padding: 0;
+	margin: 0.5em 0;
+	gap: 0.25em;
+	overflow: auto;
+	max-height: 70vh;
+}
+
+.ui-inventory ul li {
+	border: 1px solid #dddddd;
+	border-radius: 0.25em;
+	padding: 0.25em;
+	cursor: pointer;
+	background-color: #ffffff;
+	transition: background-color 0.2s ease-in-out;
+}
+
+.ui-inventory ul li:hover,
+.ui-inventory ul li:active {
+	background-color: #80fc7075;
+}
+
+.ui-inventory ul li .item-amount {
+	font-size: 80%;
+	color: #777777;
+}
+
+.ui-inventory ul li.no-items {
+	text-align: center;
+	color: #777777;
+	grid-column: 1 / -1;
+}

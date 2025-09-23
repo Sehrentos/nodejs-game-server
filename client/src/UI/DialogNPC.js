@@ -1,9 +1,10 @@
 import "./DialogNPC.css"
 import { tags } from "./index.js"
-import { State } from "../State.js"
+import state from "../State.js"
 import { sendDialog } from "../events/sendDialog.js"
+import Events from "../Events.js"
 
-const { div } = tags
+const { div, li } = tags
 
 /**
  * Dialog container element (draggable)
@@ -25,11 +26,11 @@ export default function DialogNPC() {
 	ui.addEventListener("click", onclick, false)
 
 	// bind data listeners
-	// State.events.emit("ui-dialog-npc-toggle");
-	State.events.off("ui-dialog-npc-open", onDOMDialogUpdate)
-	State.events.on("ui-dialog-npc-open", onDOMDialogUpdate)
-	State.events.off("ui-dialog-npc-toggle", toggle)
-	State.events.on("ui-dialog-npc-toggle", toggle)
+	// Events.emit("ui-dialog-npc-toggle");
+	Events.off("ui-dialog-npc-open", onDOMDialogUpdate)
+	Events.on("ui-dialog-npc-open", onDOMDialogUpdate)
+	Events.off("ui-dialog-npc-toggle", toggle)
+	Events.on("ui-dialog-npc-toggle", toggle)
 
 	return ui
 }
@@ -84,9 +85,15 @@ function onclick(event) {
 		return
 	}
 
-	// find the accept button
-	if (target.closest("button.accept")) {
-		accept()
+	// find the accept-sell-all button
+	if (target.closest("button.accept-sell-all")) {
+		acceptSellAll()
+		return
+	}
+
+	// find the sell button
+	if (target.closest("button.sell")) {
+		onSellButtonClick()
 		return
 	}
 }
@@ -95,7 +102,7 @@ function onclick(event) {
  * toggles the visibility of the next article element
  */
 function showNextArticle() {
-	if (!State.player.value || !State.socket) return
+	if (!state.player.value || !state.socket) return
 	const articles = ui.querySelectorAll("article")
 	if (currentArticle >= articles.length) {
 		currentArticle = articles.length - 1
@@ -113,14 +120,137 @@ function showNextArticle() {
 
 	// send a "next" message to the server if it's open
 	// this will tell server that the dialog is changing
-	State.socket.send(sendDialog("next", gid, State.player.value.gid))
+	state.socket.send(sendDialog("next", gid, state.player.value.gid))
+
+	// Shop UI check existence of button.sell-list-items
+	// if exists, populate it with sellable items from inventory
+	const listItems = articles[currentArticle].querySelector("ul.sell-list-items")
+	if (listItems != null) {
+		//@ts-ignore
+		updateSellListItems(listItems)
+	}
+}
+
+/**
+ * populate article UI with sellable items from entity.inventory
+ *
+ * @param {HTMLUListElement} listElement - the ul.sell-list-items element to populate
+ */
+function updateSellListItems(listElement) {
+	const player = state.player.value
+
+	// clear existing items
+	// listElement.innerHTML = ""
+
+	// get all sellable items
+	const items = player.inventory.filter(item => {
+		// only sell items that have a sell price
+		if (item.sell <= 0) return false
+		// only sell unequipped items
+		if (item.isEquipped) return false
+		return true
+	})
+
+	if (items.length === 0) {
+		listElement.innerHTML = "<li>No items to sell</li>"
+		return
+	}
+
+	// sort by name
+	listElement.replaceChildren(
+		...items.map(item => {
+			return li(`${item.name} (x${item.amount}) - Sell: ${item.sell}z`, {
+				/** click to select items to sell */
+				onclick: (e) => {
+					/** @type {HTMLLIElement|null} */
+					//@ts-ignore
+					const _li = e.target.closest("li")
+					if (_li == null) return
+					/** @type {HTMLSpanElement|null} */
+					const currentSelectedAmount = _li.querySelector(".selected-item-amount")
+					if (currentSelectedAmount) {
+						let selectedAmount = parseInt(currentSelectedAmount.dataset.selectedItemAmount || "0", 10)
+						if (selectedAmount >= item.amount) return
+						selectedAmount++
+						currentSelectedAmount.dataset.selectedItemId = item.id.toString()
+						currentSelectedAmount.dataset.selectedItemAmount = selectedAmount.toString()
+						currentSelectedAmount.textContent = `Sell amount: ${selectedAmount}`
+					}
+				},
+				/** right click to cancel selection */
+				oncontextmenu: onDecreaseSelectedItemAmount,
+				// ondblclick: onDecreaseSelectedItemAmount,
+			}, div({ class: "selected-item-amount" }, "Sell amount: 0"))
+		})
+	)
+
+	// listElement.replaceChildren(...items.map(item =>
+	// 	li(`${item.name} (x${item.amount}) - Sell: ${item.sell}z`)
+	// ))
+}
+
+/**
+ * Handler for decreasing the selected item amount on right-click or double-click.
+ * @param {Event} e
+ */
+function onDecreaseSelectedItemAmount(e) {
+	e.preventDefault()
+	/** @type {HTMLLIElement|null} */
+	//@ts-ignore
+	const _li = e.target.closest("li")
+	if (_li == null) return
+	/** @type {HTMLSpanElement|null} */
+	const currentSelectedAmount = _li.querySelector(".selected-item-amount")
+	if (currentSelectedAmount) {
+		let selectedAmount = parseInt(currentSelectedAmount.dataset.selectedItemAmount || "0", 10)
+		if (selectedAmount) {
+			selectedAmount--
+			currentSelectedAmount.dataset.selectedItemAmount = selectedAmount.toString()
+			currentSelectedAmount.textContent = `Sell amount: ${selectedAmount}`
+		}
+	}
+}
+
+/**
+ * Handler for the sell button click event.
+ * Get selected items and their amounts from the UI
+ * and send the sell request to the server.
+ */
+function onSellButtonClick() {
+	const articles = ui.querySelectorAll("article")
+	if (currentArticle >= articles.length) return
+	const listItems = articles[currentArticle].querySelectorAll("ul.sell-list-items li")
+	if (listItems.length === 0) return
+
+	/** @type {{id: number, amount: number}[]} - selected items and their amounts */
+	const selectedItems = []
+	for (const _li of listItems) {
+		/** @type {HTMLSpanElement|null} */
+		const currentSelectedAmount = _li.querySelector(".selected-item-amount")
+		if (currentSelectedAmount) {
+			const selectedItemId = parseInt(currentSelectedAmount.dataset.selectedItemId, 10)
+			const selectedItemAmount = parseInt(currentSelectedAmount.dataset.selectedItemAmount || "0", 10)
+			if (selectedItemAmount > 0) {
+				selectedItems.push({ id: selectedItemId, amount: selectedItemAmount })
+			}
+		}
+	}
+
+	// send a "sell" message to the server if it's open
+	// this will tell server that the dialog is accepted and will be closed
+	// and user can interact with other things or move
+	state.socket.send(sendDialog("sell", gid, state.player.value.gid, {
+		sellItems: selectedItems
+	}))
+
+	close()
 }
 
 /**
  * Close UI and send close ACT
  */
 function close() {
-	if (!State.player.value || !State.socket) return
+	if (!state.player.value || !state.socket) return
 	toggle()
 	currentArticle = 0
 	ui.innerHTML = ""
@@ -132,22 +262,20 @@ function close() {
 	// send a "close" message to the server if it's open
 	// this will tell server that the dialog is closed
 	// and user can interact with other things or move
-	State.socket.send(sendDialog("close", gid, State.player.value.gid))
+	state.socket.send(sendDialog("close", gid, state.player.value.gid))
 }
 
 /**
  * Accept and send sell all ACT
  */
-function accept() {
-	if (!State.player.value || !State.socket) return
+function acceptSellAll() {
+	if (!state.player.value || !state.socket) return
 	close()
-
-	// TODO only sell selected items from inventory (UI)
 
 	// send a "accept" message to the server if it's open
 	// this will tell server that the dialog is accepted and will be closed
 	// and user can interact with other things or move
-	State.socket.send(sendDialog("accept-sell-all", gid, State.player.value.gid))
+	state.socket.send(sendDialog("accept-sell-all", gid, state.player.value.gid))
 }
 
 /**
@@ -158,7 +286,7 @@ function accept() {
  * @param {import("../../../server/src/events/sendDialog.js").TDialogPacket} data - The dialog packet from the server.
  */
 function onDOMDialogUpdate(data) {
-	if (!State.player.value || !State.socket) return
+	if (!state.player.value || !state.socket) return
 	gid = data.gid || ""
 	setContent(data.dialog || "")
 	toggle(true)
@@ -166,7 +294,5 @@ function onDOMDialogUpdate(data) {
 
 	// send a "open" message to the server if it's open
 	// this will tell server that the dialog is opened
-	State.socket.send(sendDialog("open", gid, State.player.value.gid))
-
-
+	state.socket.send(sendDialog("open", gid, state.player.value.gid))
 }

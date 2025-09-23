@@ -1,4 +1,4 @@
-import { State } from "../State.js";
+import state from "../State.js";
 
 /**
  * Handles chat updates received from the server.
@@ -11,7 +11,7 @@ import { State } from "../State.js";
 export function onChat(socket, data) {
 	// console.log("Chat:", data);
 	// update chat state
-	State.chat.set((current) => ([...current, {
+	state.chat.set((current) => ([...current, {
 		...data,
 		timestamp: Date.now()
 	}]))

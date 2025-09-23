@@ -5,6 +5,7 @@ import { EntityControl } from '../control/EntityControl.js'
 import { ENTITY_TYPE } from '../../../shared/enum/Entity.js'
 import createGameId from '../utils/createGameId.js'
 import createMonster from '../utils/createMonster.js'
+import { SPR_ID } from '../../../shared/enum/Sprite.js'
 
 // create map
 export default class MapPlainFields1 extends WorldMap {
@@ -12,6 +13,7 @@ export default class MapPlainFields1 extends WorldMap {
 	constructor(props = {}) {
 		super({
 			id: 6,
+			spriteId: SPR_ID.MAP_PLAIN_FIELDS_1,
 			name: "Plain fields 1",
 			width: 1200,
 			height: 800,

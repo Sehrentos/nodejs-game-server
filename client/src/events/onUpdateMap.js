@@ -1,5 +1,5 @@
 import { WorldMap } from "../../../shared/models/WorldMap.js"
-import { State } from "../State.js"
+import state from "../State.js"
 
 /**
  * Called when the server sends a map update.
@@ -13,24 +13,19 @@ import { State } from "../State.js"
  * @param {import("../../../server/src/events/sendMap.js").TMapPacket} data - The map packet from the server.
  */
 export function onUpdateMap(socket, data) {
-	const map = data.map;
 	// update map state or create new map
-	if (State.map.value instanceof WorldMap) {
-		// Object.assign(State.map, map) // naive approach
-		State.map.set((current) => {
-			if (current == null) return current
-			current = Object.assign({}, current, map)
-			return current
-		})
+	if (state.map.value instanceof WorldMap) {
+		state.map.set((wmap) => Object.assign(wmap, data.map))
 	} else {
-		State.map.set(new WorldMap(map))
+		state.map.set(new WorldMap(data.map))
 	}
 
+	// TODO these can be removed, when client-side prediction is done (PlayerControl)
 	// also update player position
-	const player = State.player.value
+	const player = state.player.value
 	if (player == null) return
 
-	const entity = State.map.value?.entities.find(e => e.gid === player.gid)
+	const entity = state.map.value?.entities.find(e => e.gid === player.gid)
 	if (entity == null) return
 
 	// note: updating these will help with camera and map bounds,

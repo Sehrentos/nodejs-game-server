@@ -4,6 +4,7 @@ import { DIRECTION, ENTITY_TYPE } from '../../../shared/enum/Entity.js'
 import { WorldMap } from '../../../shared/models/WorldMap.js'
 import { EntityControl } from '../control/EntityControl.js'
 import createGameId from '../utils/createGameId.js'
+import { SPR_ID } from '../../../shared/enum/Sprite.js'
 
 // create map
 export default class MapLobbyTown extends WorldMap {
@@ -11,6 +12,7 @@ export default class MapLobbyTown extends WorldMap {
 	constructor(props = {}) {
 		super({
 			id: 1,
+			spriteId: SPR_ID.MAP_LOBBY_TOWN,
 			name: "Lobby town",
 			isTown: true,
 			width: 2000,

@@ -20,11 +20,12 @@ import onEntityPacketLogout from '../events/onEntityPacketLogout.js';
 import onEntityEnterMap from '../events/onEntityEnterMap.js';
 import onEntityLeaveMap from '../events/onEntityLeaveMap.js';
 import onEntitySkill from '../events/onEntitySkill.js';
-import Cooldown from '../utils/Cooldown.js';
+import Cooldown from '../../../shared/utils/Cooldown.js';
 import * as Const from '../../../shared/Constants.js';
 import { sendHeartbeat } from '../events/sendHeartbeat.js';
 // import { sendRateLimit } from '../events/sendRateLimit.js';
 import SkillControl from './SkillControl.js';
+import { sendPlayer } from '../events/sendPlayer.js';
 
 export class EntityControl {
 	/**
@@ -292,21 +293,21 @@ export class EntityControl {
 				this.entity.dir = DIRECTION.LEFT
 				if (this.entity.lastX > 0) {
 					// this.entity.lastX -= Const.ENTITY_MOVE_STEP
-					this.moveTo(this.entity.lastX - 10, this.entity.lastY, timestamp)
+					this.moveTo(this.entity.lastX - Const.ENTITY_MOVE_STEP, this.entity.lastY, timestamp)
 				}
 				break
 			case DIRECTION.RIGHT:
 				this.entity.dir = DIRECTION.RIGHT
 				if (this.entity.lastX < this.map.width) {
 					// this.entity.lastX += Const.ENTITY_MOVE_STEP
-					this.moveTo(this.entity.lastX + 10, this.entity.lastY, timestamp)
+					this.moveTo(this.entity.lastX + Const.ENTITY_MOVE_STEP, this.entity.lastY, timestamp)
 				}
 				break
 			case DIRECTION.UP:
 				this.entity.dir = DIRECTION.UP
 				if (this.entity.lastY > 0) {
 					// this.entity.lastY -= Const.ENTITY_MOVE_STEP
-					this.moveTo(this.entity.lastX, this.entity.lastY - 10, timestamp)
+					this.moveTo(this.entity.lastX, this.entity.lastY - Const.ENTITY_MOVE_STEP, timestamp)
 
 				}
 				break
@@ -314,7 +315,7 @@ export class EntityControl {
 				this.entity.dir = DIRECTION.DOWN
 				if (this.entity.lastY < this.map.height) {
 					// this.entity.lastY += Const.ENTITY_MOVE_STEP
-					this.moveTo(this.entity.lastX, this.entity.lastY + 10, timestamp)
+					this.moveTo(this.entity.lastX, this.entity.lastY + Const.ENTITY_MOVE_STEP, timestamp)
 				}
 				break
 			default:
@@ -490,7 +491,9 @@ export class EntityControl {
 
 		// check if entity can move on this tick
 		if (this._moveCd.isNotExpired(timestamp)) return
-		this._moveCd.set(timestamp + this.entity.speed - this.entity.latency)
+		// this._moveCd.set((timestamp + this.entity.speed)
+		this._moveCd.set(timestamp + (this.entity.speed * Const.ENTITY_MOVE_STEP))
+		// TODO how to mitigate this.entity.latency
 
 		// if target dies, stop following
 		if (entity.hp <= 0) {
@@ -519,6 +522,11 @@ export class EntityControl {
 			this.entity.dir = DIRECTION.DOWN
 			this.entity.lastY += Const.ENTITY_MOVE_STEP
 		}
+
+		// when entity is player, send position update
+		// if (this.entity.type === ENTITY_TYPE.PLAYER) {
+		// 	this.socket.send(sendPlayer(this.entity, "dir", "lastX", "lastY"))
+		// }
 	}
 
 	/**
@@ -548,7 +556,9 @@ export class EntityControl {
 
 		// check if entity can move on this tick
 		if (this._moveCd.isNotExpired(timestamp)) return
-		this._moveCd.set(timestamp + this.entity.speed - this.entity.latency)
+		// this._moveCd.set(timestamp + this.entity.speed)
+		this._moveCd.set(timestamp + (this.entity.speed * Const.ENTITY_MOVE_STEP))
+		// TODO how to mitigate this.entity.latency
 
 		// stop at range
 		if (Entity.inRangeOf(this.entity, x, y, 1)) {
@@ -570,6 +580,11 @@ export class EntityControl {
 			this.entity.dir = DIRECTION.DOWN
 			this.entity.lastY += Const.ENTITY_MOVE_STEP
 		}
+
+		// when entity is player, send position update
+		// if (this.entity.type === ENTITY_TYPE.PLAYER) {
+		// 	this.socket.send(sendPlayer(this.entity, "dir", "lastX", "lastY"))
+		// }
 	}
 
 	/**

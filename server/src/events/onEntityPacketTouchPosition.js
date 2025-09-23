@@ -14,6 +14,7 @@ import { sendDialog } from "./sendDialog.js"
  */
 export default function onEntityPacketTouchPosition(player, json, timestamp) {
 	const ctrl = player.control
+	ctrl.stopAttack()
 	ctrl.stopFollow()
 	ctrl.stopMoveTo()
 

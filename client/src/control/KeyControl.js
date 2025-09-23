@@ -1,5 +1,7 @@
+import { ENTITY_MOVE_STEP } from "../../../shared/Constants.js"
+// import { DIRECTION } from "../../../shared/enum/Entity.js"
 import { SKILL_ID } from "../../../shared/enum/Skill.js"
-import { State } from "../State.js"
+import Events from "../Events.js"
 import { sendKeyboardMove } from "../events/sendKeyboardMove.js"
 import { sendSkill } from "../events/sendSkill.js"
 
@@ -8,7 +10,14 @@ import { sendSkill } from "../events/sendSkill.js"
  * @description Handles player key controls
  */
 export default class KeyControl {
-	constructor() {
+	/**
+	 * @param {import("../State.js").State} state
+	 */
+	constructor(state) {
+		/** @type {import("../State.js").State} */
+		this.state = state
+
+		this.cooldown = 0 // TODO new Cooldown()
 		// binds the `onKeydown` method to the `this` context
 		this._onKeydown = this.onKeydown.bind(this)
 
@@ -22,7 +31,7 @@ export default class KeyControl {
 
 	/** @param {KeyboardEvent} e  */
 	onKeydown(e) {
-		if (State.player.value == null || State.map.value == null) return false
+		if (this.state.player.value == null || this.state.map.value == null) return false
 		// @ts-ignore exclude keydown event while in any input element
 		if ((e.target?.tagName ?? "") === "INPUT") return false
 
@@ -38,14 +47,14 @@ export default class KeyControl {
 
 		// handle skill use
 		if (KeyControl.KEYS_SKILL.includes(e.code)) {
-			// TODO use State.events.emit("ui-skill-use", { source: "KeyControl", key: e.code });
+			// TODO use Events.emit("ui-skill-use", { source: "KeyControl", key: e.code });
 			this.handleSkill(e.code)
 			return true;
 		}
 
 		// Exit game UI
 		if (e.code === "Escape") {
-			State.events.emit("ui-exit-game-toggle", { source: "KeyControl", key: e.code });
+			Events.emit("ui-exit-game-toggle", { source: "KeyControl", key: e.code });
 			return true;
 		}
 
@@ -54,10 +63,16 @@ export default class KeyControl {
 		// C to toggle accordion open/close
 		if (e.code === "KeyC") {
 			if (e.altKey) {
-				State.events.emit("ui-character-toggle", { source: "KeyControl", key: e.code });
+				Events.emit("ui-character-toggle", { source: "KeyControl", key: e.code });
 				return true;
 			}
-			State.events.emit("ui-accordion-toggle", { id: "character", source: "KeyControl", key: e.code });
+			Events.emit("ui-accordion-toggle", { id: "character", source: "KeyControl", key: e.code });
+			return true;
+		}
+
+		// Toggle inventory UI
+		if (e.code === "KeyI") {
+			Events.emit("ui-inventory-toggle", { source: "KeyControl", key: e.code });
 			return true;
 		}
 
@@ -72,34 +87,51 @@ export default class KeyControl {
 	 * @param {string} keyCode - The code of the key pressed, indicating the movement direction.
 	 */
 	handleMovement(keyCode) {
-		// TODO client side prediction for moving (immediate feedback)
-		// switch (e.code) {
+		// client side prediction for moving (immediate feedback)
+		const timestamp = Date.now()
+		const entity = this.state.player.value
+		if (entity == null) return
+
+		// entity must be alive
+		if (entity.hp <= 0) return
+		// TODO how to get entity.control.isMovementBlocked ?
+
+		// check cooldown expired
+		if (this.cooldown > timestamp) return
+		this.cooldown = timestamp + (entity.speed * ENTITY_MOVE_STEP) - entity.latency
+
+		// client side prediction for movement
+		// switch (keyCode) {
 		// 	case "KeyA":
 		// 	case "ArrowLeft":
-		// 		this.entity.dir = 0
-		// 		if (this.entity.lastX > 0) {
-		// 			this.entity.lastX--
+		// 		entity.dir = DIRECTION.LEFT
+		// 		if (entity.lastX > 0) {
+		// 			// entity.lastX--
+		// 			entity.lastX -= ENTITY_MOVE_STEP
 		// 		}
 		// 		break
 		// 	case "KeyD":
 		// 	case "ArrowRight":
-		// 		this.entity.dir = 1
-		// 		if (this.entity.lastX < State.map.value.width) {
-		// 			this.entity.lastX++
+		// 		entity.dir = DIRECTION.RIGHT
+		// 		if (entity.lastX < this.state.map.value.width) {
+		// 			// entity.lastX++
+		// 			entity.lastX += ENTITY_MOVE_STEP
 		// 		}
 		// 		break
 		// 	case "KeyW":
 		// 	case "ArrowUp":
-		// 		this.entity.dir = 2
-		// 		if (this.entity.lastY > 0) {
-		// 			this.entity.lastY--
+		// 		entity.dir = DIRECTION.UP
+		// 		if (entity.lastY > 0) {
+		// 			// entity.lastY--
+		// 			entity.lastY -= ENTITY_MOVE_STEP
 		// 		}
 		// 		break
 		// 	case "KeyS":
 		// 	case "ArrowDown":
-		// 		this.entity.dir = 3
-		// 		if (this.entity.lastY < State.map.value.height) {
-		// 			this.entity.lastY++
+		// 		entity.dir = DIRECTION.DOWN
+		// 		if (entity.lastY < this.state.map.value.height) {
+		// 			// entity.lastY++
+		// 			entity.lastY += ENTITY_MOVE_STEP
 		// 		}
 		// 		break
 		// 	default:
@@ -107,7 +139,7 @@ export default class KeyControl {
 		// }
 
 		// send websocket if it's open
-		State.socket?.send(sendKeyboardMove(keyCode));
+		this.state?.socket?.send(sendKeyboardMove(keyCode));
 	}
 
 	handleSkill(keyCode) {
@@ -134,7 +166,7 @@ export default class KeyControl {
 				break
 		}
 		if (skillId) {
-			State.socket?.send(sendSkill(skillId));
+			this.state?.socket?.send(sendSkill(skillId));
 		}
 	}
 

@@ -1,4 +1,4 @@
-import { ITEM_TYPE } from "../enum/Item.js";
+import { EQUIP_SLOT, ITEM_TYPE } from "../enum/Item.js";
 
 /**
  * Database of items
@@ -11,14 +11,15 @@ import { ITEM_TYPE } from "../enum/Item.js";
 //@type {{[key:string]: import("../models/Item.js").TItemProps}}
 export const ITEMS = {
 	DEFAULT: {
-		itemId: 0,
+		id: 0,
 		name: "Unknown",
 		type: ITEM_TYPE.ETC
 	},
 	KNIFE: {
-		itemId: 1,
+		id: 1,
 		name: "Knife",
 		type: ITEM_TYPE.WEAPON,
+		slot: EQUIP_SLOT.WEAPON,
 		sell: 100,
 		buy: 150,
 		atk: 25,
@@ -27,9 +28,10 @@ export const ITEMS = {
 		dropChange: 10,
 	},
 	SWORD: {
-		itemId: 2,
+		id: 2,
 		name: "Sword",
 		type: ITEM_TYPE.WEAPON,
+		slot: EQUIP_SLOT.WEAPON,
 		sell: 500,
 		buy: 750,
 		atk: 110,
@@ -38,9 +40,10 @@ export const ITEMS = {
 		dropChange: 10,
 	},
 	BOW: {
-		itemId: 3,
+		id: 3,
 		name: "Bow",
 		type: ITEM_TYPE.WEAPON,
+		slot: EQUIP_SLOT.WEAPON,
 		sell: 500,
 		buy: 750,
 		atk: 95,
@@ -49,9 +52,10 @@ export const ITEMS = {
 		dropChange: 10,
 	},
 	WAND: {
-		itemId: 4,
+		id: 4,
 		name: "Wand",
 		type: ITEM_TYPE.WEAPON,
+		slot: EQUIP_SLOT.WEAPON,
 		sell: 100,
 		buy: 150,
 		atk: 15,
@@ -63,9 +67,10 @@ export const ITEMS = {
 		dropChange: 10,
 	},
 	STAFF: {
-		itemId: 5,
+		id: 5,
 		name: "Staff",
 		type: ITEM_TYPE.WEAPON,
+		slot: EQUIP_SLOT.WEAPON,
 		sell: 500,
 		buy: 750,
 		atk: 35,
@@ -76,8 +81,18 @@ export const ITEMS = {
 		cspd: 1.5,
 		dropChange: 10,
 	},
+	SHIELD: {
+		id: 6,
+		name: "Shield",
+		type: ITEM_TYPE.ARMOR,
+		slot: EQUIP_SLOT.SHIELD,
+		sell: 100,
+		buy: 150,
+		def: 20,
+		dropChange: 10,
+	},
 	STONE: {
-		itemId: 6,
+		id: 7,
 		name: "Stone",
 		type: ITEM_TYPE.ETC,
 		sell: 5,
@@ -85,7 +100,7 @@ export const ITEMS = {
 		dropChange: 90,
 	},
 	WOOD: {
-		itemId: 7,
+		id: 8,
 		name: "Wood",
 		type: ITEM_TYPE.ETC,
 		sell: 10,
@@ -94,17 +109,17 @@ export const ITEMS = {
 	},
 };
 
-const ITEM_KEYS = Object.keys(ITEMS)
+// const ITEM_KEYS = Object.keys(ITEMS)
 const ITEM_VALUES = Object.values(ITEMS)
 
 /**
- * Helper to get an item by its `itemId`
- * @param {number} itemId
+ * Helper to get an item by its `id`
+ * @param {number} id
  * @param {boolean} useFallback use `ITEMS.DEFAULT `as fallback
  * @returns
  */
-export const getItemByItemId = (itemId, useFallback = true) => {
-	const item = ITEM_VALUES.find(p => p.itemId === itemId)
+export const getItemByItemId = (id, useFallback = true) => {
+	const item = ITEM_VALUES.find(p => p.id === id)
 	if (item === undefined && useFallback) return ITEMS.DEFAULT
 	return item
 }

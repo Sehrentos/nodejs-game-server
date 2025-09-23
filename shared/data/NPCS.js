@@ -1,5 +1,5 @@
 import { ENTITY_TYPE } from "../enum/Entity.js";
-import { SPRITE as SPR } from "../enum/Sprite.js";
+import { SPR_ID as SPR } from "../enum/Sprite.js";
 
 /**
  * Database of NPCs
@@ -23,7 +23,7 @@ export const NPCS = {
 	},
 	TOWNSFOLK: {
 		id: 1,
-		spriteId: SPR.TOWNSFOLK,
+		spriteId: SPR.NPC_TOWNSFOLK,
 		type: ENTITY_TYPE.NPC,
 		name: "Townsfolk",
 		dialog: `<article>
@@ -34,7 +34,7 @@ export const NPCS = {
 	},
 	BLACKSMITH: {
 		id: 2,
-		spriteId: SPR.BLACKSMITH,
+		spriteId: SPR.NPC_BLACKSMITH,
 		type: ENTITY_TYPE.NPC,
 		name: "Blacksmith",
 		dialog: `<article>
@@ -45,20 +45,27 @@ export const NPCS = {
 	},
 	TOOL_DEALER: {
 		id: 3,
-		spriteId: SPR.TOOL_DEALER,
+		spriteId: SPR.NPC_TOOL_DEALER,
 		type: ENTITY_TYPE.NPC,
 		name: "Tool dealer",
 		dialog: `<article>
 			<header>Tool dealer</header>
 			<p>Hey there! I'm the Tool dealer!</p>
 			<p>You can sell all your items to me.</p>
-			<button class="accept">Sell all</button>
+			<button class="accept-sell-all">Sell all</button>
+			<button class="next">Sell</button>
 			<button class="close">X</button>
-		</article>`
+		</article>
+		<article>
+			<header>Tool dealer</header>
+			<ul class="sell-list-items"></ul>
+			<button class="sell">Sell</button>
+			<button class="close">X</button>
+		</article>`,
 	},
 	MERCHANT: {
 		id: 4,
-		spriteId: SPR.MERCHANT,
+		spriteId: SPR.NPC_MERCHANT,
 		type: ENTITY_TYPE.NPC,
 		name: "Merchant",
 		dialog: `<article>
@@ -69,7 +76,7 @@ export const NPCS = {
 	},
 	STRANGER: {
 		id: 5,
-		spriteId: SPR.STRANGER,
+		spriteId: SPR.NPC_STRANGER,
 		type: ENTITY_TYPE.NPC,
 		name: "Stranger",
 		dialog: `<article>

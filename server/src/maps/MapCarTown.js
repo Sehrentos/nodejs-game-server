@@ -3,6 +3,7 @@ import { ENTITY_TYPE } from '../../../shared/enum/Entity.js'
 import { WorldMap } from '../../../shared/models/WorldMap.js'
 import { EntityControl } from '../control/EntityControl.js'
 import createGameId from '../utils/createGameId.js'
+import { SPR_ID } from '../../../shared/enum/Sprite.js'
 
 // create map
 export default class MapCarTown extends WorldMap {
@@ -10,6 +11,7 @@ export default class MapCarTown extends WorldMap {
 	constructor(props = {}) {
 		super({
 			id: 3,
+			spriteId: SPR_ID.MAP_CAR_TOWN,
 			name: "Car town",
 			isTown: true,
 			width: 2000,

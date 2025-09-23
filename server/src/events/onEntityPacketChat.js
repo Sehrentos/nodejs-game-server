@@ -1,6 +1,7 @@
 import { ENTITY_TYPE } from "../../../shared/enum/Entity.js";
 import { REGEX_BLACKLIST_PLAYER_NAMES } from "../../../shared/Constants.js";
 import { sendChat } from "./sendChat.js";
+import { SPR_ID, SPR_MAP } from "../../../shared/enum/Sprite.js";
 
 /**
  * Chat commands available in the game
@@ -108,12 +109,6 @@ CMD['/changename'] = async (entity, data, params) => {
 			return
 		}
 
-		const { affectedRows } = await ctrl.world.db.player.setName(entity.id, name)
-		if (!affectedRows) {
-			ctrl.socket.send(sendChat("default", "Server", entity.name, "Change name failed."))
-			return
-		}
-
 		// success
 		entity.name = name
 		ctrl.socket.send(sendChat("default", "Server", entity.name, "Change name success."))
@@ -147,16 +142,25 @@ CMD['/changemap'] = async (entity, data, params) => {
 	}
 }
 
-// TODO implement disguise command to show different sprite
+// command to show different sprite
 CMD['/disguise'] = async (entity, data, params) => {
 	try {
 		const ctrl = entity.control
 		const name = params.join(' ');
 		const sprite = name === '' ? 0 : parseInt(name, 10);
-		if (isNaN(sprite) || sprite < 0 || sprite > 100) {
-			ctrl.socket.send(sendChat("default", "Server", entity.name, "Disguise invalid format. Use /disguise <spriteId>"))
+		console.log(`[CMD.disguise] sprite: ${sprite}`)
+
+		// check sprite id is valid from SPR_ID enum and not SPR_MAP
+		// eg. 1-7 could be map sprites, 8+ may be player/mob sprites
+		if (Object.values(SPR_MAP).includes(sprite)) {
+			ctrl.socket.send(sendChat("default", "Server", entity.name, "Disguise invalid spriteId (map sprite)."))
 			return
 		}
+		if (!Object.values(SPR_ID).includes(sprite)) {
+			ctrl.socket.send(sendChat("default", "Server", entity.name, "Disguise invalid spriteId."))
+			return
+		}
+		// success
 		entity.spriteId = sprite
 		ctrl.socket.send(sendChat("default", "Server", entity.name, `Disguise changed to spriteId:${sprite}`))
 	} catch (error) {

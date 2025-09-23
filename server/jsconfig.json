@@ -20,7 +20,7 @@
 	],
 	"include": [
 		"**/*.js",
-		"**/*.ts",
+		"**/*.ts", "../shared/utils/Cooldown.js",
 	],
 	"typeAcquisition": {
 		"enable": true,

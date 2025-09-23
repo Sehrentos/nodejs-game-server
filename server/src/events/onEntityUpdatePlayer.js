@@ -45,9 +45,9 @@ export default function onEntityUpdatePlayer(player, timestamp) {
 			ctrl.socket.send(sendMap(player, map))
 		}
 
-		// send full player state update (e.g. every 5 seconds)
-		// TODO: this should only be sent, when player enters a new map
-		// and use aggregated or delta updates afterwards to update player state
+		// send full player state update (e.g. every 5-10 seconds)
+		// example this is sent, when player enters a new map
+		// use aggregated or delta updates afterwards to update player state
 		if (ctrl._socketSentPlayerUpdateCd.isExpired(timestamp)) {
 			ctrl._socketSentPlayerUpdateCd.set(timestamp + COOLDOWN_SOCKET_SEND_PLAYER)
 			ctrl.socket.send(sendPlayer(player))

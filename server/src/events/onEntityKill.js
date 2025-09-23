@@ -3,6 +3,7 @@ import { ENTITY_TYPE } from "../../../shared/enum/Entity.js"
 import { Item } from "../../../shared/models/Item.js"
 import { getRandomInt } from "../utils/getRandomInt.js"
 import { sendItemsReceived } from "./sendItemsReceived.js"
+import { sendPlayer } from "./sendPlayer.js"
 
 /**
  * Handles the event when an entity is killed.
@@ -18,12 +19,14 @@ export function onEntityKill(killer, killed) {
 	killed.hp = 0
 	killed.mp = 0
 	killed.death = timestamp
-
 	killed.control.stopMoveTo()
 	killed.control.stopFollow()
 	killed.control.stopAttack()
 
-	// send killed player to saved position
+	killer.control.stopFollow()
+	killer.control.stopAttack()
+
+	// send killed player back to saved position
 	if (killed.type === ENTITY_TYPE.PLAYER) {
 		killed.control.toSavePosition()
 		killed.control.revive()
@@ -68,21 +71,35 @@ export function onEntityKill(killer, killed) {
 		killer.control.heal(0, killer.mpMax)
 	}
 
-	// reaward the player with items from the killed monster
+	// reward the player with items from the killed monster
 	if (killed.type === ENTITY_TYPE.MONSTER) {
-		const items = []
+		/** @type {Item[]} */
+		const rewardItems = []
 		for (const item of killed.inventory) {
 			// check drop change of item and reward it when it is dropped
 			if (item.dropChange > 0 && getRandomInt(0, 100) <= item.dropChange) { // 0 - 100%
-				// create new item object and set player id
-				let _item = new Item(item)
-				_item.playerId = typeof killer.id === "number" ? killer.id : BigInt(killer.id)
-				items.push(new Item(_item))
+				rewardItems.push(item)
 			}
 		}
-		if (items.length > 0) {
-			killer.inventory.push(...items)
-			killer.control.socket.send(sendItemsReceived(items))
+		// add items to inventory
+		if (rewardItems.length > 0) {
+			// killer.inventory.push(...items)
+			// when item does already exist in the inventory, update the amount
+			// else create new inventory item
+			for (const item of rewardItems) {
+				const existingItem = killer.inventory.find(itm => itm.id === item.id)
+				if (existingItem) {
+					existingItem.amount += item.amount
+					console.log(`[Event.onEntityKill] (existing) item "${item.id}" added to inventory (amount: ${item.amount} / now: ${existingItem.amount})`)
+				} else {
+					killer.inventory.push(new Item(item))
+					console.log(`[Event.onEntityKill] (new) item "${item.id}" added to inventory (amount: ${item.amount})`)
+				}
+			}
+
+			// send received items packet
+			killer.control.socket.send(sendItemsReceived(rewardItems))
+			killer.control.socket.send(sendPlayer(killer, "baseExp", "jobExp", "level", "jobLevel", "inventory"))
 		}
 	}
 

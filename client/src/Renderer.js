@@ -1,8 +1,7 @@
-import { State } from "./State.js"
 import * as Settings from "./Settings.js"
 import * as Const from "../../shared/Constants.js";
 import { DIRECTION, ENTITY_TYPE } from "../../shared/enum/Entity.js"
-import { MAP, PLAYER, NPC, MOB } from "./sprites/Sprites.js"
+import SPRITES from "./sprites/Sprites.js"
 import { getNPCById } from "../../shared/data/NPCS.js"
 import { getMobById } from "../../shared/data/MOBS.js";
 import { Entity } from "../../shared/models/Entity.js";
@@ -19,25 +18,28 @@ import { Entity } from "../../shared/models/Entity.js";
  */
 export default class Renderer {
 	/**
-	 * @param {HTMLCanvasElement} canvas - The canvas element to render to.
-	 *
 	 * Initializes the renderer with the given canvas element.
+	 *
+	 * @param {import("./State.js").State} state
 	 *
 	 * @prop {HTMLCanvasElement} canvas - The canvas element to render to.
 	 * @prop {CanvasRenderingContext2D} ctx - The 2D rendering context of the canvas.
 	 * @prop {number|null} frame - The current frame number, or null if the animation is stopped.
 	 * @prop {boolean} stop - Whether the animation is stopped.
 	 */
-	constructor(canvas) {
+	constructor(state) {
+		/** @type {import("./State.js").State} */
+		this.state = state
+
 		/**
 		 * @type {HTMLCanvasElement}
 		 */
-		this.canvas = canvas
+		this.canvas = state.canvas
 
 		/**
 		 * @type {CanvasRenderingContext2D}
 		 */
-		this.ctx = canvas.getContext("2d")
+		this.ctx = this.canvas.getContext("2d")
 
 		/**
 		 * @type {boolean}
@@ -100,11 +102,11 @@ export default class Renderer {
 		this._lastFrameTimestamp = timestamp
 
 		// #region drawing
-		if (State.map.value != null && State.player.value != null) {
-			this.drawCamera(State.player.value)
-			if (State.map.value != null) {
-				this.drawMapLayout(State.map.value)
-				this.drawMapEntities(State.map.value)
+		if (this.state.map.value != null && this.state.player.value != null) {
+			this.drawCamera(this.state.player.value)
+			if (this.state.map.value != null) {
+				this.drawMapLayout(this.state.map.value)
+				this.drawMapEntities(this.state.map.value)
 			}
 		}
 		// #endregion
@@ -156,7 +158,8 @@ export default class Renderer {
 	 */
 	drawMapLayout(map) {
 		// draw map by sprite
-		const sprite = MAP[map.id]
+		const spriteId = map.spriteId || map.id
+		const sprite = SPRITES[spriteId]
 		if (sprite) {
 			Renderer.drawMapSprite(sprite, this.ctx, map)
 		} else {
@@ -203,7 +206,7 @@ export default class Renderer {
 	 */
 	drawEntityNPC(entity) {
 		const spriteId = entity.spriteId || entity.id
-		const sprite = NPC[spriteId]
+		const sprite = SPRITES[spriteId]
 		const npc = getNPCById(entity.id)
 		if (sprite && npc) {
 			const npcData = new Entity({ ...npc, ...entity }) // merge entity data (status, etc)
@@ -233,7 +236,7 @@ export default class Renderer {
 	drawEntityMonster(entity) {
 		// draw entity by sprite, if available. fallback to id
 		const spriteId = entity.spriteId || entity.id
-		const sprite = MOB[spriteId]
+		const sprite = SPRITES[spriteId]
 		const mob = getMobById(entity.id)
 		if (sprite && mob) {
 			const mobData = new Entity({ ...mob, ...entity }) // merge entity data (hp, status, etc)
@@ -259,7 +262,7 @@ export default class Renderer {
 	drawEntityPlayer(entity) {
 		// draw player by sprite, if available. fallback to id 1
 		const spriteId = entity.spriteId || 1
-		const sprite = PLAYER[spriteId]
+		const sprite = SPRITES[spriteId]
 		const baseEntity = new Entity(entity) // create a base entity to get default values
 		if (sprite) {
 			// 0: Left (x--), 1: Right (x++), 2: Up (y--), 3: Down (y++). default 0

@@ -1,34 +1,57 @@
 /**
- * @file Enum for sprite IDs.
+ * Enum for map sprite IDs.
+ *
+ * Note: each ID must be unique.
  */
-export const SPRITE = {
-	PLAYER1: 1,
-	PLAYER2: 2,
-	// NPCs
-	TOWNSFOLK: 3,
-	BLACKSMITH: 4,
-	TOOL_DEALER: 5,
-	MERCHANT: 6,
-	STRANGER: 7,
-	// Mobs
-	CAT: 8,
-	ORC: 9,
-	ORC2: 10,
-	PLANKTON: 11,
-	EYE: 12,
-	LADYBUG: 13,
-	LADYBUG2: 14,
-	SKELETON: 15,
-	DINOSAUR: 16,
-	MUSHROOM: 17,
-	WIND_SPIRIT: 19,
-	SLUSHIE: 19,
-	RED_MUSHROOM: 20,
-	ROBOT: 21,
-	UNICORN: 22,
-	GHOST: 23,
-	SNAKE: 24,
-	CAT2: 25,
-	DOG: 26,
-	FROG: 27,
+export const SPR_MAP = {
+	MAP_LOBBY_TOWN: 1,
+	MAP_FLOWER_TOWN: 2,
+	MAP_CAR_TOWN: 3,
+	MAP_UNDER_WATER_1: 4,
+	MAP_UNDER_WATER_2: 5,
+	MAP_PLAIN_FIELDS_1: 6,
+	MAP_PLAIN_FIELDS_2: 7,
 }
+
+Object.freeze(SPR_MAP)
+
+/**
+ * Enum for sprite IDs.
+ *
+ * Note: each ID must be unique.
+ */
+export const SPR_ID = {
+	...SPR_MAP,
+	// Players
+	PLAYER_MALE: 8,
+	PLAYER_FEMALE: 9,
+	// NPCs
+	NPC_TOWNSFOLK: 10,
+	NPC_BLACKSMITH: 11,
+	NPC_TOOL_DEALER: 12,
+	NPC_MERCHANT: 13,
+	NPC_STRANGER: 14,
+	// Mobs
+	MOB_CAT: 15,
+	MOB_CAT2: 16,
+	MOB_DOG: 17,
+	MOB_ORC: 18,
+	MOB_ORC2: 19,
+	MOB_PLANKTON: 20,
+	MOB_EYE: 21,
+	MOB_LADYBUG: 22,
+	MOB_LADYBUG2: 23,
+	MOB_SKELETON: 24,
+	MOB_DINOSAUR: 25,
+	MOB_MUSHROOM: 26,
+	MOB_WIND_SPIRIT: 27,
+	MOB_SLUSHIE: 28,
+	MOB_RED_MUSHROOM: 29,
+	MOB_ROBOT: 30,
+	MOB_UNICORN: 31,
+	MOB_GHOST: 32,
+	MOB_SNAKE: 33,
+	MOB_FROG: 34,
+}
+
+Object.freeze(SPR_ID)

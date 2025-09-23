@@ -1,6 +1,5 @@
 import { PLAYER_TOUCH_AREA_SIZE } from "../../../shared/Constants.js"
 import { WorldMap } from "../../../shared/models/WorldMap.js"
-import { State } from "../State.js"
 import { sendTouchPosition } from "../events/sendTouchPosition.js"
 
 /**
@@ -8,16 +7,22 @@ import { sendTouchPosition } from "../events/sendTouchPosition.js"
  * @description Handles player touch controls
  */
 export default class TouchControl {
-	constructor(canvas, renderer) {
+	/**
+	 * @param {import("../State.js").State} state
+	 */
+	constructor(state) {
+		/** @type {import("../State.js").State} */
+		this.state = state
+
 		/**
 		 * @type {HTMLCanvasElement}
 		 */
-		this.canvas = canvas
+		this.canvas = state.canvas
 
 		/**
 		 * @type {import("../Renderer").default}
 		 */
-		this.renderer = renderer
+		this.renderer = state.renderer
 
 		// binds the methods to the `this` context
 		this._onClick = this.onClick.bind(this)
@@ -46,16 +51,54 @@ export default class TouchControl {
 		event.preventDefault()
 		event.stopPropagation()
 
-		if (this.canvas == null || State.map.value == null || State.socket == null) return
+		if (this.canvas == null || this.state.map.value == null || this.state.socket == null) return
 		const { x, y } = this.getMousePosition(event)
-		const stack = WorldMap.findEntitiesInRadius(State.map.value, x, y, PLAYER_TOUCH_AREA_SIZE)
-
-		// TODO remove logs, when done testing
-		console.log(x, y, stack)
 
 		// send a "click" message to the server if it's open
 		// server EntityControl.onClickPosition
-		State.socket.send(sendTouchPosition(x, y))
+		this.state.socket.send(sendTouchPosition(x, y))
+
+		// client side move predictions
+		// const timestamp = Date.now()
+		const entities = WorldMap.findEntitiesInRadius(this.state.map.value, x, y, PLAYER_TOUCH_AREA_SIZE)
+			.filter(entity => entity.gid !== this.state.player.value?.gid) // exclude self
+
+		// TODO remove logs, when done testing
+		console.log(x, y, entities)
+
+		// // if no entities found
+		// // start moving to the clicked position
+		// if (entities.length === 0) {
+		// 	moveTo(json.x, json.y, timestamp)
+		// 	return
+		// }
+
+		// // 1. priority - Monster (alive)
+		// const mobs = entities.filter(e => e.type === ENTITY_TYPE.MONSTER && e.hp > 0)
+		// if (mobs.length) {
+		// 	return touch(player, mobs[0], timestamp)
+		// }
+
+		// // 2. priority - NPC
+		// const npcs = entities.filter(e => e.type === ENTITY_TYPE.NPC)
+		// if (npcs.length) {
+		// 	return touch(player, npcs[0], timestamp)
+		// }
+
+		// // 3. priority - Player
+		// const players = entities.filter(e => e.type === ENTITY_TYPE.PLAYER)
+		// if (players.length) {
+		// 	return touch(player, players[0], timestamp)
+		// }
+
+		// // 4. priority - PORTAL
+		// const portals = entities.filter(e => e.type === ENTITY_TYPE.PORTAL)
+		// if (portals.length) {
+		// 	return touch(player, portals[0], timestamp)
+		// }
+
+		// // 5. move to position
+		// ctrl.moveTo(json.x, json.y, timestamp)
 	}
 
 	/**
@@ -69,9 +112,9 @@ export default class TouchControl {
 	 * @param {MouseEvent} event - The mouse move event.
 	 */
 	onMouseMove(event) {
-		if (this.canvas == null || State.map.value == null) return
+		if (this.canvas == null || this.state.map.value == null) return
 		const { x, y } = this.getMousePosition(event)
-		const stack = WorldMap.findEntitiesInRadius(State.map.value, x, y, PLAYER_TOUCH_AREA_SIZE)
+		const stack = WorldMap.findEntitiesInRadius(this.state.map.value, x, y, PLAYER_TOUCH_AREA_SIZE)
 
 		// change mouse cursor to pointer
 		if (stack.length) {

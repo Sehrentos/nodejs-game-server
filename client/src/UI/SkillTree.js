@@ -1,8 +1,8 @@
 import "./SkillTree.css"
 import { tags } from "./index.js"
-import { State } from "../State.js"
 import { SKILL } from "../../../shared/data/SKILL.js"
 import { SKILL_ID } from "../../../shared/enum/Skill.js"
+import Events from "../Events.js"
 
 const { div, span, header, button } = tags
 
@@ -24,12 +24,12 @@ export default function SkillTreeUI() {
 	ui.removeEventListener("click", onClickClose, false)
 	ui.addEventListener("click", onClickClose, false)
 
-	State.events.off("ui-skill-tree-toggle", onSkillTreeToggle)
-	State.events.on("ui-skill-tree-toggle", onSkillTreeToggle)
+	Events.off("ui-skill-tree-toggle", onSkillTreeToggle)
+	Events.on("ui-skill-tree-toggle", onSkillTreeToggle)
 
 	// TODO get list of skills from player data
 	// update skill tree data from state
-	// const unsubscribe = State.player.subscribe((player) => {
+	// const unsubscribe = state.player.subscribe((player) => {
 	// 	if (!player) return
 	// 	update()
 	// 	unsubscribe()

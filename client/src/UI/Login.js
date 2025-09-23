@@ -1,6 +1,6 @@
 import "./Login.css"
 import { tags } from "./index.js"
-import { Auth } from "../Auth.js"
+import auth from "../Auth.js"
 import Observable from "../utils/Observable.js"
 
 const { main, form, div, p, header, input, label } = tags
@@ -12,6 +12,10 @@ const isRemember = new Observable(localStorage.getItem("remember") === "true" ? 
 
 const stateMessageView = div({ class: "response" }, stateMessage.value)
 const container = main({ class: "ui card ui-login centered open" }, LoginForm())
+
+const onStopPropagation = (event) => event.stopPropagation()
+container.addEventListener("selectstart", onStopPropagation)
+container.addEventListener("contextmenu", onStopPropagation)
 
 // subscribe to state changes for UI updates
 isRegister.subscribe((value) => {
@@ -29,7 +33,16 @@ stateMessage.subscribe((message) => {
 	stateMessageView.replaceChildren(message)
 })
 
-// Auth.jwtToken.subscribe((token) => refresh())
+// auth.jwtToken.subscribe((token) => refresh())
+
+// hide login UI when logged in
+auth.isLoggedIn.subscribe((isLoggedIn) => {
+	if (isLoggedIn) {
+		container.classList.remove("open")
+	} else {
+		container.classList.add("open")
+	}
+})
 
 /**
  * Renders the UI based on the current state of the isRegister observable.
@@ -43,7 +56,7 @@ const refresh = () => container.replaceChildren(isRegister.value ? RegisterForm(
  */
 export default function LoginUI() {
 	if (isRegister.value) {
-		// swapt to register
+		// swap to register
 		container.replaceChildren(RegisterForm())
 	}
 	return container
@@ -67,7 +80,7 @@ function LoginForm() {
 		p("Login with your account to play the game."),
 		stateMessageView,
 		// hide username field when JWT token exists
-		Auth.jwtToken.value ? null : input({
+		auth.jwtToken.value ? null : input({
 			type: "text",
 			name: "username",
 			id: "username",
@@ -77,7 +90,7 @@ function LoginForm() {
 			autofocus: true,
 		}),
 		// hide password field when JWT token exists
-		Auth.jwtToken.value ? null : input({
+		auth.jwtToken.value ? null : input({
 			type: "password",
 			name: "password",
 			id: "password",
@@ -88,11 +101,11 @@ function LoginForm() {
 		input({
 			id: "login",
 			type: "submit",
-			value: Auth.jwtToken.value ? "Start Game" : "Login",
+			value: auth.jwtToken.value ? "Start Game" : "Login",
 			disabled: isLoading.value
 		}),
 		// show logout button when JWT token exists
-		Auth.jwtToken.value ? input({
+		auth.jwtToken.value ? input({
 			id: "logout",
 			type: "button",
 			value: "Logout",
@@ -186,7 +199,7 @@ function RegisterForm() {
  * It also clears the state message.
  */
 function onLogout() {
-	Auth.reset() // clear JWT token & logged in state
+	auth.reset() // clear JWT token & logged in state
 	stateMessage.set("")
 	refresh()
 }
@@ -222,7 +235,7 @@ async function onSubmit(event) {
 	// do register or login
 	if (isRegister.value) {
 		try {
-			await Auth.register(username, password, email, isRemember.value)
+			await auth.register(username, password, email, isRemember.value)
 			message = "Registration successful"
 		} catch (e) {
 			console.log("register failed", e.message)
@@ -230,9 +243,9 @@ async function onSubmit(event) {
 		}
 	} else {
 		// do login with JWT token when it exists
-		if (Auth.jwtToken.value) {
+		if (auth.jwtToken.value) {
 			try {
-				await Auth.loginToken(Auth.jwtToken.value, isRemember.value)
+				await auth.loginToken(auth.jwtToken.value, isRemember.value)
 				message = "Login successful"
 			} catch (e) {
 				console.log("login (token) failed", e.message)
@@ -241,7 +254,7 @@ async function onSubmit(event) {
 		} else {
 			// do login with username & password
 			try {
-				await Auth.login(username, password, isRemember.value)
+				await auth.login(username, password, isRemember.value)
 				message = "Login successful"
 			} catch (e) {
 				console.log("login failed", e.message)
@@ -273,4 +286,3 @@ function onChange(event) {
 			break;
 	}
 }
-

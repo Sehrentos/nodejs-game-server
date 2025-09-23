@@ -19,6 +19,7 @@ import { sendChat } from './events/sendChat.js';
 import { Item } from '../../shared/models/Item.js';
 import { getItemByItemId } from '../../shared/data/ITEMS.js';
 import { createPetEntity } from './actions/pet.js';
+import { SPR_ID } from '../../shared/enum/Sprite.js';
 
 /**
  * @module World
@@ -93,8 +94,19 @@ export class World {
 						// terminate client connection
 						entity.control.socket.close()
 						// save player data
-						let { affectedRows } = await this.db.player.update(entity)
-						console.log(`[World] (id:${entity.id}) "${entity.name}" is ${affectedRows > 0 ? 'saved' : 'not saved'}.`)
+						let playerUpdate = await this.db.player.update(entity)
+						console.log(`[World (debug)] (id:${entity.id}) "${entity.name}" is ${playerUpdate.affectedRows > 0 ? 'saved' : 'not saved'}.`)
+						// save player inventory
+						// TODO improve this logic
+						let inventoryClear = await this.db.inventory.clear(entity.id)
+						console.log(`[World (debug)] (id:${entity.id}) "${entity.name}" inventory was ${inventoryClear.affectedRows > 0 ? 'cleared' : 'not cleared'}.`)
+
+						let inventoryAddAll = await this.db.inventory.addAll(entity.id, entity.inventory)
+						if (inventoryAddAll.length) {
+							inventoryAddAll.forEach(item => console.log(`[World (debug)] (id:${entity.id}) "${entity.name}" inventory was ${item.affectedRows > 0 ? 'updated' : 'not updated'}.`))
+						} else {
+							console.log(`[World (debug)] (id:${entity.id}) "${entity.name}" inventory was not updated.`)
+						}
 					}
 				}
 			}
@@ -109,6 +121,44 @@ export class World {
 		} finally {
 			process.exit(0)
 		}
+	}
+
+	/**
+	 * Called when a player disconnects from the world server.
+	 * Logs the disconnection of the player and broadcasts a leave message.
+	 * Removes the disconnected player from the map entities.
+	 * @param {Entity} player - The player who disconnected.
+	 */
+	async onClientClose(player) {
+		if (this.isClosing) return // Skip, server closing process is handled in onExit method
+
+		this.broadcast(sendPlayerLeave(player.name));
+
+		// do logout by setting state=0
+		await this.db.account.logout(player.aid, false);
+
+		// save player data
+		let playerUpdate = await this.db.player.update(player)
+		console.log(`[World (debug)] (id:${player.id}) "${player.name}" is ${playerUpdate.affectedRows > 0 ? 'saved' : 'not saved'}.`)
+
+		// save player inventory
+		// TODO improve this logic
+		let inventoryClear = await this.db.inventory.clear(player.id)
+		console.log(`[World (debug)] (id:${player.id}) "${player.name}" inventory was ${inventoryClear.affectedRows > 0 ? 'cleared' : 'not cleared'}.`)
+
+		let inventoryAddAll = await this.db.inventory.addAll(player.id, player.inventory)
+		if (inventoryAddAll.length) {
+			inventoryAddAll.forEach(item => console.log(`[World] (id:${player.id}) "${player.name}" inventory was ${item.affectedRows > 0 ? 'updated' : 'not updated'}.`))
+		} else {
+			console.log(`[World (debug)] (id:${player.id}) "${player.name}" inventory was not updated.`)
+		}
+
+		// remove player from map
+		// remove player pets from map
+		this.maps.forEach((map) => {
+			map.entities = map.entities.filter((entity) => entity.gid !== player.gid)
+				.filter((entity) => !(entity.type === ENTITY_TYPE.PET && entity.owner.gid === player.gid))
+		})
 	}
 
 	/**
@@ -213,6 +263,7 @@ export class World {
 				type: ENTITY_TYPE.PLAYER,
 				aid: Number(account.id),
 				gid: createGameId(), // generate unique id for player
+				spriteId: SPR_ID.PLAYER_MALE, // default sprite
 				name: `player-${this.playersCountTotal}`, // initial name
 				// saveMap: 'Lobby town',
 				// saveX: 875,
@@ -238,9 +289,9 @@ export class World {
 
 			// load inventory items from database
 			const items = await this.db.inventory.getItems(player.id)
-			// TODO handle item amount
+			// set player inventory
 			player.inventory = items.map(item => {
-				return new Item(getItemByItemId(item.itemId))
+				return new Item(Object.assign({}, getItemByItemId(item.id), item))
 			})
 
 			// set player controller
@@ -307,40 +358,6 @@ export class World {
 				}
 			}
 		}
-	}
-
-	/**
-	 * Called when a player disconnects from the world server.
-	 * Logs the disconnection of the player and broadcasts a leave message.
-	 * Removes the disconnected player from the map entities.
-	 * @param {Entity} player - The player who disconnected.
-	 */
-	async onClientClose(player) {
-		if (this.isClosing) return // Skip, server closing process is handled in onExit method
-
-		this.broadcast(sendPlayerLeave(player.name));
-
-		// do logout by setting state=0
-		await this.db.account.logout(player.aid, false);
-
-		// save player data
-		const playerQuery = await this.db.player.update(player)
-		// const playerState = playerQuery.affectedRows > 0 ? 'saved' : 'not saved'
-
-		if (player.inventory.length > 0) {
-			await this.db.inventory.clear(player.id)
-			const inventoryQuery = await this.db.inventory.addAll(player.id, player.inventory)
-			// const inventoryState = inventoryQuery.affectedRows > 0 ? 'saved' : 'not saved'
-		}
-
-		console.log(`[World] Player "${player.name}" (id:${player.id}) disconnected.`)
-
-		// remove player from map
-		// remove player pets from map
-		this.maps.forEach((map) => {
-			map.entities = map.entities.filter((entity) => entity.gid !== player.gid)
-				.filter((entity) => !(entity.type === ENTITY_TYPE.PET && entity.owner.gid === player.gid))
-		})
 	}
 
 	/**
