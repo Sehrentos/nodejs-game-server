@@ -1,5 +1,4 @@
 import { Entity } from "../../../shared/models/Entity.js";
-import state from "../State.js";
 
 /**
  * Handles player updates received from the server.
@@ -9,10 +8,11 @@ import state from "../State.js";
  * Otherwise, it creates a new player instance with the provided data.
  * Optionally, a custom event can be send to update the player UI.
  *
- * @param {WebSocket|import("../control/SocketControl.js").default} socket - The WebSocket connection.
+ * @param {import("../control/SocketControl.js").default} socket - The WebSocket connection.
  * @param {import("../../../server/src/events/sendPlayer.js").TPlayerPacket} data - The player packet from the server.
  */
 export function onUpdatePlayer(socket, data) {
+	const state = socket.state
 	// update player state or merge existing data
 	if (state.player.value instanceof Entity) {
 		state.player.set((player) => Object.assign(player, data.player));

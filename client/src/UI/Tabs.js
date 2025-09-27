@@ -1,5 +1,5 @@
 import "./Tabs.css"
-import { tags } from "./index.js"
+import { tags } from "../utils/seui.js"
 
 const { div } = tags
 

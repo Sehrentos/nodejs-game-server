@@ -1,4 +1,3 @@
-
 /**
  * Converts a keyboard event's key code into a packet to send to the server,
  * indicating the player's movement.

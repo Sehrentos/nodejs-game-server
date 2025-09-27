@@ -17,13 +17,12 @@ import Events from "../Events.js";
 export default class SocketControl {
 	/**
 	 * @param {import("../State.js").State} state
-	 * @param {import("../Auth.js").Auth} auth
 	 */
-	constructor(state, auth) {
+	constructor(state) {
 		/** @type {import("../State.js").State} */
 		this.state = state
 		/** @type {import("../Auth.js").Auth} */
-		this.auth = auth
+		this.auth = state.auth
 
 		// binds methods to the `this` context
 		this._onSocketOpen = this.onSocketOpen.bind(this)
@@ -32,7 +31,7 @@ export default class SocketControl {
 		this._onSocketMessage = this.onSocketMessage.bind(this)
 
 		this._socket = new WebSocket(SOCKET_URL, [
-			"ws", "wss", `Bearer.${auth.jwtToken.value}`
+			"ws", "wss", `Bearer.${this.auth.jwtToken.value}`
 		]);
 
 		this._socket.onopen = this._onSocketOpen

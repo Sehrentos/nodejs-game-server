@@ -19,61 +19,40 @@ import KeyControl from "./control/KeyControl.js"
 import TouchControl from "./control/TouchControl.js"
 import PlayerControl from "./control/PlayerControl.js"
 
+console.log(`App started in ${process.env.NODE_ENV} mode.`)
+
 // Get the root element, where to render the UI
 const root = document.body
 
-// where the game is rendered
+// set state variables
+state.root = root
+state.auth = auth
+
+// create the canvas and add it to the root
 state.canvas = CanvasUI("game-canvas")
+root.appendChild(state.canvas)
+
+// initialize the renderer
 state.renderer = new Renderer(state)
 
-// Subscribe to changes in the authentication state
-// and render the UI accordingly
-// auth.isLoggedIn.subscribe((isLoggedIn) => {
-// 	if (!isLoggedIn) {
-// 		// show login UI
-// 		root.replaceChildren(LoginUI())
-// 		root.removeEventListener("selectstart", onPreventDefault)
-// 		root.removeEventListener("contextmenu", onPreventDefault)
-// 		return
-// 	}
-// 	// show game UI
-// 	root.replaceChildren(
-// 		CanvasUI(), // where the game is rendered
-// 		CharacterUI(),
-// 		ChatUI(),
-// 		SkillBarUI(),
-// 		SkillTreeUI(),
-// 		Inventory(),
-// 		DialogNPC(),
-// 		// Note: keep these at the end to ensure they are rendered on top
-// 		ExitGameUI(),
-// 		DialogConnectionClosed(),
-// 	)
-// 	// disable selectstart event to disable text selection in the game UI
-// 	root.addEventListener("selectstart", onPreventDefault)
-// 	// disable context menu to disable right click menu in the game UI
-// 	root.addEventListener("contextmenu", onPreventDefault)
-// })
+// register all UI components
+state.ui.set("login", LoginUI(state))
+state.ui.set("character", CharacterUI(state))
+state.ui.set("chat", ChatUI(state))
+state.ui.set("skillbar", SkillBarUI(state))
+state.ui.set("skilltree", SkillTreeUI(state))
+state.ui.set("inventory", Inventory(state))
+state.ui.set("dialognpc", DialogNPC(state))
+state.ui.set("exitgame", ExitGameUI(state))
+state.ui.set("dialogconnectionclosed", DialogConnectionClosed(state))
 
-// Initial render, possibly showing loader/landing page
-// root.appendChild(LoginUI())
+// render all UI components
+state.ui.forEach(ui => root.appendChild(ui))
 
-// show game UI
-root.append(
-	state.canvas,
-	LoginUI(),
-	CharacterUI(),
-	ChatUI(),
-	SkillBarUI(),
-	SkillTreeUI(),
-	Inventory(),
-	DialogNPC(),
-	// Note: keep these at the end to ensure they are rendered on top
-	ExitGameUI(),
-	DialogConnectionClosed(),
-)
+// register global event listeners / observers
 // disable selectstart event to disable text selection in the game UI
 root.addEventListener("selectstart", onPreventDefault)
+
 // disable context menu to disable right click menu in the game UI
 root.addEventListener("contextmenu", onPreventDefault)
 
@@ -87,10 +66,8 @@ auth.jwtToken.subscribe((token) => {
 	if (!token) return
 	// initialize the game
 	state.socket?.remove()
-	state.socket = new SocketControl(state, auth)
+	state.socket = new SocketControl(state)
 	state.keyControl = new KeyControl(state)
 	state.touchControl = new TouchControl(state)
 	state.playerControl = new PlayerControl(state)
 })
-
-console.log(`App started in ${process.env.NODE_ENV} mode.`)

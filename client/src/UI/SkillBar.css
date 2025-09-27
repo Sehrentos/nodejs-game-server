@@ -14,6 +14,7 @@
 	padding: 0.25em;
 	background-color: #d3d3d3;
 	color: #252525;
+	transition: border-color 0.2s ease-in-out, background-color 0.2s ease-in-out;
 }
 
 .ui-skill-bar button:active {

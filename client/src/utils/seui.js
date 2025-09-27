@@ -2,7 +2,7 @@
  * @typedef {{[key:string]:(...props: UIProps)=>HTMLElement}} TagsProxy a proxy object for HTML tags
  * @typedef {Array<null|undefined|string|number|boolean|bigint|Node|Element|HTMLElement|LifecycleMethods|UIAttributes>} UIProps
  * @typedef {{[key:string]:any}} UIAttributes
- * @typedef {(e:CustomEvent & { target: HTMLElement&{ _listeners: {key:string,handler:()=>any}[] } })=>any} LifecycleCallback
+ * @typedef {(event:CustomEvent<{ui: HTMLElement}>) => void} LifecycleCallback
  * @typedef {Object} LifecycleMethods
  * @prop {LifecycleCallback} oncreate a callback to be invoked when the element is created
  */
@@ -116,7 +116,7 @@ function createElement(namespace, tag, children) {
 		bubbles: false,
 		cancelable: true,
 		detail: {
-			component: element
+			ui: element
 		}
 	}))
 

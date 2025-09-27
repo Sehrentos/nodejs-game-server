@@ -5,6 +5,12 @@ import Observable from "./utils/Observable.js";
  */
 export class State {
 	constructor() {
+		/**
+		 * Page root element that contains all game UI
+		 * @type {null|HTMLElement}
+		 */
+		this.root = null
+
 		// /** @type {import("./locale/locale.js").TLocale|null} */
 		// this.locale= null
 
@@ -13,6 +19,12 @@ export class State {
 		 * @type {null|HTMLCanvasElement}
 		 */
 		this.canvas = null
+
+		/**
+		 * Game UI elements / components
+		 * @type {Map<string, HTMLElement>}
+		 */
+		this.ui = new Map()
 
 		/**
 		 * The renderer for the game
@@ -31,6 +43,12 @@ export class State {
 		 * @type {import("./control/TouchControl.js").default|null}
 		 */
 		this.touchControl = null
+
+		/**
+		 * Authentication state
+		 * @type {import("./Auth.js").Auth|null}
+		 */
+		this.auth = null
 
 		/**
 		 * WebSocket controller

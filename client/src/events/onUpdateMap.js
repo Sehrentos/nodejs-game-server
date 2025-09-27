@@ -1,5 +1,4 @@
 import { WorldMap } from "../../../shared/models/WorldMap.js"
-import state from "../State.js"
 
 /**
  * Called when the server sends a map update.
@@ -9,10 +8,11 @@ import state from "../State.js"
  * If not, a new map is created.
  * Also updates player x,y position if the player is found in the map.
  *
- * @param {WebSocket|import("../control/SocketControl.js").default} socket - The WebSocket connection.
+ * @param {import("../control/SocketControl.js").default} socket - The WebSocket connection.
  * @param {import("../../../server/src/events/sendMap.js").TMapPacket} data - The map packet from the server.
  */
 export function onUpdateMap(socket, data) {
+	const state = socket.state
 	// update map state or create new map
 	if (state.map.value instanceof WorldMap) {
 		state.map.set((wmap) => Object.assign(wmap, data.map))
@@ -32,6 +32,4 @@ export function onUpdateMap(socket, data) {
 	// since map update is more frequent, than player update (for now).
 	player.lastX = entity.lastX
 	player.lastY = entity.lastY
-
-	// Note: next render cycle will update the game view
 }

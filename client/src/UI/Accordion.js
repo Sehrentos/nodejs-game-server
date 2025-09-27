@@ -1,5 +1,5 @@
 import "./Accordion.css"
-import { tags } from "./index.js"
+import { tags } from "../utils/seui.js"
 import Events from "../Events.js"
 
 const { div } = tags
@@ -24,12 +24,7 @@ const { div } = tags
 export default function Accordion(props = {}, ...children) {
 	const key = props.id || String(performance.now()).replace(".", "-")
 
-	// listen for event to toggle visibility
-	// Events.emit("ui-accordion-toggle", { id: "myId" });
-	Events.off("ui-accordion-toggle", toggle); // prevent duplicate listeners
-	Events.on("ui-accordion-toggle", toggle);
-
-	return div({ class: "ui-accordion", id: "ui-accordion-" + key, onclick },
+	const ui = div({ class: "ui-accordion", id: "ui-accordion-" + key, onclick },
 		div({
 			class: "header",
 			"aria-expanded": props.isOpen, // ARIA for screen readers
@@ -37,6 +32,11 @@ export default function Accordion(props = {}, ...children) {
 		}, children[0]),
 		div({ class: `content ${props.isOpen ? "open" : ""}`, id: "accordion-content-" + key }, children[1])
 	)
+
+	// add global event listeners
+	Events.on("ui-accordion-toggle", toggle);
+
+	return ui
 }
 
 function onclick(e) {

@@ -1,16 +1,16 @@
 import { SKILL_ID, SKILL_STATE } from "../../../shared/enum/Skill.js";
 import { SKILL, STATE } from "../../../shared/data/SKILL.js";
 import { Entity } from "../../../shared/models/Entity.js";
-import state from "../State.js";
 import Events from "../Events.js";
 
 /**
  * Skill use received from the server.
  *
- * @param {WebSocket|import("../control/SocketControl.js").default} socket - The WebSocket connection.
+ * @param {import("../control/SocketControl.js").default} socket - The WebSocket connection.
  * @param {import("../../../server/src/events/sendSkillUse.js").TSkillUsePacket} data - The packet from the server.
  */
 export function onSkillUse(socket, data) {
+	const state = socket.state
 	console.log("Received skill use (from server):", data);
 
 	// check player state
@@ -31,7 +31,7 @@ export function onSkillUse(socket, data) {
 		message,
 		timestamp: Date.now(),
 	};
-	// State.events.emit("ui-chat", chatParams);
+	// Events.emit("ui-chat", chatParams);
 	// update chat state
 	state.chat.set((current) => ([...current, chatParams]))
 	// update skill bar state

@@ -63,7 +63,8 @@ export default class KeyControl {
 		// C to toggle accordion open/close
 		if (e.code === "KeyC") {
 			if (e.altKey) {
-				Events.emit("ui-character-toggle", { source: "KeyControl", key: e.code });
+				// Events.emit("ui-character-toggle", { source: "KeyControl", key: e.code });
+				Events.emit("toggle", { id: "character" });
 				return true;
 			}
 			Events.emit("ui-accordion-toggle", { id: "character", source: "KeyControl", key: e.code });
@@ -72,7 +73,9 @@ export default class KeyControl {
 
 		// Toggle inventory UI
 		if (e.code === "KeyI") {
-			Events.emit("ui-inventory-toggle", { source: "KeyControl", key: e.code });
+			//Events.emit("ui-inventory-toggle", { source: "KeyControl", key: e.code });
+			// this.state.ui.get("inventory").toggle() // TEST
+			Events.emit("toggle", { id: "inventory" });
 			return true;
 		}
 

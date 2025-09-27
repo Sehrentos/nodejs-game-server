@@ -38,10 +38,12 @@ export default class Observable {
 	/**
 	 * Add an observer to the list of observers.
 	 * @param {ObserverCallback<T>} observer The function to be called when the observable's value changes.
+	 * @param {boolean} [runAfterSet=false] optional. If true, the observer will be called with the current value as argument.
 	 * @returns {UnsubscribeFunction} A function to unsubscribe the observer from the list of observers.
 	 */
-	subscribe(observer) {
+	subscribe(observer, runAfterSet = false) {
 		this.observers.push(observer);
+		if (runAfterSet) observer(this.value, this.value, observer, this);
 		return () => this.unsubscribe(observer);
 	}
 

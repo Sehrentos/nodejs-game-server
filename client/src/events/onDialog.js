@@ -3,7 +3,7 @@ import Events from "../Events.js";
 /**
  * Handles NPC dialog updates received from the server.
  *
- * @param {WebSocket|import("../control/SocketControl.js").default} socket - The WebSocket connection.
+ * @param {import("../control/SocketControl.js").default} socket - The WebSocket connection.
  * @param {import("../../../server/src/events/sendDialog.js").TDialogPacket} data - The dialog packet from the server.
  */
 export function onDialog(socket, data) {
