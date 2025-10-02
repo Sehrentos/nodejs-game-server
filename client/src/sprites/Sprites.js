@@ -26,6 +26,10 @@ SPR[SPR_ID.MAP_UNDER_WATER_1] = new Sprite(PATH_MAPS + 'map_4.jpg')
 SPR[SPR_ID.MAP_UNDER_WATER_2] = new Sprite(PATH_MAPS + 'map_5.jpg')
 SPR[SPR_ID.MAP_PLAIN_FIELDS_1] = new Sprite(PATH_MAPS + 'map_6.jpg')
 SPR[SPR_ID.MAP_PLAIN_FIELDS_2] = new Sprite(PATH_MAPS + 'map_7.jpg')
+SPR[SPR_ID.MAP_PLAIN_FIELDS_3] = new Sprite(PATH_MAPS + 'map_8.jpg')
+SPR[SPR_ID.MAP_DUNGEON_1] = new Sprite(PATH_MAPS + 'map_9.jpg')
+SPR[SPR_ID.MAP_BEACH_1] = new Sprite(PATH_MAPS + 'map_10.jpg')
+SPR[SPR_ID.MAP_SPACE_1] = new Sprite(PATH_MAPS + 'map_11.jpg')
 
 // #endregion
 

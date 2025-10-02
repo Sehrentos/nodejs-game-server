@@ -1,7 +1,7 @@
 /**
  * Creates a "packet" containing the state of Player.
  *
- * Note: not every player property is sent.
+ * Note: some properties are filtered on purpose, so the client does not know everything.
  *
  * @param {import("../../../shared/models/Entity.js").TEntityProps} player - A player object.
  * @param {string[]} [props] - optional. Specific player properties to send.
@@ -12,10 +12,11 @@
  * @prop {import("../../../shared/models/Entity.js").TEntityProps} player
  */
 export function sendPlayer(player, ...props) {
+	const type = "player"
 	// if no props are specified, send all
 	if (props.length === 0) {
 		return JSON.stringify({
-			type: "player",
+			type,
 			player: {
 				gid: player.gid,
 				// aid: player.aid,
@@ -74,11 +75,15 @@ export function sendPlayer(player, ...props) {
 	}
 
 	// if props are specified, send only those
-	const playerProps = {}
-	Object.keys(player).forEach(key => props.includes(key) && (playerProps[key] = player[key]))
+	const filteredProps = {}
+	Object.keys(player).forEach(key => {
+		if (props.includes(key)) {
+			filteredProps[key] = player[key]
+		}
+	})
 
 	return JSON.stringify({
-		type: "player",
-		player: playerProps
+		type,
+		player: filteredProps
 	})
 }

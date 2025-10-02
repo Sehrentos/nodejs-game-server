@@ -16,12 +16,11 @@ const TAG = '[Event.onEntityPacketDialog]';
  */
 export default async function onEntityPacketDialog(entity, data, timestamp) {
 	try {
-		const ctrl = entity.control
-
+		// const ctrl = entity.control
 		switch (data.action) {
 			case 'open':
 				console.log(`${TAG} "${entity.name}" started interacting with NPC (gid: ${data.gid})`)
-				ctrl.isMovementBlocked = true
+				entity.isMoveable = false
 				break;
 
 			case 'next':
@@ -30,7 +29,7 @@ export default async function onEntityPacketDialog(entity, data, timestamp) {
 
 			case 'close':
 				console.log(`${TAG} "${entity.name}" stopped interacting with NPC (gid: ${data.gid})`)
-				ctrl.isMovementBlocked = false
+				entity.isMoveable = true
 				break;
 
 			case 'sell':
@@ -64,7 +63,7 @@ async function sellSelectedItems(entity, sellItems) {
 
 	// unblock movement in case it wasn't already
 	// await user to select close in the dialog
-	// entity.control.isMovementBlocked = false
+	// entity.isMoveable = true
 
 	for (const item of sellItems) {
 		// validate item exists
@@ -117,7 +116,7 @@ async function sellAllItems(entity) {
 	let totalSellAmount = 0
 
 	// unblock movement in case it wasn't already
-	entity.control.isMovementBlocked = false
+	entity.isMoveable = true
 
 	// get all sellable items
 	const items = entity.inventory.filter(item => {

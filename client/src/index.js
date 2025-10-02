@@ -17,7 +17,7 @@ import Inventory from "./UI/Inventory.js"
 import Renderer from "./Renderer.js"
 import KeyControl from "./control/KeyControl.js"
 import TouchControl from "./control/TouchControl.js"
-import PlayerControl from "./control/PlayerControl.js"
+// import PlayerControl from "./control/PlayerControl.js"
 
 console.log(`App started in ${process.env.NODE_ENV} mode.`)
 
@@ -69,5 +69,6 @@ auth.jwtToken.subscribe((token) => {
 	state.socket = new SocketControl(state)
 	state.keyControl = new KeyControl(state)
 	state.touchControl = new TouchControl(state)
-	state.playerControl = new PlayerControl(state)
+	// client-side predictions (disabled for now)
+	// state.playerControl = new PlayerControl(state)
 })

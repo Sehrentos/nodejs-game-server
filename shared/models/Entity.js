@@ -1,3 +1,4 @@
+import EventEmitter from '../utils/EventEmitter.js';
 import { DIRECTION, ENTITY_TYPE } from "../enum/Entity.js"
 import { ELEMENT } from "../enum/Element.js";
 import * as Const from "../Constants.js";
@@ -14,6 +15,9 @@ import { Item } from "./Item.js";
  * @prop {string=} lastMap - Current map name.
  * @prop {number=} lastX - Current X position.
  * @prop {number=} lastY - Current Y position.
+ * prop {number=} prevX - Previous X position.
+ * prop {number=} prevY - Previous Y position.
+ * @prop {boolean=} isMoveable - Whether the entity can move. default true
  * @prop {number=} w - The width of the entity. default: 64
  * @prop {number=} h - The height of the entity. default: 64
  * @prop {boolean=} visible - Whether the entity is visible. default: true
@@ -21,10 +25,13 @@ import { Item } from "./Item.js";
  * @prop {number=} saveX - The position X entity was created or saved.
  * @prop {number=} saveY - The position Y entity was created or saved.
  * @prop {number=} dir - Direction facing 0: Left (x--), 1: Right (x++), 2: Up (y--), 3: Down (y++). default 0
+ * prop {number=} prevDir - Previous direction
  * @prop {number=} hp - Current health points.
  * @prop {number=} hpMax - Maximum health points.
+ * prop {number=} prevHp - Previous health points.
  * @prop {number=} mp - Current mana points.
  * @prop {number=} mpMax - Maximum mana points.
+ * prop {number=} prevMp - Previous mana points.
  * @prop {DOMHighResTimeStamp=} death - Time of death. default 0
  * @prop {number=} latency - **Player** Latency. default 0
  * @prop {number=} level - Level. default 1
@@ -79,10 +86,11 @@ import { Item } from "./Item.js";
  * @prop {string=} dialog - **NPC** dialog text
  * @prop {Entity=} owner - **PET** Owner entity
  * @prop {number[]=} pets - **Player** Pet entity IDs.
- * @prop {import("../../server/src/control/EntityControl.js").EntityControl=} control - **CONTROL** controller instance
+ * @prop {import("../../server/src/control/EntityControl.js").EntityControl=} control - **CONTROL** controller instance for server-side only.
+ * @prop {any} [delta] - **CONTROL** optional. container object for delta data
  */
 
-export class Entity {
+export class Entity extends EventEmitter {
 	/**
 	 * Constructor for creating a new Entity with initial properties.
 	 *
@@ -90,8 +98,10 @@ export class Entity {
 	 * entity type, visual name, map information, etc.
 	 *
 	 * @param {TEntityProps} p
+	 * @param {{ [key: string]: (...args: any[]) => void }} [events] optional. event emitter listeners
 	 */
-	constructor(p) {
+	constructor(p, events) {
+		super()
 		/** @type {number=} Database ID. default: 0 */
 		this.id = p?.id ?? 0
 		/** @type {string} Game ID. default: '' */
@@ -113,9 +123,14 @@ export class Entity {
 
 		// #region positions current & saved
 		this.dir = p?.dir ?? DIRECTION.DOWN
+		// this.prevDir = p?.prevDir ?? this.dir
 		this.lastMap = p?.lastMap ?? Const.ENTITY_LAST_MAP
 		this.lastX = p?.lastX ?? Const.ENTITY_LAST_X
 		this.lastY = p?.lastY ?? Const.ENTITY_LAST_Y
+		// this.prevX = p?.prevX ?? Const.ENTITY_LAST_X // for delta update
+		// this.prevY = p?.prevY ?? Const.ENTITY_LAST_Y
+		/** @type {boolean} isMoveable - Whether the entity can move. default true */
+		this.isMoveable = p?.isMoveable ?? true
 		this.saveMap = p?.saveMap ?? Const.ENTITY_LAST_MAP
 		this.saveX = p?.saveX ?? Const.ENTITY_LAST_X
 		this.saveY = p?.saveY ?? Const.ENTITY_LAST_Y
@@ -124,8 +139,10 @@ export class Entity {
 		// #region health & mana
 		this.hp = p?.hp ?? 1
 		this.hpMax = p?.hpMax ?? 1
+		// this.prevHp = p?.prevHp ?? this.hp // for delta update
 		this.mp = p?.mp ?? 1
 		this.mpMax = p?.mpMax ?? 1
+		// this.prevMp = p?.prevMp ?? this.mp // for delta update
 		// #endregion
 
 		/** @type {DOMHighResTimeStamp} - time of death. default 0 */
@@ -213,7 +230,13 @@ export class Entity {
 		// #region control
 		/** @type {import("../../server/src/control/EntityControl.js").EntityControl} */
 		this.control = p?.control ?? null
+		this.delta = p?.delta ?? null
 		// #endregion
+
+		// add events
+		if (events) {
+			Object.keys(events).forEach(k => this.on(k, events[k]))
+		}
 	}
 
 	/**

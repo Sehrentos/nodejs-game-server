@@ -1,10 +1,9 @@
 import { SOCKET_URL } from "../Settings.js";
 import { onPing } from "../events/onPing.js";
 import { onUpdatePlayer } from "../events/onUpdatePlayer.js";
-import { onUpdateMap } from "../events/onUpdateMap.js";
+import { onNewMapEntity, onRemoveMapEntity, onUpdateMap, onUpdateMapDelta, onUpdateMapEntity } from "../events/onUpdateMap.js";
 import { onChat } from "../events/onChat.js";
 import { onDialog } from "../events/onDialog.js";
-import { onRateLimit } from "../events/onRateLimit.js";
 import { onPlayerLeave } from "../events/onPlayerLeave.js";
 import { onItemsReceived } from "../events/onItemsReceived.js";
 import { onSkillUse } from "../events/onSkillUse.js";
@@ -182,48 +181,48 @@ export default class SocketControl {
 		try {
 			// TODO (sketch) : handle receiving binary data instead JSON string
 			// Check if the received data is an ArrayBuffer (binary data)
-			if (event.data instanceof ArrayBuffer) {
-				const receivedBuffer = event.data;
-				const view = new DataView(receivedBuffer);
+			// if (event.data instanceof ArrayBuffer) {
+			// 	const receivedBuffer = event.data;
+			// 	const view = new DataView(receivedBuffer);
 
-				// Ensure buffer is long enough for at least the header
-				if (view.byteLength < 1) {
-					console.error("Received buffer too small for header.");
-					return;
-				}
+			// 	// Ensure buffer is long enough for at least the header
+			// 	if (view.byteLength < 1) {
+			// 		console.error("Received buffer too small for header.");
+			// 		return;
+			// 	}
 
-				// Read the header byte (at offset 0)
-				const header = view.getUint8(0);
+			// 	// Read the header byte (at offset 0)
+			// 	const header = view.getUint8(0);
 
-				// Check the header value
-				switch (header) {
-					case 0x21: // Our defined Timestamp Header (example)
-						// Check if the buffer is the expected length for this type
-						if (view.byteLength !== 9) { // 1 byte header + 8 bytes timestamp
-							console.error("Received timestamp packet with incorrect length:", view.byteLength);
-							return;
-						}
-						try {
-							// Read the timestamp (Float64 BE) starting from OFFSET 1
-							const receivedTimestamp = view.getFloat64(1, false); // false = Big Endian
-							const receivedDate = new Date(receivedTimestamp);
-							console.log("Received Timestamp Packet:", receivedTimestamp, receivedDate.toISOString());
-							// Process the timestamp...
-						} catch (e) {
-							console.error("Error reading timestamp payload:", e);
-						}
-						break;
+			// 	// Check the header value
+			// 	switch (header) {
+			// 		case 0x21: // Our defined Timestamp Header (example)
+			// 			// Check if the buffer is the expected length for this type
+			// 			if (view.byteLength !== 9) { // 1 byte header + 8 bytes timestamp
+			// 				console.error("Received timestamp packet with incorrect length:", view.byteLength);
+			// 				return;
+			// 			}
+			// 			try {
+			// 				// Read the timestamp (Float64 BE) starting from OFFSET 1
+			// 				const receivedTimestamp = view.getFloat64(1, false); // false = Big Endian
+			// 				const receivedDate = new Date(receivedTimestamp);
+			// 				console.log("Received Timestamp Packet:", receivedTimestamp, receivedDate.toISOString());
+			// 				// Process the timestamp...
+			// 			} catch (e) {
+			// 				console.error("Error reading timestamp payload:", e);
+			// 			}
+			// 			break;
 
-					case 0xAB: // Example: Another packet type
-						console.log("Received Another Packet Type (0xAB)");
-						// Process differently...
-						break;
+			// 		case 0xAB: // Example: Another packet type
+			// 			console.log("Received Another Packet Type (0xAB)");
+			// 			// Process differently...
+			// 			break;
 
-					default:
-						console.warn("Received packet with unknown header:", header);
-				}
-				return;
-			}
+			// 		default:
+			// 			console.warn("Received packet with unknown header:", header);
+			// 	}
+			// 	return;
+			// }
 
 			// Message is non-binary data
 
@@ -244,19 +243,34 @@ export default class SocketControl {
 					onPing(this, data);
 					break;
 
-				// rate limiter client send too many messages in short time
-				case "rate-limit":
-					onRateLimit(this, data);
-					break;
-
-				// update player state (all or specific properties)
+				// player update (all or specific properties)
 				case "player":
 					onUpdatePlayer(this, data);
 					break;
 
-				// update map
+				// update world map state
 				case "map":
 					onUpdateMap(this, data);
+					break;
+
+				// map entity update (all or specific properties)
+				case "map-entity":
+					onUpdateMapEntity(this, data);
+					break;
+
+				// map delta updates
+				case "map-update":
+					onUpdateMapDelta(this, data);
+					break;
+
+				// add new map entity
+				case "map-new-entity":
+					onNewMapEntity(this, data);
+					break;
+
+				// remove map entity
+				case "map-remove-entity":
+					onRemoveMapEntity(this, data);
 					break;
 
 				// chat controls

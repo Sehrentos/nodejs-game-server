@@ -43,13 +43,14 @@ export class AIPet {
 	 */
 	onIddleMovement(timestamp) {
 		const entity = this.entity
+		const ctrl = entity.control
 
 		// check if entity can move
 		// check if entity is still alive and in a map
 		// check if iddleStart is greater than 5000ms
-		if (entity.hp > 0 && entity.control.map != null) {
+		if (entity.hp > 0 && ctrl.map != null) {
 			// check if is in combat, then do not iddle
-			if (entity.control._attacking != null) {
+			if (ctrl._attacking != null) {
 				return
 			}
 			// stay put for 5 seconds,
@@ -62,12 +63,9 @@ export class AIPet {
 				return
 			}
 
-			// check movement delay
-			if (this.entity.control._moveCd.isNotExpired(timestamp)) return
-
 			if (entity.dir === DIRECTION.DOWN) {
-				if ((entity.lastY < entity.saveY + ENTITY_AI_IDDLE_MOVE_MAX) && entity.lastY < entity.control.map.height) {
-					entity.control.move(DIRECTION.DOWN, timestamp)
+				if ((entity.lastY < entity.saveY + ENTITY_AI_IDDLE_MOVE_MAX) && entity.lastY < ctrl.map.height) {
+					ctrl.move(DIRECTION.DOWN, timestamp)
 				} else {
 					// next direction
 					entity.dir = DIRECTION.RIGHT
@@ -75,8 +73,8 @@ export class AIPet {
 				}
 			}
 			if (entity.dir === DIRECTION.RIGHT) {
-				if ((entity.lastX < entity.saveX + ENTITY_AI_IDDLE_MOVE_MAX) && entity.lastX < entity.control.map.width) {
-					entity.control.move(DIRECTION.RIGHT, timestamp)
+				if ((entity.lastX < entity.saveX + ENTITY_AI_IDDLE_MOVE_MAX) && entity.lastX < ctrl.map.width) {
+					ctrl.move(DIRECTION.RIGHT, timestamp)
 				} else {
 					entity.dir = DIRECTION.UP
 					this.iddleStart = timestamp
@@ -84,7 +82,7 @@ export class AIPet {
 			}
 			if (entity.dir === DIRECTION.UP) {
 				if ((entity.lastY > entity.saveY - ENTITY_AI_IDDLE_MOVE_MAX) && entity.lastY > 0) {
-					entity.control.move(DIRECTION.UP, timestamp)
+					ctrl.move(DIRECTION.UP, timestamp)
 				} else {
 					entity.dir = DIRECTION.LEFT
 					this.iddleStart = timestamp
@@ -92,7 +90,7 @@ export class AIPet {
 			}
 			if (entity.dir === DIRECTION.LEFT) {
 				if ((entity.lastX > entity.saveX - ENTITY_AI_IDDLE_MOVE_MAX) && entity.lastX > 0) {
-					entity.control.move(DIRECTION.LEFT, timestamp)
+					ctrl.move(DIRECTION.LEFT, timestamp)
 				} else {
 					entity.dir = DIRECTION.DOWN
 					this.iddleStart = timestamp
@@ -109,14 +107,15 @@ export class AIPet {
 	detectNearby(radius, timestamp) {
 		try {
 			const self = this.entity
+			const ctrl = self.control
 
 			// find entities in x tiles radius
-			const nearbyEntities = WorldMap.findEntitiesInRadius(self.control.map, self.lastX, self.lastY, radius)
+			const nearbyEntities = WorldMap.findEntitiesInRadius(ctrl.map, self.lastX, self.lastY, radius)
 				.filter(entity => entity.gid !== self.gid && entity.gid !== self.owner.gid) // exclude self and owner
 
 			// no entities in radius
 			if (nearbyEntities.length === 0) {
-				self.control._attacking = null
+				ctrl._attacking = null
 				return
 			}
 
@@ -128,14 +127,14 @@ export class AIPet {
 						continue; // skip to next target
 					}
 					// start following target
-					self.control.follow(entity, timestamp)
+					ctrl.follow(entity, timestamp)
 					// has previous target and still in range
 					// then attack it
-					if (self.control._attacking != null) {
-						self.control.attack(self.control._attacking, timestamp)
+					if (ctrl._attacking != null) {
+						ctrl.attack(ctrl._attacking, timestamp)
 					} else {
-						self.control._attacking = entity
-						self.control.attack(entity, timestamp)
+						ctrl._attacking = entity
+						ctrl.attack(entity, timestamp)
 					}
 					return
 				}

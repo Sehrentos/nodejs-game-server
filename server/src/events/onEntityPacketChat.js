@@ -77,6 +77,16 @@ CMD['/help'] = (entity, data, params) => {
 	));
 }
 
+// return current position
+CMD['/where'] = (entity, data, params) => {
+	entity.control.socket.send(sendChat(
+		'default',
+		'Server',
+		entity.name,
+		`Current position: "${entity.lastMap}" x:${entity.lastX}, y:${entity.lastY}`
+	));
+}
+
 // save position in the current map
 CMD['/save'] = async (entity, data, params) => {
 	try {

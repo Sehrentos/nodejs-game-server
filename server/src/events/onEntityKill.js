@@ -3,6 +3,7 @@ import { ENTITY_TYPE } from "../../../shared/enum/Entity.js"
 import { Item } from "../../../shared/models/Item.js"
 import { getRandomInt } from "../utils/getRandomInt.js"
 import { sendItemsReceived } from "./sendItemsReceived.js"
+import { sendMapEntity } from "./sendMap.js"
 import { sendPlayer } from "./sendPlayer.js"
 
 /**
@@ -103,10 +104,10 @@ export function onEntityKill(killer, killed) {
 		}
 	}
 
-	// reset player send upate cooldown
-	// so next tick player will get fresh data
-	// for the UI etc.
-	killer.control._socketSentPlayerUpdateCd.reset()
+	// send entity update
+	const world = killed.control.world
+	const map = killed.control.map
+	world.broadcastMap(map, sendMapEntity(killed, "hp", "mp", "death"))
 
 	// DEBUG
 	// console.log(`[Event.onEntityKill] killer "${killer.name} (${killer.level})" with exp: ${killed.baseExp}/${killed.jobExp}`)

@@ -1,12 +1,11 @@
 import { Entity } from "../../../shared/models/Entity.js";
 
 /**
- * Handles player updates received from the server.
+ * Handles player update received from the server.
  *
  * Updates the player state with data received from the server.
  * If a player already exists, it merges the new data into the existing player state.
  * Otherwise, it creates a new player instance with the provided data.
- * Optionally, a custom event can be send to update the player UI.
  *
  * @param {import("../control/SocketControl.js").default} socket - The WebSocket connection.
  * @param {import("../../../server/src/events/sendPlayer.js").TPlayerPacket} data - The player packet from the server.

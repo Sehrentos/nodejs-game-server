@@ -25,7 +25,7 @@ import * as Const from '../../../shared/Constants.js';
 import { sendHeartbeat } from '../events/sendHeartbeat.js';
 // import { sendRateLimit } from '../events/sendRateLimit.js';
 import SkillControl from './SkillControl.js';
-import { sendPlayer } from '../events/sendPlayer.js';
+import { sendMapEntity } from '../events/sendMap.js';
 
 export class EntityControl {
 	/**
@@ -59,9 +59,6 @@ export class EntityControl {
 
 		/** @type {import("../../../shared/models/Entity.js").Entity?} following this entity */
 		this._follow = null
-
-		/** @type {boolean=} - whether movement is blocked e.g. NPC dialog is open */
-		this.isMovementBlocked = false
 
 		/** @type {{x: number, y: number}|null} entity move to position */
 		this._moveTo = null
@@ -111,6 +108,7 @@ export class EntityControl {
 		// check if the message is binary (not JSON)
 		if (isBinary) {
 			console.log(`[${this.constructor.name}] "${this.entity.name}" sent binary message!`);
+			console.log("Binary message is not implemented.");
 			return;
 		}
 		// This code will only execute if the message is NOT rate limited.
@@ -151,6 +149,7 @@ export class EntityControl {
 		this.socket.off('error', this._onSocketError)
 		this.socket.off('message', this._onSocketMessage)
 		this.world.onClientClose(this.entity)
+		this.entity.emit('socket.close')
 	}
 
 	/**
@@ -159,6 +158,7 @@ export class EntityControl {
 	 */
 	onSocketError(error) {
 		console.log(`[${this.constructor.name}] onError "${this.entity.name}"`, error.message || error || '[no-code]');
+		this.entity.emit('socket.error', error)
 	}
 
 	/**
@@ -167,6 +167,7 @@ export class EntityControl {
 	 */
 	onSocketHeartbeat() {
 		this.socket.send(sendHeartbeat("ping", performance.now()))
+		this.entity.emit('socket.heartbeat')
 	}
 
 	/**
@@ -176,6 +177,7 @@ export class EntityControl {
 	 */
 	broadcast(data, isBinary = false) {
 		this.world.broadcast(data, isBinary)
+		this.entity.emit('broadcast', data, isBinary)
 	}
 
 	/**
@@ -184,6 +186,7 @@ export class EntityControl {
 	 * @param {number} timestamp `performance.now()` from the world.onTick
 	 */
 	onTick(timestamp) {
+		this.entity.emit('tick', timestamp)
 		switch (this.entity.type) {
 			case ENTITY_TYPE.PLAYER: onEntityUpdatePlayer(this.entity, timestamp); break;
 			case ENTITY_TYPE.MONSTER: onEntityUpdateMonster(this.entity, timestamp); break;
@@ -196,20 +199,22 @@ export class EntityControl {
 
 	/**
 	 * Called when the player entity enters a map.
-	 * @param {import("../../../shared/models/WorldMap.js").WorldMap} map - The map the player is entering
+	 * @param {import("../../../shared/models/WorldMap.js").WorldMap} newMap - The map the player is entering
 	 * @param {import("../../../shared/models/WorldMap.js").WorldMap} oldMap - The map the player was previously in
 	 */
-	onEnterMap(map, oldMap) {
-		return onEntityEnterMap(this.entity, map, oldMap)
+	onEnterMap(newMap, oldMap) {
+		this.entity.emit('map.enter', newMap, oldMap)
+		return onEntityEnterMap(this.entity, newMap, oldMap)
 	}
 
 	/**
 	 * Called when the player entity leaves a map.
-	 * @param {import("../../../shared/models/WorldMap.js").WorldMap} map - The map the player is entering
+	 * @param {import("../../../shared/models/WorldMap.js").WorldMap} newMap - The map the player is entering
 	 * @param {import("../../../shared/models/WorldMap.js").WorldMap} oldMap - The map the player was previously in
 	 */
-	onLeaveMap(map, oldMap) {
-		return onEntityLeaveMap(this.entity, map, oldMap)
+	onLeaveMap(newMap, oldMap) {
+		this.entity.emit('map.leave', newMap, oldMap)
+		return onEntityLeaveMap(this.entity, newMap, oldMap)
 	}
 
 	/**
@@ -240,6 +245,8 @@ export class EntityControl {
 		ent.def = (lv * Const.PLAYER_BASE_DEF) + ent.vit
 		// calc base MDef by level * 1.5 plus int + 25% of def
 		ent.mDef = (lv * Const.PLAYER_BASE_MDEF) + ent.int + (ent.def * 0.25)
+
+		this.entity.emit('sync.stats')
 	}
 
 	/**
@@ -275,55 +282,6 @@ export class EntityControl {
 	}
 
 	/**
-	 * Moves the entity in the specified direction if possible.
-	 * The movement is based on the entity's direction and current speed.
-	 * Updates the entity's position on the map while ensuring it stays within boundaries.
-	 * The movement is constrained by a delay calculated from speed / step.
-	 *
-	 * @param {number} dir - The direction to move the entity:
-	 *   0: Left (x--), 1: Right (x++), 2: Up (y--), 3: Down (y++)
-	 * @param {number} timestamp - The current timestamp or performance.now().
-	 */
-	move(dir, timestamp) {
-		if (this.isMovementBlocked) return // can't move
-		if (this.entity.hp <= 0) return // must be alive
-
-		switch (dir) {
-			case DIRECTION.LEFT:
-				this.entity.dir = DIRECTION.LEFT
-				if (this.entity.lastX > 0) {
-					// this.entity.lastX -= Const.ENTITY_MOVE_STEP
-					this.moveTo(this.entity.lastX - Const.ENTITY_MOVE_STEP, this.entity.lastY, timestamp)
-				}
-				break
-			case DIRECTION.RIGHT:
-				this.entity.dir = DIRECTION.RIGHT
-				if (this.entity.lastX < this.map.width) {
-					// this.entity.lastX += Const.ENTITY_MOVE_STEP
-					this.moveTo(this.entity.lastX + Const.ENTITY_MOVE_STEP, this.entity.lastY, timestamp)
-				}
-				break
-			case DIRECTION.UP:
-				this.entity.dir = DIRECTION.UP
-				if (this.entity.lastY > 0) {
-					// this.entity.lastY -= Const.ENTITY_MOVE_STEP
-					this.moveTo(this.entity.lastX, this.entity.lastY - Const.ENTITY_MOVE_STEP, timestamp)
-
-				}
-				break
-			case DIRECTION.DOWN:
-				this.entity.dir = DIRECTION.DOWN
-				if (this.entity.lastY < this.map.height) {
-					// this.entity.lastY += Const.ENTITY_MOVE_STEP
-					this.moveTo(this.entity.lastX, this.entity.lastY + Const.ENTITY_MOVE_STEP, timestamp)
-				}
-				break
-			default:
-				break
-		}
-	}
-
-	/**
 	 * Start attacking the target entity
 	 * - call stopMoveTo method
 	 *
@@ -349,6 +307,7 @@ export class EntityControl {
 		if (!Entity.inRangeOfEntity(this.entity, entity)) return // out of range
 		// set auto-attack cooldown as timestamp + aspd * multiplier
 		this._attackAutoCd.set(timestamp + (this.entity.aspd * this.entity.aspdMultiplier))
+		this.entity.emit('attack.start', entity.gid)
 		// entity take damage from attacker
 		entity.control.takeDamageFrom(this.entity)
 	}
@@ -358,6 +317,7 @@ export class EntityControl {
 	 */
 	stopAttack() {
 		this._attacking = null
+		this.entity.emit('attack.stop')
 	}
 
 	/**
@@ -377,7 +337,7 @@ export class EntityControl {
 		if (this.entity.type === ENTITY_TYPE.PORTAL) return // PORTAL can't take damage
 		if (this.map !== attacker.control.map) return // must be in the same map, to receive damage
 		if (this.entity.type === ENTITY_TYPE.PLAYER && attacker.type === ENTITY_TYPE.PLAYER && !this.map.isPVP) return // PLAYER can take damage in PVP map only
-
+		let lastHp = this.entity.hp
 		// physical attacks are always neutral? what about weapons elements?
 		// TODO take defence into account
 		if (attacker.eAtk === ELEMENT.NEUTRAL) {
@@ -385,9 +345,10 @@ export class EntityControl {
 		} else {
 			this.entity.hp -= (attacker.int + attacker.mAtk) * attacker.mAtkMultiplier * extraMultiplyer;
 		}
-
+		this.entity.emit('damage', attacker.gid, this.entity.gid, lastHp, this.entity.hp)
 		// if entity dies, call the onEntityKill event
 		if (this.entity.hp <= 0) {
+			this.entity.emit('die', attacker.gid, this.entity.gid)
 			onEntityKill(attacker, this.entity)
 		}
 	}
@@ -408,6 +369,12 @@ export class EntityControl {
 		this.entity.hp = Number(this.entity.hpMax)
 		this.entity.mp = Number(this.entity.mpMax)
 		this.entity.death = 0 // reset time of death
+		this.entity.emit('revive', this.entity.gid)
+
+		// send entity "revive" packet
+		const world = this.entity.control.world
+		const map = this.entity.control.map
+		world.broadcastMap(map, sendMapEntity(this.entity, "hp", "mp", "death"))
 	}
 
 	/**
@@ -421,12 +388,15 @@ export class EntityControl {
 	 * this.heal(this.entity.hpMax, this.entity.mpMax); // 100%
 	 */
 	heal(hp, mp) {
+		let lastHp = this.entity.hp
+		let lastMp = this.entity.mp
 		if (hp) {
 			this.entity.hp = Math.min(this.entity.hp + hp, this.entity.hpMax)
 		}
 		if (mp) {
 			this.entity.mp = Math.min(this.entity.mp + mp, this.entity.mpMax)
 		}
+		this.entity.emit('heal', this.entity.gid, lastHp, this.entity.hp, lastMp, this.entity.mp)
 	}
 
 	/**
@@ -437,11 +407,14 @@ export class EntityControl {
 		if (this.map.name === this.entity.saveMap) {
 			this.lastX = this.entity.saveX
 			this.lastY = this.entity.saveY
+			this.entity.emit('savePosition', this.entity.gid)
 			return
 		}
 		// different map, join
 		if (this.entity.type === ENTITY_TYPE.PLAYER) {
-			this.map.world.joinMap(this.entity, this.entity.saveMap, this.entity.saveX, this.entity.saveY)
+			this.map.world.joinMap(this.entity, this.entity.saveMap, this.entity.saveX, this.entity.saveY).then(() => {
+				this.entity.emit('savePosition', this.entity.gid)
+			})
 		}
 	}
 
@@ -475,6 +448,60 @@ export class EntityControl {
 	}
 
 	/**
+	 * Moves the entity in the specified direction if possible.
+	 * The movement is based on the entity's direction and current speed.
+	 * Updates the entity's position on the map while ensuring it stays within boundaries.
+	 * The movement is constrained by a delay calculated from speed / step.
+	 *
+	 * @param {number} dir - The direction to move the entity:
+	 *   0: Left (x--), 1: Right (x++), 2: Up (y--), 3: Down (y++)
+	 * @param {number} timestamp - The current timestamp or performance.now().
+	 */
+	move(dir, timestamp) {
+		if (!this.entity.isMoveable) return // can't move
+		if (this.entity.hp <= 0) return // must be alive
+
+		// check if entity can move on this tick
+		if (this._moveCd.isNotExpired(timestamp)) return
+		this._moveCd.set(timestamp + (this.entity.speed * Const.ENTITY_MOVE_STEP) - this.entity.latency)
+
+		switch (dir) {
+			case DIRECTION.LEFT:
+				this.entity.dir = DIRECTION.LEFT
+				if (this.entity.lastX > 0) {
+					this.entity.lastX -= Const.ENTITY_MOVE_STEP
+					// this.moveTo(this.entity.lastX - Const.ENTITY_MOVE_STEP, this.entity.lastY, timestamp)
+				}
+				break
+			case DIRECTION.RIGHT:
+				this.entity.dir = DIRECTION.RIGHT
+				if (this.entity.lastX < this.map.width) {
+					this.entity.lastX += Const.ENTITY_MOVE_STEP
+					// this.moveTo(this.entity.lastX + Const.ENTITY_MOVE_STEP, this.entity.lastY, timestamp)
+				}
+				break
+			case DIRECTION.UP:
+				this.entity.dir = DIRECTION.UP
+				if (this.entity.lastY > 0) {
+					this.entity.lastY -= Const.ENTITY_MOVE_STEP
+					// this.moveTo(this.entity.lastX, this.entity.lastY - Const.ENTITY_MOVE_STEP, timestamp)
+
+				}
+				break
+			case DIRECTION.DOWN:
+				this.entity.dir = DIRECTION.DOWN
+				if (this.entity.lastY < this.map.height) {
+					this.entity.lastY += Const.ENTITY_MOVE_STEP
+					// this.moveTo(this.entity.lastX, this.entity.lastY + Const.ENTITY_MOVE_STEP, timestamp)
+				}
+				break
+			default:
+				break
+		}
+		this.entity.emit('move', this.entity.gid, this.entity.dir)
+	}
+
+	/**
 	 * Makes the entity follow another entity, by moving its position on each tick
 	 * closer to the target entity. The target must be in the range.
 	 * If the target moves out of range or dies, then stop following.
@@ -483,29 +510,16 @@ export class EntityControl {
 	 */
 	follow(entity, timestamp) {
 		this.stopMoveTo()
-
-		if (this.isMovementBlocked) return // can't move
-		if (this.entity.hp <= 0) return // must be alive
+		if (!this.entity.isMoveable) return this.stopFollow() // can't move
+		if (this.entity.hp <= 0) return this.stopFollow() // must be alive
+		if (entity.hp <= 0) return this.stopFollow() // target must be alive
+		if (Entity.inRangeOfEntity(this.entity, entity)) return this.stopFollow() // in range
 
 		this._follow = entity
 
 		// check if entity can move on this tick
 		if (this._moveCd.isNotExpired(timestamp)) return
-		// this._moveCd.set((timestamp + this.entity.speed)
-		this._moveCd.set(timestamp + (this.entity.speed * Const.ENTITY_MOVE_STEP))
-		// TODO how to mitigate this.entity.latency
-
-		// if target dies, stop following
-		if (entity.hp <= 0) {
-			this._follow = null
-			return
-		}
-
-		// stop at range
-		if (Entity.inRangeOfEntity(this.entity, entity)) {
-			this._follow = null
-			return
-		}
+		this._moveCd.set(timestamp + (this.entity.speed * Const.ENTITY_MOVE_STEP) - this.entity.latency)
 
 		// follow entity
 		if (this.entity.lastX > entity.lastX) {
@@ -523,10 +537,12 @@ export class EntityControl {
 			this.entity.lastY += Const.ENTITY_MOVE_STEP
 		}
 
+		// Note: test for frequent position updates
 		// when entity is player, send position update
 		// if (this.entity.type === ENTITY_TYPE.PLAYER) {
 		// 	this.socket.send(sendPlayer(this.entity, "dir", "lastX", "lastY"))
 		// }
+		this.entity.emit('follow', this.entity.gid, entity.gid)
 	}
 
 	/**
@@ -534,6 +550,7 @@ export class EntityControl {
 	 */
 	stopFollow() {
 		this._follow = null
+		this.entity.emit('follow.stop', this.entity.gid)
 	}
 
 	/**
@@ -547,8 +564,12 @@ export class EntityControl {
 	 */
 	moveTo(x, y, timestamp) {
 		this.stopFollow()
-		if (this.isMovementBlocked) return // can't move
-		if (this.entity.hp <= 0) return // must be alive
+		if (!this.entity.isMoveable) return this.stopMoveTo() // can't move
+		if (this.entity.hp <= 0) return this.stopMoveTo() // must be alive
+		// stop at range
+		if (Entity.inRangeOf(this.entity, x, y, Const.ENTITY_MOVE_STEP)) {
+			return this.stopMoveTo()
+		}
 
 		// set move to position
 		// next tick will move entity closer to this position
@@ -556,15 +577,7 @@ export class EntityControl {
 
 		// check if entity can move on this tick
 		if (this._moveCd.isNotExpired(timestamp)) return
-		// this._moveCd.set(timestamp + this.entity.speed)
-		this._moveCd.set(timestamp + (this.entity.speed * Const.ENTITY_MOVE_STEP))
-		// TODO how to mitigate this.entity.latency
-
-		// stop at range
-		if (Entity.inRangeOf(this.entity, x, y, 1)) {
-			this._moveTo = null
-			return
-		}
+		this._moveCd.set(timestamp + (this.entity.speed * Const.ENTITY_MOVE_STEP) - this.entity.latency)
 
 		if (this.entity.lastX > x) {
 			this.entity.dir = DIRECTION.LEFT
@@ -581,10 +594,12 @@ export class EntityControl {
 			this.entity.lastY += Const.ENTITY_MOVE_STEP
 		}
 
+		// Note: test for frequent position updates
 		// when entity is player, send position update
 		// if (this.entity.type === ENTITY_TYPE.PLAYER) {
 		// 	this.socket.send(sendPlayer(this.entity, "dir", "lastX", "lastY"))
 		// }
+		this.entity.emit('moveTo', this.entity.gid, x, y)
 	}
 
 	/**
@@ -593,6 +608,7 @@ export class EntityControl {
 	 */
 	stopMoveTo() {
 		this._moveTo = null
+		this.entity.emit('moveTo.stop', this.entity.gid)
 	}
 
 	/**
@@ -607,6 +623,7 @@ export class EntityControl {
 		if (x > -1 && x > this.entity.lastX) return DIRECTION.RIGHT
 		if (y > -1 && y < this.entity.lastY) return DIRECTION.UP
 		if (y > -1 && y > this.entity.lastY) return DIRECTION.DOWN
+		return DIRECTION.DOWN
 	}
 
 }

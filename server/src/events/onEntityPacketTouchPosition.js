@@ -98,7 +98,7 @@ function touch(player, entity, timestamp) {
 			}
 			// in range of the NPC
 			// while interacting with an NPC disable entity movement
-			ctrl.isMovementBlocked = true
+			entity.isMoveable = false
 			// send start NPC interact message
 			ctrl.socket.send(sendDialog(entity.gid, entity.dialog))
 			break;

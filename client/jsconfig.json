@@ -22,7 +22,7 @@
 	],
 	"include": [
 		"**/*.js",
-		"**/*.ts",
+		"**/*.ts", "../shared/utils/EventEmitter.js",
 	],
 	"typeAcquisition": {
 		"enable": true,

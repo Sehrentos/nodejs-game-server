@@ -103,6 +103,9 @@ export default class Renderer {
 
 		// #region drawing
 		if (this.state.map.value != null && this.state.player.value != null) {
+			// client-side predictions
+			this.state.playerControl?.onTick(timestamp)
+			// normal rendering
 			this.drawCamera(this.state.player.value)
 			if (this.state.map.value != null) {
 				this.drawMapLayout(this.state.map.value)
@@ -234,6 +237,8 @@ export default class Renderer {
 	 * @param {import("../../shared/models/Entity.js").TEntityProps} entity - The monster entity to draw.
 	 */
 	drawEntityMonster(entity) {
+		// dont draw, when entity is dead
+		if (entity.hp <= 0) return;
 		// draw entity by sprite, if available. fallback to id
 		const spriteId = entity.spriteId || entity.id
 		const sprite = SPRITES[spriteId]

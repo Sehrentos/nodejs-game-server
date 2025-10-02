@@ -1,4 +1,6 @@
 import { COOLDOWN_PORTAL_USE } from "../../../shared/Constants.js";
+import { ENTITY_TYPE } from "../../../shared/enum/Entity.js";
+import { sendMap, sendMapNewEntity } from "./sendMap.js";
 import { sendPlayer } from "./sendPlayer.js";
 
 /**
@@ -23,9 +25,18 @@ export default async function onEntityEnterMap(entity, map, oldMap) {
 		// recalculate player stats
 		ctrl.syncStats()
 
-		// Note: this is also send in onTick
 		// send packet to client, containing player data
 		ctrl.socket.send(sendPlayer(entity))
+		// send full map state
+		ctrl.socket.send(sendMap(entity, map, true))
+
+		// notify other players about the player entering the map
+		const entityPets = map.entities.filter(e => e.type === ENTITY_TYPE.PET && e.owner.gid === entity.gid)
+		for (let other of map.entities) {
+			if (other.type === ENTITY_TYPE.PLAYER && other.gid !== entity.gid) {
+				other.control.socket.send(sendMapNewEntity(entity, ...entityPets))
+			}
+		}
 		return true
 
 	} catch (ex) {

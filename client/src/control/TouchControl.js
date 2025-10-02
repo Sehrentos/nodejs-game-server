@@ -58,47 +58,8 @@ export default class TouchControl {
 		// server EntityControl.onClickPosition
 		this.state.socket.send(sendTouchPosition(x, y))
 
-		// client side move predictions
-		// const timestamp = Date.now()
-		const entities = WorldMap.findEntitiesInRadius(this.state.map.value, x, y, PLAYER_TOUCH_AREA_SIZE)
-			.filter(entity => entity.gid !== this.state.player.value?.gid) // exclude self
-
-		// TODO remove logs, when done testing
-		console.log(x, y, entities)
-
-		// // if no entities found
-		// // start moving to the clicked position
-		// if (entities.length === 0) {
-		// 	moveTo(json.x, json.y, timestamp)
-		// 	return
-		// }
-
-		// // 1. priority - Monster (alive)
-		// const mobs = entities.filter(e => e.type === ENTITY_TYPE.MONSTER && e.hp > 0)
-		// if (mobs.length) {
-		// 	return touch(player, mobs[0], timestamp)
-		// }
-
-		// // 2. priority - NPC
-		// const npcs = entities.filter(e => e.type === ENTITY_TYPE.NPC)
-		// if (npcs.length) {
-		// 	return touch(player, npcs[0], timestamp)
-		// }
-
-		// // 3. priority - Player
-		// const players = entities.filter(e => e.type === ENTITY_TYPE.PLAYER)
-		// if (players.length) {
-		// 	return touch(player, players[0], timestamp)
-		// }
-
-		// // 4. priority - PORTAL
-		// const portals = entities.filter(e => e.type === ENTITY_TYPE.PORTAL)
-		// if (portals.length) {
-		// 	return touch(player, portals[0], timestamp)
-		// }
-
-		// // 5. move to position
-		// ctrl.moveTo(json.x, json.y, timestamp)
+		// client-side predictions
+		this.state.playerControl?.touchPosition(x, y)
 	}
 
 	/**

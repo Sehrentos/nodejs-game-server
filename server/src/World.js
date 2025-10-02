@@ -7,6 +7,7 @@ import { Database } from './db/Database.js';
 import MapLobbyTown from './maps/MapLobbyTown.js';
 import MapPlainFields1 from './maps/MapPlainFields1.js';
 import MapPlainFields2 from './maps/MapPlainFields2.js';
+import MapPlainFields3 from './maps/MapPlainFields3.js';
 import { EntityControl } from './control/EntityControl.js';
 import createGameId from './utils/createGameId.js';
 import { PLAYER_BASE_HP_REGEN, UPDATE_TICK } from '../../shared/Constants.js';
@@ -14,12 +15,15 @@ import MapFlowerTown from './maps/MapFlowerTown.js';
 import MapCarTown from './maps/MapCarTown.js';
 import MapUnderWater1 from './maps/MapUnderWater1.js';
 import MapUnderWater2 from './maps/MapUnderWater2.js';
+import MapDungeon1 from './maps/MapDungeon1.js';
 import { sendPlayerLeave } from './events/sendPlayerLeave.js';
 import { sendChat } from './events/sendChat.js';
 import { Item } from '../../shared/models/Item.js';
 import { getItemByItemId } from '../../shared/data/ITEMS.js';
 import { createPetEntity } from './actions/pet.js';
 import { SPR_ID } from '../../shared/enum/Sprite.js';
+import { sendMapRemoveEntity } from './events/sendMap.js';
+import { sendPlayer } from './events/sendPlayer.js';
 
 /**
  * @module World
@@ -57,6 +61,8 @@ export class World {
 			new MapUnderWater2({ world: this }),
 			new MapPlainFields1({ world: this }),
 			new MapPlainFields2({ world: this }),
+			new MapPlainFields3({ world: this }),
+			new MapDungeon1({ world: this }),
 		]
 
 		/** @type {number} - total number of players, from server start */
@@ -98,15 +104,8 @@ export class World {
 						console.log(`[World (debug)] (id:${entity.id}) "${entity.name}" is ${playerUpdate.affectedRows > 0 ? 'saved' : 'not saved'}.`)
 						// save player inventory
 						// TODO improve this logic
-						let inventoryClear = await this.db.inventory.clear(entity.id)
-						console.log(`[World (debug)] (id:${entity.id}) "${entity.name}" inventory was ${inventoryClear.affectedRows > 0 ? 'cleared' : 'not cleared'}.`)
-
-						let inventoryAddAll = await this.db.inventory.addAll(entity.id, entity.inventory)
-						if (inventoryAddAll.length) {
-							inventoryAddAll.forEach(item => console.log(`[World (debug)] (id:${entity.id}) "${entity.name}" inventory was ${item.affectedRows > 0 ? 'updated' : 'not updated'}.`))
-						} else {
-							console.log(`[World (debug)] (id:${entity.id}) "${entity.name}" inventory was not updated.`)
-						}
+						await this.db.inventory.clear(entity.id)
+						await this.db.inventory.addAll(entity.id, entity.inventory)
 					}
 				}
 			}
@@ -143,16 +142,17 @@ export class World {
 
 		// save player inventory
 		// TODO improve this logic
-		let inventoryClear = await this.db.inventory.clear(player.id)
-		console.log(`[World (debug)] (id:${player.id}) "${player.name}" inventory was ${inventoryClear.affectedRows > 0 ? 'cleared' : 'not cleared'}.`)
+		await this.db.inventory.clear(player.id)
+		await this.db.inventory.addAll(player.id, player.inventory)
 
-		let inventoryAddAll = await this.db.inventory.addAll(player.id, player.inventory)
-		if (inventoryAddAll.length) {
-			inventoryAddAll.forEach(item => console.log(`[World] (id:${player.id}) "${player.name}" inventory was ${item.affectedRows > 0 ? 'updated' : 'not updated'}.`))
-		} else {
-			console.log(`[World (debug)] (id:${player.id}) "${player.name}" inventory was not updated.`)
+		// send entity remove packet to other players
+		const playerMap = player.control.map
+		const playerPets = playerMap.entities.filter(entity => entity.type === ENTITY_TYPE.PET && entity.owner.gid === player.gid)
+		for (let other of playerMap.entities) {
+			if (other.type === ENTITY_TYPE.PLAYER && other.gid !== player.gid) {
+				other.control.socket.send(sendMapRemoveEntity(player, ...playerPets))
+			}
 		}
-
 		// remove player from map
 		// remove player pets from map
 		this.maps.forEach((map) => {
@@ -224,22 +224,22 @@ export class World {
 			ws.close(4401, 'Invalid Bearer in Sec-WebSocket-Protocol header');
 			return;
 		}
-		const datetime = new Date().toLocaleString();
+		// const datetime = new Date().toLocaleString();
 		const tokenExpires = new Date(payload.exp * 1000).toLocaleString();
-		console.log(`[World] token verified, account_id:${payload.id}, created:${datetime}, expires:${tokenExpires}`)
+		console.log(`[World] token verified, account_id:${payload.id}, expires:${tokenExpires}`)
 
 		// token is valid, load user data from database
-		let conn, player, account;
+		// let conn, player, account;
 		try {
-			conn = await this.db.connect()
+			// conn = await this.db.connect()
 
 			// Note: find the account with same token
 			// account = await this.db.account.login(payload.username, payload.password);
-			account = await this.db.account.loginToken(token);
+			const account = await this.db.account.loginToken(token);
 
 			// when multiple logins on the same account
 			// send notification and close connection
-			player = this.getPlayerByAccount(account.id);
+			let player = this.getPlayerByAccount(account.id);
 			if (player) {
 				player.control.socket.send(sendChat(
 					'default',
@@ -268,7 +268,7 @@ export class World {
 				// saveMap: 'Lobby town',
 				// saveX: 875,
 				// saveY: 830,
-				speed: 30, // X step in ms per tick, lower is faster
+				speed: 5,//ENTITY_MOVE_SPEED / 2,
 				hpRecovery: PLAYER_BASE_HP_REGEN,
 			})
 
@@ -296,9 +296,9 @@ export class World {
 
 			// set player controller
 			// Note: control.map will be set in onEnterMap
-			player.control = new EntityControl(player, this, ws/*, map */)
-
+			player.control = new EntityControl(player, this, ws)
 			console.log(`[World] Player "${player.name}" (id:${player.id} aid:${player.aid} lastLogin:${player.lastLogin}) connection established.`)
+			ws.send(sendPlayer(player))
 
 			// make the player join map and update entity map property
 			const map = await this.joinMap(
@@ -323,9 +323,9 @@ export class World {
 		} catch (err) {
 			console.log('[World] Error', err.message, err.code || '')
 			ws.close(4401, 'Invalid credentials')
-		} finally {
+		}/* finally {
 			if (conn) conn.end();
-		}
+		}*/
 	}
 
 	/**
@@ -356,6 +356,21 @@ export class World {
 				if (entity.type === ENTITY_TYPE.PLAYER && entity.control.socket.readyState === WebSocket.OPEN) {
 					entity.control.socket.send(data, { binary: isBinary });
 				}
+			}
+		}
+	}
+
+	/**
+	 * Sends a message to all players in the given map.
+	 * @param {WorldMap} map
+	 * @param {string|Buffer} data
+	 * @param {boolean} isBinary
+	 */
+	broadcastMap(map, data, isBinary = false) {
+		for (let entity of map.entities) {
+			// Entity with a socket is also Player
+			if (entity.type === ENTITY_TYPE.PLAYER && entity.control.socket.readyState === WebSocket.OPEN) {
+				entity.control.socket.send(data, { binary: isBinary });
 			}
 		}
 	}

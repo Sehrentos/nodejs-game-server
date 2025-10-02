@@ -1,4 +1,4 @@
-import EventEmitter from "./utils/EventEmitter.js";
+import EventEmitter from "../../shared/utils/EventEmitter.js";
 
 /**
  * Global event emitter for client-side events.

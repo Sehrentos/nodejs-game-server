@@ -18,7 +18,7 @@ export const SOCKET_HEARTBEAT_INTERVAL = 5000
  * This is used to keep the client up to date with the server's map state.
  * Also see the `PLAYER_VIEW_AREA_SIZE` constant for the area of interest.
  */
-export const COOLDOWN_SOCKET_SEND_MAP = 60
+export const COOLDOWN_SOCKET_SEND_MAP = 120//60
 /**
  * The update frequency in milliseconds for the server to send player entity updates to the client.
  */
@@ -57,7 +57,7 @@ export const ENTITY_HEIGHT = 64
 export const ENTITY_LAST_MAP = "Lobby town"
 export const ENTITY_LAST_X = 875
 export const ENTITY_LAST_Y = 830
-export const ENTITY_MOVE_SPEED = 400
+export const ENTITY_MOVE_SPEED = 100
 export const ENTITY_ATK_SPEED = 1000
 export const ENTITY_CAST_SPEED = 1000
 export const ENTITY_HP_REGEN_RATE = 5000

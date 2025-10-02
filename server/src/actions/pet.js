@@ -3,6 +3,7 @@ import { ENTITY_TYPE } from "../../../shared/enum/Entity.js"
 import { Entity } from "../../../shared/models/Entity.js"
 import { AIPet } from "../control/AIPet.js"
 import { EntityControl } from "../control/EntityControl.js"
+import { sendMapNewEntity } from "../events/sendMap.js"
 import createGameId from "../utils/createGameId.js"
 
 /**
@@ -63,6 +64,11 @@ export function createPetEntity(entity, ...mobId) {
 		// Add the pet to the map's list of entities
 		map.entities.push(pet)
 		pets.push(pet)
+	}
+
+	// notify map clients for new entity
+	if (pets.length) {
+		map.entities.forEach(player => player.control?.socket?.send(sendMapNewEntity(...pets)))
 	}
 
 	// Return the created pet entity

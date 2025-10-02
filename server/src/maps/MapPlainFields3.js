@@ -8,15 +8,15 @@ import createMonster from '../utils/createMonster.js'
 import { SPR_ID } from '../../../shared/enum/Sprite.js'
 
 // create map
-export default class MapPlainFields2 extends WorldMap {
+export default class MapPlainFields3 extends WorldMap {
 	/** @param {import("../../../shared/models/WorldMap.js").TWorldMapProps} props */
 	constructor(props = {}) {
 		super({
-			id: 7,
-			spriteId: SPR_ID.MAP_PLAIN_FIELDS_2,
-			name: "Plain fields 2",
-			width: 1200,
-			height: 800,
+			id: 8,
+			spriteId: SPR_ID.MAP_PLAIN_FIELDS_3,
+			name: "Plain fields 3",
+			width: 2000,
+			height: 1400,
 			isLoaded: true, // no assets to load
 			...props
 		})
@@ -41,31 +41,18 @@ export default class MapPlainFields2 extends WorldMap {
 		this.entities = [
 			new Entity({
 				type: ENTITY_TYPE.PORTAL,
-				lastX: 8,
-				lastY: 800 / 2,
-				portalName: "Plain fields 1",
-				portalX: 1200 - 8 - 20, // map width - portal X position - portal width/range
-				portalY: 800 / 2,
+				lastX: this.width / 2,
+				lastY: this.height - 20,
+				portalName: "Lobby town",
+				portalX: 970,
+				portalY: 154,
 				range: 32,
 				w: 32,
 				h: 32,
 			}),
-			// to create single monsters:
-			// new Entity({ ...MOBS.PLANKTON }),
-			// new Entity({ ...MOBS.ORC }),
-			// new Entity({ ...MOBS.ORC2 }),
-			// multiple monsters:
-			...createMonster(this, 10, { ...MOBS.PLANKTON }),
-			...createMonster(this, 10, { ...MOBS.ORC2 }),
-			...createMonster(this, 10, { ...MOBS.EYE }),
 			...createMonster(this, 10, { ...MOBS.LADYBUG }),
 			...createMonster(this, 10, { ...MOBS.LADYBUG2 }),
-			...createMonster(this, 10, { ...MOBS.ROBOT }),
-			...createMonster(this, 2, { ...MOBS.UNICORN }),
-			...createMonster(this, 2, { ...MOBS.GHOST }),
-			...createMonster(this, 5, { ...MOBS.SNAKE }),
-			// ...createMonster(this, 1, { ...MOBS.SKELETON }),
-			new Entity({ ...MOBS.SKELETON, lastX: (this.width / 2), lastY: (this.height / 2), dir: 0, saveX: (this.width / 2), saveY: (this.height / 2) }),
+			...createMonster(this, 10, { ...MOBS.UNICORN }),
 		]
 		// add controllers and game ids
 		this.entities.forEach((entity) => {

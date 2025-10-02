@@ -12,4 +12,7 @@
  */
 export function onPlayerLeave(socket, data) {
 	console.log(`Player "${data.name}" left the game.`); // DEBUG
+	// TODO remove the entity from map
+	// const state = socket.state
+	// const map.entities = map.entities.filter(e => e.gid !== data.gid)
 }

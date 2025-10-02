@@ -1,33 +1,35 @@
 import { Entity } from '../../../shared/models/Entity.js'
-import { MOBS } from '../../../shared/data/MOBS.js'
+import { ENTITY_TYPE } from '../../../shared/enum/Entity.js'
 import { WorldMap } from '../../../shared/models/WorldMap.js'
 import { EntityControl } from '../control/EntityControl.js'
-import { ENTITY_TYPE } from '../../../shared/enum/Entity.js'
 import createGameId from '../utils/createGameId.js'
 import createMonster from '../utils/createMonster.js'
+import { MOBS } from '../../../shared/data/MOBS.js'
 import { SPR_ID } from '../../../shared/enum/Sprite.js'
 
 // create map
-export default class MapPlainFields1 extends WorldMap {
+export default class MapDungeon1 extends WorldMap {
 	/** @param {import("../../../shared/models/WorldMap.js").TWorldMapProps} props */
 	constructor(props = {}) {
 		super({
-			id: 6,
-			spriteId: SPR_ID.MAP_PLAIN_FIELDS_1,
-			name: "Plain fields 1",
-			width: 1200,
-			height: 800,
+			id: 9,
+			spriteId: SPR_ID.MAP_DUNGEON_1,
+			name: "Dungeon 1",
+			width: 2000,
+			height: 1400,
 			isLoaded: true, // no assets to load
 			...props
 		})
 	}
 
 	/**
-	 * Loads the map data asynchronously
+	 * Loads the map data asynchronously.
+	 * Sets the map's `isLoaded` property to true upon successful loading.
 	 * @returns {Promise<void>}
 	 */
 	async load() {
 		// load any assets etc.
+		// ...
 		this.isLoaded = true
 	}
 
@@ -41,38 +43,28 @@ export default class MapPlainFields1 extends WorldMap {
 		this.entities = [
 			new Entity({
 				type: ENTITY_TYPE.PORTAL,
-				lastX: 8,
-				lastY: 800 / 2,
+				lastX: this.width / 2,
+				lastY: 20,
 				portalName: "Lobby town",
-				portalX: 1878,
-				portalY: 722,
+				portalX: 958,
+				portalY: 1308,
 				range: 32,
 				w: 32,
 				h: 32,
 			}),
+			...createMonster(this, 5, { ...MOBS.GHOST }),
+			...createMonster(this, 10, { ...MOBS.SNAKE }),
+			...createMonster(this, 10, { ...MOBS.ORC2 }),
 			new Entity({
-				type: ENTITY_TYPE.PORTAL,
-				lastX: 1200 - 8,
-				lastY: 800 / 2,
-				portalName: "Plain fields 2",
-				portalX: 20,
-				portalY: 800 / 2,
-				range: 32,
-				w: 32,
-				h: 32,
+				...MOBS.SKELETON,
+				lastX: (this.width / 2),
+				lastY: (this.height / 2),
+				dir: 0,
+				saveX: (this.width / 2),
+				saveY: (this.height / 2)
+			}, { // event emitter
+				"damage": onSkeletonDamage
 			}),
-			// to create single monsters:
-			// new MonsterControl({ ...MOBS.CAT, map: this }),
-			// new MonsterControl({ ...MOBS.ORC, map: this }),
-			// multiple monsters:
-			// ...createMonster(this, 50, { ...MOBS.DEFAULT }), // Worm
-			...createMonster(this, 10, { ...MOBS.CAT }),
-			...createMonster(this, 10, { ...MOBS.ORC }),
-			...createMonster(this, 10, { ...MOBS.DINOSAUR }),
-			...createMonster(this, 10, { ...MOBS.MUSHROOM }),
-			...createMonster(this, 10, { ...MOBS.WIND_SPIRIT }),
-			...createMonster(this, 10, { ...MOBS.SLUSHIE }),
-			...createMonster(this, 10, { ...MOBS.RED_MUSHROOM }),
 		]
 		// add controllers and game ids
 		this.entities.forEach((entity) => {
@@ -82,4 +74,10 @@ export default class MapPlainFields1 extends WorldMap {
 
 		console.log(`[${this.constructor.name}] "${this.name}" is created with ${this.entities.length} entities.`)
 	}
+}
+
+// Test entity event emitter
+function onSkeletonDamage(attackerGid, gid, lastHp, curHp) {
+	console.log("Skeleton damaged", attackerGid, gid, lastHp, curHp)
+	// "Skeleton damaged c2a126669331a55b97ea728fc4b273f7 215f93b6e21d34c6ebca41194cff3010 4325 4190"
 }
