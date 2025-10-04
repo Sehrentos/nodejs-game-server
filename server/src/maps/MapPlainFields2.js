@@ -1,20 +1,21 @@
 import { Entity } from '../../../shared/models/Entity.js'
+import { DIR, RANGE, SIZE, TYPE } from '../../../shared/enum/Entity.js'
 import { MOBS } from '../../../shared/data/MOBS.js'
 import { WorldMap } from '../../../shared/models/WorldMap.js'
+import { MAP_ID, MAP_NAME } from '../../../shared/enum/WorldMap.js'
+import { SPR_ID } from '../../../shared/enum/Sprite.js'
 import { EntityControl } from '../control/EntityControl.js'
-import { ENTITY_TYPE } from '../../../shared/enum/Entity.js'
 import createGameId from '../utils/createGameId.js'
 import createMonster from '../utils/createMonster.js'
-import { SPR_ID } from '../../../shared/enum/Sprite.js'
 
 // create map
 export default class MapPlainFields2 extends WorldMap {
 	/** @param {import("../../../shared/models/WorldMap.js").TWorldMapProps} props */
 	constructor(props = {}) {
 		super({
-			id: 7,
+			id: MAP_ID.PLAIN_FIELDS_2,
+			name: MAP_NAME[MAP_ID.PLAIN_FIELDS_2],
 			spriteId: SPR_ID.MAP_PLAIN_FIELDS_2,
-			name: "Plain fields 2",
 			width: 1200,
 			height: 800,
 			isLoaded: true, // no assets to load
@@ -40,15 +41,14 @@ export default class MapPlainFields2 extends WorldMap {
 		// create map entities
 		this.entities = [
 			new Entity({
-				type: ENTITY_TYPE.PORTAL,
+				type: TYPE.PORTAL,
 				lastX: 8,
 				lastY: 800 / 2,
-				portalName: "Plain fields 1",
+				portalId: 6,//"Plain fields 1",
 				portalX: 1200 - 8 - 20, // map width - portal X position - portal width/range
 				portalY: 800 / 2,
-				range: 32,
-				w: 32,
-				h: 32,
+				range: RANGE.SHORT,
+				size: SIZE.SMALL,
 			}),
 			// to create single monsters:
 			// new Entity({ ...MOBS.PLANKTON }),
@@ -65,7 +65,14 @@ export default class MapPlainFields2 extends WorldMap {
 			...createMonster(this, 2, { ...MOBS.GHOST }),
 			...createMonster(this, 5, { ...MOBS.SNAKE }),
 			// ...createMonster(this, 1, { ...MOBS.SKELETON }),
-			new Entity({ ...MOBS.SKELETON, lastX: (this.width / 2), lastY: (this.height / 2), dir: 0, saveX: (this.width / 2), saveY: (this.height / 2) }),
+			new Entity({
+				...MOBS.SKELETON,
+				lastX: (this.width / 2),
+				lastY: (this.height / 2),
+				dir: DIR.DOWN,
+				saveX: (this.width / 2),
+				saveY: (this.height / 2)
+			}),
 		]
 		// add controllers and game ids
 		this.entities.forEach((entity) => {

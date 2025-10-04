@@ -1,5 +1,6 @@
 import { Entity } from '../../../shared/models/Entity.js'
-import { ENTITY_TYPE } from '../../../shared/enum/Entity.js'
+import { RANGE, SIZE, TYPE } from '../../../shared/enum/Entity.js'
+import { MAP_ID, MAP_NAME } from '../../../shared/enum/WorldMap.js'
 import { WorldMap } from '../../../shared/models/WorldMap.js'
 import { EntityControl } from '../control/EntityControl.js'
 import createGameId from '../utils/createGameId.js'
@@ -12,9 +13,9 @@ export default class MapDungeon1 extends WorldMap {
 	/** @param {import("../../../shared/models/WorldMap.js").TWorldMapProps} props */
 	constructor(props = {}) {
 		super({
-			id: 9,
+			id: MAP_ID.DUNGEON_1,
+			name: MAP_NAME[MAP_ID.DUNGEON_1],
 			spriteId: SPR_ID.MAP_DUNGEON_1,
-			name: "Dungeon 1",
 			width: 2000,
 			height: 1400,
 			isLoaded: true, // no assets to load
@@ -42,15 +43,14 @@ export default class MapDungeon1 extends WorldMap {
 		// create map entities
 		this.entities = [
 			new Entity({
-				type: ENTITY_TYPE.PORTAL,
+				type: TYPE.PORTAL,
 				lastX: this.width / 2,
 				lastY: 20,
-				portalName: "Lobby town",
+				portalId: 1, //"Lobby town",
 				portalX: 958,
 				portalY: 1308,
-				range: 32,
-				w: 32,
-				h: 32,
+				range: RANGE.SHORT,
+				size: SIZE.SMALL,
 			}),
 			...createMonster(this, 5, { ...MOBS.GHOST }),
 			...createMonster(this, 10, { ...MOBS.SNAKE }),
@@ -62,9 +62,7 @@ export default class MapDungeon1 extends WorldMap {
 				dir: 0,
 				saveX: (this.width / 2),
 				saveY: (this.height / 2)
-			}, { // event emitter
-				"damage": onSkeletonDamage
-			}),
+			}).on("damage", onSkeletonDamage),
 		]
 		// add controllers and game ids
 		this.entities.forEach((entity) => {

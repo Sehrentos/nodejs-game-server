@@ -1,5 +1,5 @@
 import { PLAYER_TOUCH_AREA_SIZE } from "../../../shared/Constants.js"
-import { WorldMap } from "../../../shared/models/WorldMap.js"
+import { findMapEntitiesInRadius } from "../../../shared/utils/EntityUtils.js"
 import { sendTouchPosition } from "../events/sendTouchPosition.js"
 
 /**
@@ -75,7 +75,7 @@ export default class TouchControl {
 	onMouseMove(event) {
 		if (this.canvas == null || this.state.map.value == null) return
 		const { x, y } = this.getMousePosition(event)
-		const stack = WorldMap.findEntitiesInRadius(this.state.map.value, x, y, PLAYER_TOUCH_AREA_SIZE)
+		const stack = findMapEntitiesInRadius(this.state.map.value, x, y, PLAYER_TOUCH_AREA_SIZE)
 
 		// change mouse cursor to pointer
 		if (stack.length) {

@@ -1,6 +1,5 @@
 import * as Settings from "./Settings.js"
-import * as Const from "../../shared/Constants.js";
-import { DIRECTION, ENTITY_TYPE } from "../../shared/enum/Entity.js"
+import { DIR, TYPE } from "../../shared/enum/Entity.js"
 import SPRITES from "./sprites/Sprites.js"
 import { getNPCById } from "../../shared/data/NPCS.js"
 import { getMobById } from "../../shared/data/MOBS.js";
@@ -179,23 +178,23 @@ export default class Renderer {
 		if (map.entities.length == 0) return;
 
 		for (const entity of map.entities) {
-			if (entity.type === ENTITY_TYPE.NPC) {
+			if (entity.type === TYPE.NPC) {
 				this.drawEntityNPC(entity);
 			}
-			else if (entity.type === ENTITY_TYPE.MONSTER) {
+			else if (entity.type === TYPE.MONSTER) {
 				this.drawEntityMonster(entity);
 			}
-			else if (entity.type === ENTITY_TYPE.PORTAL) {
+			else if (entity.type === TYPE.PORTAL) {
 				this.drawEntityPortal(entity);
 			}
-			else if (entity.type === ENTITY_TYPE.PLAYER) {
+			else if (entity.type === TYPE.PLAYER) {
 				this.drawEntityPlayer(entity);
 			}
-			else if (entity.type === ENTITY_TYPE.PET) {
+			else if (entity.type === TYPE.PET) {
 				this.drawEntityMonster(entity);
 			} else {
 				// unknown entity type
-				Renderer.drawCircle(this.ctx, "purple", entity.lastX, entity.lastY, Const.ENTITY_HEIGHT / 2);
+				Renderer.drawCircle(this.ctx, "purple", entity.lastX, entity.lastY, entity.size / 2);
 				Renderer.drawEntityFacingDirection(this.ctx, entity, 4, "white");
 				Renderer.drawEntityName(this.ctx, entity, "purple", false);
 				console.warn(`[WARN]: Unknown entity type: ${entity.type}`, entity);
@@ -215,7 +214,7 @@ export default class Renderer {
 			const npcData = new Entity({ ...npc, ...entity }) // merge entity data (status, etc)
 			Renderer.drawEntitySprite(sprite, this.ctx, npcData, 0);
 		} else {
-			Renderer.drawCircle(this.ctx, "black", entity.lastX, entity.lastY, Const.ENTITY_HEIGHT / 2);
+			Renderer.drawCircle(this.ctx, "black", entity.lastX, entity.lastY, entity.size / 2);
 			Renderer.drawEntityFacingDirection(this.ctx, entity, 4, "white");
 			Renderer.drawEntityName(this.ctx, entity, "white", false);
 		}
@@ -229,7 +228,7 @@ export default class Renderer {
 		// Portal range
 		// TODO portal default entity data (server side)
 		Renderer.drawCircle(this.ctx, "#0000ff91", entity.lastX, entity.lastY, entity.range);
-		Renderer.drawCircle(this.ctx, "blue", entity.lastX, entity.lastY, entity.h / 2);
+		Renderer.drawCircle(this.ctx, "blue", entity.lastX, entity.lastY, entity.size / 2);
 	}
 
 	/**
@@ -254,7 +253,7 @@ export default class Renderer {
 				default: Renderer.drawEntitySprite(sprite, this.ctx, mobData, 0); break; // front
 			}
 		} else {
-			Renderer.drawCircle(this.ctx, "red", entity.lastX, entity.lastY, Const.ENTITY_HEIGHT / 2);
+			Renderer.drawCircle(this.ctx, "red", entity.lastX, entity.lastY, entity.size / 2);
 			Renderer.drawEntityFacingDirection(this.ctx, entity, entity.range, "black");
 			Renderer.drawEntityName(this.ctx, entity, "red", true);
 		}
@@ -281,9 +280,9 @@ export default class Renderer {
 		} else {
 			// fallback
 			// draw current player's melee attack radius
-			Renderer.drawCircle(this.ctx, "#2d2d2d57", entity.lastX - ((entity.range / 2) - entity.w), entity.lastY - ((entity.range / 2) - Const.ENTITY_HEIGHT), entity.range);
+			Renderer.drawCircle(this.ctx, "#2d2d2d57", entity.lastX - ((entity.range / 2) - entity.size), entity.lastY - ((entity.range / 2) - entity.size), entity.range);
 			Renderer.drawEntityFacingDirection(this.ctx, entity, entity.range, "black");
-			Renderer.drawCircle(this.ctx, "black", entity.lastX, entity.lastY, Const.ENTITY_HEIGHT / 2);
+			Renderer.drawCircle(this.ctx, "black", entity.lastX, entity.lastY, entity.size / 2);
 			Renderer.drawEntityName(this.ctx, entity, "white", true);
 		}
 	}
@@ -428,7 +427,7 @@ export default class Renderer {
 			// draw something to indicate that the sprite is loading
 			ctx.save()
 			ctx.beginPath()
-			ctx.rect(entity.lastX - (entity.w / 2), entity.lastY - (Const.ENTITY_HEIGHT / 2), entity.w, Const.ENTITY_HEIGHT)
+			ctx.rect(entity.lastX - (entity.size / 2), entity.lastY - (entity.size / 2), entity.size, entity.size)
 			ctx.fillStyle = "green"
 			ctx.fill()
 			Renderer.drawEntityName(ctx, entity, "white", true);
@@ -441,16 +440,16 @@ export default class Renderer {
 			// draw the full sprite image
 			ctx.drawImage(
 				sprite.image,
-				entity.lastX - (entity.w / 2), // dx
-				entity.lastY - (Const.ENTITY_HEIGHT / 2), // dy
-				entity.w, // dw
-				Const.ENTITY_HEIGHT // dh
+				entity.lastX - (entity.size / 2), // dx
+				entity.lastY - (entity.size / 2), // dy
+				entity.size, // dw
+				entity.size // dh
 			)
 		} else {
 			// draw the sprite portion from the image
 			const [frameWidth, frameHeight, row, column] = sprite.frames[frameIndex]
-			const dx = entity.lastX - (entity.w / 2)
-			const dy = entity.lastY - (Const.ENTITY_HEIGHT / 2)
+			const dx = entity.lastX - (entity.size / 2)
+			const dy = entity.lastY - (entity.size / 2)
 			ctx.drawImage(
 				sprite.image,
 				column * frameWidth, // sx
@@ -461,8 +460,8 @@ export default class Renderer {
 				dy,
 				// frameWidth, // dw
 				// frameHeight // dh
-				entity.w, // dw
-				Const.ENTITY_HEIGHT // dh
+				entity.size, // dw
+				entity.size // dh
 			);
 		}
 		// draw the entity name
@@ -496,13 +495,13 @@ export default class Renderer {
 		ctx.beginPath();
 		const marginTop = 4 // add some space between sprite and name
 		let text = entity.name || "Unknown";
-		if (showHp && entity.type != ENTITY_TYPE.NPC) {
+		if (showHp && entity.type != TYPE.NPC) {
 			text += ` (${entity.hp}/${entity.hpMax})`
 		}
 
 		// calculate the x position to center the text
 		let _x = entity.lastX - (text.length / 2) * (Settings.FONT_SIZE * Settings.FONT_WIDTH_RATIO)
-		let _y = entity.lastY - (Const.ENTITY_HEIGHT / 2) - marginTop
+		let _y = entity.lastY - (entity.size / 2) - marginTop
 		let textWidth = ctx.measureText(text).width
 
 		// draw black background rectangle
@@ -513,7 +512,7 @@ export default class Renderer {
 		ctx.font = `${Settings.FONT_SIZE}px ${Settings.FONT_FAMILY}`;
 		ctx.fillText(text, _x, _y);
 		// optional. autoshink text if it's too long
-		// ctx.fillText(text, _x, _y, entity.w);
+		// ctx.fillText(text, _x, _y, entity.size);
 		ctx.restore();
 	}
 
@@ -534,16 +533,16 @@ export default class Renderer {
 		ctx.moveTo(x, y);
 		ctx.strokeStyle = color;
 		switch (entity.dir) {
-			case DIRECTION.UP:
+			case DIR.UP:
 				ctx.lineTo(x, y - range);
 				break;
-			case DIRECTION.DOWN:
+			case DIR.DOWN:
 				ctx.lineTo(x, y + range);
 				break;
-			case DIRECTION.LEFT:
+			case DIR.LEFT:
 				ctx.lineTo(x - range, y);
 				break;
-			case DIRECTION.RIGHT:
+			case DIR.RIGHT:
 				ctx.lineTo(x + range, y);
 				break;
 			default: break;

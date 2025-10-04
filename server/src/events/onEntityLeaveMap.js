@@ -1,5 +1,5 @@
 import { COOLDOWN_PORTAL_USE } from "../../../shared/Constants.js";
-import { ENTITY_TYPE } from "../../../shared/enum/Entity.js";
+import { TYPE } from "../../../shared/enum/Entity.js";
 import { sendMapRemoveEntity } from "./sendMap.js";
 
 /**
@@ -26,9 +26,9 @@ export default async function onEntityLeaveMap(entity, map, oldMap) {
 		ctrl.stopMoveTo()
 
 		// notify other players about the player entering the map
-		const entityPets = map.entities.filter(e => e.type === ENTITY_TYPE.PET && e.owner.gid === entity.gid)
+		const entityPets = map.entities.filter(e => e.type === TYPE.PET && e.owner.gid === entity.gid)
 		for (let other of map.entities) {
-			if (other.type === ENTITY_TYPE.PLAYER && other.gid !== entity.gid) {
+			if (other.type === TYPE.PLAYER && other.gid !== entity.gid) {
 				other.control.socket.send(sendMapRemoveEntity(entity, ...entityPets))
 			}
 		}

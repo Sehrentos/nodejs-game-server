@@ -1,5 +1,6 @@
 import { COOLDOWN_SOCKET_SEND_MAP, COOLDOWN_SOCKET_SEND_PLAYER } from "../../../shared/Constants.js";
 import { sendMapUpdate } from "./sendMap.js";
+import { sendPlayerUpdate } from "./sendPlayer.js";
 
 /**
  * Player update/tick
@@ -36,12 +37,7 @@ export default function onEntityUpdatePlayer(player, timestamp) {
 
 		// send full map state update
 		// so the client can update the map and it's entities
-		// TODO: this should only be sent, when player enters a new map
-		// and use aggregated or delta updates afterwards to update entity positions
-		// if (ctrl._socketSentMapUpdateCd.isExpired(timestamp) && map != null) {
-		// 	ctrl._socketSentMapUpdateCd.set(timestamp + COOLDOWN_SOCKET_SEND_MAP)
-		// 	ctrl.socket.send(sendMap(player, map)) // moved to onEntityEnterMap
-		// }
+		// uses delta updates to update entity positions
 		if (ctrl._socketSentMapUpdateCd.isExpired(timestamp) && map != null) {
 			ctrl._socketSentMapUpdateCd.set(timestamp + COOLDOWN_SOCKET_SEND_MAP)
 			// check for delta updates
@@ -49,13 +45,16 @@ export default function onEntityUpdatePlayer(player, timestamp) {
 			if (deltaUpdates != null) ctrl.socket.send(deltaUpdates)
 		}
 
-		// send full player state update (e.g. every 5-10 seconds).
-		// Note: This is now sent, when player enters a new map, then
-		// use aggregated or delta updates afterwards to update player state.
-		// if (ctrl._socketSentPlayerUpdateCd.isExpired(timestamp)) {
-		// 	ctrl._socketSentPlayerUpdateCd.set(timestamp + COOLDOWN_SOCKET_SEND_PLAYER)
-		// 	ctrl.socket.send(sendPlayer(player))
-		// }
+		// send full player state update (e.g. every 1-10 seconds).
+		// Note: This uses delta updates to update player state.
+		if (ctrl._socketSentPlayerUpdateCd.isExpired(timestamp)) {
+			ctrl._socketSentPlayerUpdateCd.set(timestamp + COOLDOWN_SOCKET_SEND_PLAYER)
+			let deltaUpdate = sendPlayerUpdate(player)
+			if (deltaUpdate != null) {
+				// console.log(`[Event.onEntityUpdatePlayer] "${player.name}" sending delta update:`, deltaUpdate)
+				ctrl.socket.send(deltaUpdate)
+			}
+		}
 
 		// TODO implement other player updates, like stats that needs to be more frequent?
 		// skills, equipment, inventory, quests for example, does not need to be updated so frequently.

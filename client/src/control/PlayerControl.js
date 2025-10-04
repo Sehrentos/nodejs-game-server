@@ -1,7 +1,6 @@
 import * as Const from "../../../shared/Constants.js"
-import { DIRECTION, ENTITY_TYPE } from "../../../shared/enum/Entity.js"
-import { Entity } from "../../../shared/models/Entity.js"
-import { WorldMap } from "../../../shared/models/WorldMap.js"
+import { DIR, TYPE } from "../../../shared/enum/Entity.js"
+import { inRangeOf, inRangeOfEntity, findMapEntitiesInRadius } from "../../../shared/utils/EntityUtils.js"
 import Cooldown from "../../../shared/utils/Cooldown.js"
 
 /**
@@ -74,7 +73,7 @@ export default class PlayerControl {
 		if (player.hp <= 0) return
 
 		// find entities at clicked position in x radius
-		const entities = WorldMap.findEntitiesInRadius(map, x, y, Const.PLAYER_TOUCH_AREA_SIZE)
+		const entities = findMapEntitiesInRadius(map, x, y, Const.PLAYER_TOUCH_AREA_SIZE)
 			.filter(entity => entity.gid !== player.gid) // exclude self
 
 		// if no entities found
@@ -85,25 +84,25 @@ export default class PlayerControl {
 		}
 
 		// 1. priority - Monster (alive)
-		const mobs = entities.filter(e => e.type === ENTITY_TYPE.MONSTER && e.hp > 0)
+		const mobs = entities.filter(e => e.type === TYPE.MONSTER && e.hp > 0)
 		if (mobs.length) {
 			return this.touch(player, mobs[0], timestamp)
 		}
 
 		// 2. priority - NPC
-		const npcs = entities.filter(e => e.type === ENTITY_TYPE.NPC)
+		const npcs = entities.filter(e => e.type === TYPE.NPC)
 		if (npcs.length) {
 			return this.touch(player, npcs[0], timestamp)
 		}
 
 		// 3. priority - Player
-		const players = entities.filter(e => e.type === ENTITY_TYPE.PLAYER)
+		const players = entities.filter(e => e.type === TYPE.PLAYER)
 		if (players.length) {
 			return this.touch(player, players[0], timestamp)
 		}
 
 		// 4. priority - PORTAL
-		const portals = entities.filter(e => e.type === ENTITY_TYPE.PORTAL)
+		const portals = entities.filter(e => e.type === TYPE.PORTAL)
 		if (portals.length) {
 			return this.touch(player, portals[0], timestamp)
 		}
@@ -127,21 +126,21 @@ export default class PlayerControl {
 	 */
 	touch(player, entity, timestamp) {
 		// const ctrl = player.control
-		const inRange = Entity.inRangeOfEntity(player, entity)
+		const inRange = inRangeOfEntity(player, entity)
 
 		switch (entity.type) {
-			case ENTITY_TYPE.MONSTER:
+			case TYPE.MONSTER:
 				this.attack(entity, timestamp)
 				break;
 
-			case ENTITY_TYPE.PLAYER:
+			case TYPE.PLAYER:
 				// player interaction
 				if (this.map.isPVP) {
 					this.attack(entity, timestamp)
 				}
 				break;
 
-			case ENTITY_TYPE.NPC:
+			case TYPE.NPC:
 				// must be in range to interact with
 				if (!inRange) {
 					// start moving towards the NPC
@@ -156,7 +155,7 @@ export default class PlayerControl {
 				// this.socket.send(sendDialog(entity.gid, entity.dialog))
 				break;
 
-			case ENTITY_TYPE.PORTAL:
+			case TYPE.PORTAL:
 				this.moveTo(entity.lastX, entity.lastY, timestamp)
 				break;
 
@@ -179,19 +178,19 @@ export default class PlayerControl {
 		switch (keyCode) {
 			case "KeyA":
 			case "ArrowLeft":
-				this.move(DIRECTION.LEFT, timestamp)
+				this.move(DIR.LEFT, timestamp)
 				break
 			case "KeyD":
 			case "ArrowRight":
-				this.move(DIRECTION.RIGHT, timestamp)
+				this.move(DIR.RIGHT, timestamp)
 				break
 			case "KeyW":
 			case "ArrowUp":
-				this.move(DIRECTION.UP, timestamp)
+				this.move(DIR.UP, timestamp)
 				break
 			case "KeyS":
 			case "ArrowDown":
-				this.move(DIRECTION.DOWN, timestamp)
+				this.move(DIR.DOWN, timestamp)
 				break
 			default:
 				break
@@ -216,28 +215,28 @@ export default class PlayerControl {
 		this._moveCd.set(timestamp + (entity.speed * Const.ENTITY_MOVE_STEP) - entity.latency)
 
 		switch (dir) {
-			case DIRECTION.LEFT:
+			case DIR.LEFT:
 				entity.dir = dir
 				if (entity.lastX > 0) {
 					entity.lastX -= Const.ENTITY_MOVE_STEP
 					// this.moveTo(entity.lastX - Const.ENTITY_MOVE_STEP, entity.lastY, timestamp)
 				}
 				break
-			case DIRECTION.RIGHT:
+			case DIR.RIGHT:
 				entity.dir = dir
 				if (entity.lastX < this.map.width) {
 					entity.lastX += Const.ENTITY_MOVE_STEP
 					// this.moveTo(entity.lastX + Const.ENTITY_MOVE_STEP, entity.lastY, timestamp)
 				}
 				break
-			case DIRECTION.UP:
+			case DIR.UP:
 				entity.dir = dir
 				if (entity.lastY > 0) {
 					entity.lastY -= Const.ENTITY_MOVE_STEP
 					// this.moveTo(entity.lastX, entity.lastY - Const.ENTITY_MOVE_STEP, timestamp)
 				}
 				break
-			case DIRECTION.DOWN:
+			case DIR.DOWN:
 				entity.dir = dir
 				if (entity.lastY < this.map.height) {
 					entity.lastY += Const.ENTITY_MOVE_STEP
@@ -264,7 +263,7 @@ export default class PlayerControl {
 		if (entity == null) return this.stopMoveTo()
 		if (!entity.isMoveable) return this.stopMoveTo() // can't move
 		if (entity.hp <= 0) return this.stopMoveTo() // must be alive
-		if (Entity.inRangeOf(entity, x, y, Const.ENTITY_MOVE_STEP)) return this.stopMoveTo() // in range
+		if (inRangeOf(entity, x, y, Const.ENTITY_MOVE_STEP)) return this.stopMoveTo() // in range
 
 		// set move to position
 		// next tick will move entity closer to this position
@@ -276,17 +275,17 @@ export default class PlayerControl {
 		// this._moveCd.set(timestamp + (entity.speed * Const.ENTITY_MOVE_STEP) - entity.latency)
 
 		if (entity.lastX > x) {
-			entity.dir = DIRECTION.LEFT
+			entity.dir = DIR.LEFT
 			entity.lastX -= Const.ENTITY_MOVE_STEP
 		} else if (entity.lastX < x) {
-			entity.dir = DIRECTION.RIGHT
+			entity.dir = DIR.RIGHT
 			entity.lastX += Const.ENTITY_MOVE_STEP
 		}
 		if (entity.lastY > y) {
-			entity.dir = DIRECTION.UP
+			entity.dir = DIR.UP
 			entity.lastY -= Const.ENTITY_MOVE_STEP
 		} else if (entity.lastY < y) {
-			entity.dir = DIRECTION.DOWN
+			entity.dir = DIR.DOWN
 			entity.lastY += Const.ENTITY_MOVE_STEP
 		}
 
@@ -320,7 +319,7 @@ export default class PlayerControl {
 		if (!player.isMoveable) return this.stopFollow() // can't move
 		if (player.hp <= 0) return this.stopFollow() // must be alive
 		if (entity.hp <= 0) return this.stopFollow() // target must be alive
-		if (Entity.inRangeOfEntity(player, entity)) return this.stopFollow() // in range
+		if (inRangeOfEntity(player, entity)) return this.stopFollow() // in range
 
 		this._follow = entity
 
@@ -332,17 +331,17 @@ export default class PlayerControl {
 
 		// follow entity
 		if (player.lastX > entity.lastX) {
-			player.dir = DIRECTION.LEFT
+			player.dir = DIR.LEFT
 			player.lastX -= Const.ENTITY_MOVE_STEP
 		} else if (player.lastX < entity.lastX) {
-			player.dir = DIRECTION.RIGHT
+			player.dir = DIR.RIGHT
 			player.lastX += Const.ENTITY_MOVE_STEP
 		}
 		if (player.lastY > entity.lastY) {
-			player.dir = DIRECTION.UP
+			player.dir = DIR.UP
 			player.lastY -= Const.ENTITY_MOVE_STEP
 		} else if (player.lastY < entity.lastY) {
-			player.dir = DIRECTION.DOWN
+			player.dir = DIR.DOWN
 			player.lastY += Const.ENTITY_MOVE_STEP
 		}
 	}
@@ -360,9 +359,9 @@ export default class PlayerControl {
 
 		if (player == null) return
 		if (entity.hp <= 0) return // must be alive
-		if (entity.type === ENTITY_TYPE.NPC) return // NPC can't be attacked
-		if (entity.type === ENTITY_TYPE.PORTAL) return // PORTAL can't be attacked
-		if (player.type === ENTITY_TYPE.PLAYER && entity.type === ENTITY_TYPE.PLAYER && !map.isPVP) return // PLAYER can attack in PVP map only
+		if (entity.type === TYPE.NPC) return // NPC can't be attacked
+		if (entity.type === TYPE.PORTAL) return // PORTAL can't be attacked
+		if (player.type === TYPE.PLAYER && entity.type === TYPE.PLAYER && !map.isPVP) return // PLAYER can attack in PVP map only
 
 		this.stopMoveTo()
 
@@ -373,7 +372,7 @@ export default class PlayerControl {
 		// aspd = attack speed. default 1000ms = 1 second
 		// aspdMultiplier = attack speed multiplier. default 1.0
 		if (!this._attackAutoCd.isExpired(timestamp)) return // can't attack yet
-		if (!Entity.inRangeOfEntity(player, entity)) return // out of range
+		if (!inRangeOfEntity(player, entity)) return // out of range
 		// set auto-attack cooldown as timestamp + aspd * multiplier
 		this._attackAutoCd.set(timestamp + (player.aspd * player.aspdMultiplier))
 		// entity take damage from attacker

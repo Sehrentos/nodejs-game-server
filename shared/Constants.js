@@ -22,7 +22,7 @@ export const COOLDOWN_SOCKET_SEND_MAP = 120//60
 /**
  * The update frequency in milliseconds for the server to send player entity updates to the client.
  */
-export const COOLDOWN_SOCKET_SEND_PLAYER = 10000
+export const COOLDOWN_SOCKET_SEND_PLAYER = 1000
 /**
  * Cooldown time in milliseconds for the player to use a portal again.
  */
@@ -51,10 +51,7 @@ export const ENTITY_AI_NEARBY_RANGE = 80
  * The step in pixels to move the entity per tick.
  */
 export const ENTITY_MOVE_STEP = 2
-export const ENTITY_RANGE = 32
-export const ENTITY_WIDTH = 64
-export const ENTITY_HEIGHT = 64
-export const ENTITY_LAST_MAP = "Lobby town"
+export const ENTITY_LAST_MAP = 1 // "Lobby town"
 export const ENTITY_LAST_X = 875
 export const ENTITY_LAST_Y = 830
 export const ENTITY_MOVE_SPEED = 100

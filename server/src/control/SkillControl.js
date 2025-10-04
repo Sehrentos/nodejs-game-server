@@ -1,7 +1,7 @@
-import { ENTITY_TYPE } from "../../../shared/enum/Entity.js";
+import { TYPE } from "../../../shared/enum/Entity.js";
 import { SKILL_ID, SKILL_STATE } from "../../../shared/enum/Skill.js";
-import { Entity } from "../../../shared/models/Entity.js";
-import * as PetAction from "../actions/pet.js";
+import { inRangeOfEntity } from "../../../shared/utils/EntityUtils.js";
+import * as PetAction from "../actions/createPetEntity.js";
 import { sendSkillUse } from "../events/sendSkillUse.js";
 import Cooldown from "../../../shared/utils/Cooldown.js";
 // import createGameId from "../utils/createGameId.js";
@@ -76,7 +76,7 @@ export default class SkillControl {
 			socket.send(sendSkillUse(SKILL_ID.STRIKE, attacker.gid, attacking.gid, SKILL_STATE.COOLDOWN))
 			return
 		}
-		if (!Entity.inRangeOfEntity(attacker, attacking)) {
+		if (!inRangeOfEntity(attacker, attacking)) {
 			socket.send(sendSkillUse(SKILL_ID.STRIKE, attacker.gid, attacking.gid, SKILL_STATE.OUT_OF_RANGE))
 			return
 		}
@@ -102,7 +102,7 @@ export default class SkillControl {
 			return
 		}
 		// must be monster type
-		if (taming.type !== ENTITY_TYPE.MONSTER) {
+		if (taming.type !== TYPE.MONSTER) {
 			socket.send(sendSkillUse(SKILL_ID.TAME, tamer.gid, taming.gid, SKILL_STATE.INVALID_TARGET))
 			return
 		}
@@ -114,7 +114,7 @@ export default class SkillControl {
 			socket.send(sendSkillUse(SKILL_ID.TAME, tamer.gid, taming.gid, SKILL_STATE.COOLDOWN))
 			return
 		}
-		// if (!Entity.inRangeOf(tamer, taming.lastX, taming.lastY, 50)) {
+		// if (!inRangeOf(tamer, taming.lastX, taming.lastY, 50)) {
 		// 	socket.send(sendSkillUse(SKILL_ID.TAME, tamer.gid, taming.gid, SKILL_STATE.OUT_OF_RANGE))
 		// 	return
 		// }

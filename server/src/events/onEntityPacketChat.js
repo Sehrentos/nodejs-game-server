@@ -1,4 +1,4 @@
-import { ENTITY_TYPE } from "../../../shared/enum/Entity.js";
+import { TYPE } from "../../../shared/enum/Entity.js";
 import { REGEX_BLACKLIST_PLAYER_NAMES } from "../../../shared/Constants.js";
 import { sendChat } from "./sendChat.js";
 import { SPR_ID, SPR_MAP } from "../../../shared/enum/Sprite.js";
@@ -38,7 +38,7 @@ export default function onEntityPacketChat(player, json, timestamp) {
 	// send to specific player name
 	player.control.world.maps.forEach((map) => {
 		map.entities.forEach((entity) => {
-			if (entity.name === json.to && entity.type === ENTITY_TYPE.PLAYER) {
+			if (entity.name === json.to && entity.type === TYPE.PLAYER) {
 				entity.control.socket.send(packet);
 			}
 			// implement send failed message, when receiving player was not found
@@ -134,19 +134,19 @@ CMD['/changemap'] = async (entity, data, params) => {
 		// "<map name or id> <x> <y>"
 		const matches = params.join(' ').match(/^([a-zA-Z0-9 -_']{1,100})\s([0-9]{1,4})\s([0-9]{1,4})$/)
 		if (!matches) {
-			ctrl.socket.send(sendChat("default", "Server", entity.name, "Change map invalid format. Use <mapname|mapid> <x> <y>"))
+			ctrl.socket.send(sendChat("default", "Server", entity.name, "Change map invalid format. Use <mapid> <x> <y>"))
 			return
 		}
-		const mapNameOrId = matches[1]
+		const mapId = Number(matches[1] || 0)
 		const mapX = Number(matches[2] || -1)
 		const mapY = Number(matches[3] || -1)
 		// check map exists
-		const map = ctrl.world.maps.find(m => m.name === mapNameOrId || m.id === parseInt(mapNameOrId))
+		const map = ctrl.world.maps.find(m => m.id === mapId)
 		if (!map) {
-			ctrl.socket.send(sendChat("default", "Server", entity.name, `The map "${mapNameOrId}" does not exist.`))
+			ctrl.socket.send(sendChat("default", "Server", entity.name, `The map "${mapId}" does not exist.`))
 			return
 		}
-		map.world.joinMap(entity, mapNameOrId, mapX, mapY)
+		map.world.changeMap(entity, mapId, mapX, mapY)
 	} catch (error) {
 		console.log(`[Event.onChatCommand] error changing map.`, error.message)
 	}

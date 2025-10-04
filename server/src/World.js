@@ -1,29 +1,22 @@
 import WebSocket, { WebSocketServer } from 'ws';
 import { WorldMap } from '../../shared/models/WorldMap.js';
 import { Entity } from '../../shared/models/Entity.js';
-import { DIRECTION, ENTITY_TYPE } from '../../shared/enum/Entity.js';
+import { TYPE } from '../../shared/enum/Entity.js';
 import { verifyToken } from './utils/jwt.js';
 import { Database } from './db/Database.js';
 import MapLobbyTown from './maps/MapLobbyTown.js';
 import MapPlainFields1 from './maps/MapPlainFields1.js';
 import MapPlainFields2 from './maps/MapPlainFields2.js';
 import MapPlainFields3 from './maps/MapPlainFields3.js';
-import { EntityControl } from './control/EntityControl.js';
-import createGameId from './utils/createGameId.js';
-import { PLAYER_BASE_HP_REGEN, UPDATE_TICK } from '../../shared/Constants.js';
+import { UPDATE_TICK } from '../../shared/Constants.js';
 import MapFlowerTown from './maps/MapFlowerTown.js';
 import MapCarTown from './maps/MapCarTown.js';
 import MapUnderWater1 from './maps/MapUnderWater1.js';
 import MapUnderWater2 from './maps/MapUnderWater2.js';
 import MapDungeon1 from './maps/MapDungeon1.js';
-import { sendPlayerLeave } from './events/sendPlayerLeave.js';
 import { sendChat } from './events/sendChat.js';
-import { Item } from '../../shared/models/Item.js';
-import { getItemByItemId } from '../../shared/data/ITEMS.js';
-import { createPetEntity } from './actions/pet.js';
-import { SPR_ID } from '../../shared/enum/Sprite.js';
-import { sendMapRemoveEntity } from './events/sendMap.js';
-import { sendPlayer } from './events/sendPlayer.js';
+import { addEntityToMap } from './actions/addEntityToMap.js';
+import { createPlayerEntity } from './actions/createPlayerEntity.js';
 
 /**
  * @module World
@@ -96,17 +89,16 @@ export class World {
 			// disconnect all players
 			for (const map of this.maps) {
 				for (let entity of map.entities) {
-					if (entity.type === ENTITY_TYPE.PLAYER && entity.control.socket.readyState === WebSocket.OPEN) {
-						// terminate client connection
-						entity.control.socket.close()
-						// save player data
-						let playerUpdate = await this.db.player.update(entity)
-						console.log(`[World (debug)] (id:${entity.id}) "${entity.name}" is ${playerUpdate.affectedRows > 0 ? 'saved' : 'not saved'}.`)
-						// save player inventory
-						// TODO improve this logic
-						await this.db.inventory.clear(entity.id)
-						await this.db.inventory.addAll(entity.id, entity.inventory)
-					}
+					if (entity.type !== TYPE.PLAYER || entity.control.socket.readyState === WebSocket.OPEN) continue;
+					// terminate client connection
+					entity.control.socket.close()
+					// save player data
+					let playerUpdate = await this.db.player.update(entity)
+					console.log(`[World (debug)] (id:${entity.id}) "${entity.name}" is ${playerUpdate.affectedRows > 0 ? 'saved' : 'not saved'}.`)
+					// save player inventory
+					// TODO improve this logic
+					await this.db.inventory.clear(entity.id)
+					await this.db.inventory.addAll(entity.id, entity.inventory)
 				}
 			}
 			// logout all accounts
@@ -123,76 +115,6 @@ export class World {
 	}
 
 	/**
-	 * Called when a player disconnects from the world server.
-	 * Logs the disconnection of the player and broadcasts a leave message.
-	 * Removes the disconnected player from the map entities.
-	 * @param {Entity} player - The player who disconnected.
-	 */
-	async onClientClose(player) {
-		if (this.isClosing) return // Skip, server closing process is handled in onExit method
-
-		this.broadcast(sendPlayerLeave(player.name));
-
-		// do logout by setting state=0
-		await this.db.account.logout(player.aid, false);
-
-		// save player data
-		let playerUpdate = await this.db.player.update(player)
-		console.log(`[World (debug)] (id:${player.id}) "${player.name}" is ${playerUpdate.affectedRows > 0 ? 'saved' : 'not saved'}.`)
-
-		// save player inventory
-		// TODO improve this logic
-		await this.db.inventory.clear(player.id)
-		await this.db.inventory.addAll(player.id, player.inventory)
-
-		// send entity remove packet to other players
-		const playerMap = player.control.map
-		const playerPets = playerMap.entities.filter(entity => entity.type === ENTITY_TYPE.PET && entity.owner.gid === player.gid)
-		for (let other of playerMap.entities) {
-			if (other.type === ENTITY_TYPE.PLAYER && other.gid !== player.gid) {
-				other.control.socket.send(sendMapRemoveEntity(player, ...playerPets))
-			}
-		}
-		// remove player from map
-		// remove player pets from map
-		this.maps.forEach((map) => {
-			map.entities = map.entities.filter((entity) => entity.gid !== player.gid)
-				.filter((entity) => !(entity.type === ENTITY_TYPE.PET && entity.owner.gid === player.gid))
-		})
-	}
-
-	/**
-	 * Join a map (or create it if it doesn't exist), and tell the Player to join it
-	 * @param {Entity} player - The Player that wants to join the map
-	 * @param {string|number} mapNameOrId - The name or ID of the map to join (default: "Lobby town")
-	 * @param {number} x - The x coordinate of the map to join (default: -1)
-	 * @param {number} y - The y coordinate of the map to join (default: -1)
-	 * @returns {Promise<WorldMap>} - The map that was joined
-	 */
-	async joinMap(player, mapNameOrId = "Lobby town", x = -1, y = -1) {
-		// check if map exists
-		let map = this.maps.find(m => typeof mapNameOrId === "string" ? (m.name === mapNameOrId || m.id === parseInt(mapNameOrId)) : mapNameOrId)
-		if (!map) {
-			// @ts-ignore create new map from map data
-			// map = new WorldMap(this, MAPS.find(m => m.name === mapName) || { name: mapName })
-			// this.maps.push(map)
-			console.log(`[World] joinMap '${mapNameOrId}' not found.`)
-			return
-		}
-		// load any map assets async
-		if (!map.isLoaded) {
-			await map.load()
-		}
-		// create entities async
-		if (!map.isCreated) {
-			await map.create()
-		}
-		// update Player data, so the player can join the map
-		await this.addEntityToMap(map, player, x, y)
-		return map
-	}
-
-	/**
 	 * Called when a new WebSocket connection is established.
 	 * Validates the token and creates a new EntityControl instance.
 	 *
@@ -200,54 +122,51 @@ export class World {
 	 * @param {import("http").IncomingMessage} req - The HTTP request
 	 */
 	async onConnection(ws, req) {
-		// TODO rate limitter for the WS connection
-		// authentication
-		// custom way of finding the access token in websocket headers
-		const protocol = req.headers['sec-websocket-protocol']; //="ws, wss, Bearer.123"
-		// const urlFrom = req.socket?.remoteAddress ?? '127.0.0.1';
-		// const urlTo = (req?.url ?? '').substring(1);
-		// console.log('[World] Player connection established.', urlFrom, urlTo, protocol)
-		if (!protocol) {
-			ws.close(4401, 'Missing Bearer in Sec-WebSocket-Protocol header');
-			return;
-		}
-		const token = protocol.split(' ').find(part => part.startsWith('Bearer.')).split('Bearer.')[1];
-		if (!token) {
-			ws.close(4401, 'Missing Bearer in Sec-WebSocket-Protocol header');
-			return;
-		}
-		// validate token
-		let payload;
 		try {
-			payload = await verifyToken(token);
-		} catch (err) {
-			ws.close(4401, 'Invalid Bearer in Sec-WebSocket-Protocol header');
-			return;
-		}
-		// const datetime = new Date().toLocaleString();
-		const tokenExpires = new Date(payload.exp * 1000).toLocaleString();
-		console.log(`[World] token verified, account_id:${payload.id}, expires:${tokenExpires}`)
+			// TODO rate limitter for the WS connection
+			// authentication
+			// custom way of finding the access token in websocket headers
+			const protocol = req.headers['sec-websocket-protocol']; //="ws, wss, Bearer.123"
+			// const urlFrom = req.socket?.remoteAddress ?? '127.0.0.1';
+			// const urlTo = (req?.url ?? '').substring(1);
+			// console.log('[World] Player connection established.', urlFrom, urlTo, protocol)
+			if (!protocol) {
+				ws.close(4401, 'Missing Bearer in Sec-WebSocket-Protocol header');
+				return;
+			}
+			const token = protocol.split(' ').find(part => part.startsWith('Bearer.')).split('Bearer.')[1];
+			if (!token) {
+				ws.close(4401, 'Missing Bearer in Sec-WebSocket-Protocol header');
+				return;
+			}
+			// validate token
+			let payload;
+			try {
+				payload = await verifyToken(token);
+			} catch (err) {
+				ws.close(4401, 'Invalid Bearer in Sec-WebSocket-Protocol header');
+				return;
+			}
+			// const datetime = new Date().toLocaleString();
+			const tokenExpires = new Date(payload.exp * 1000).toLocaleString();
+			console.log(`[World] token verified, account_id:${payload.id}, expires:${tokenExpires}`)
 
-		// token is valid, load user data from database
-		// let conn, player, account;
-		try {
-			// conn = await this.db.connect()
-
+			// token is valid. Next step is to load user data from database
 			// Note: find the account with same token
 			// account = await this.db.account.login(payload.username, payload.password);
 			const account = await this.db.account.loginToken(token);
 
 			// when multiple logins on the same account
 			// send notification and close connection
-			let player = this.getPlayerByAccount(account.id);
-			if (player) {
-				player.control.socket.send(sendChat(
+			const existingPlayer = this.getPlayerByAccount(account.id);
+			if (existingPlayer) {
+				existingPlayer.control.socket.send(sendChat(
 					'default',
 					'Security',
-					player.name,
+					existingPlayer.name,
 					'Some one just logged into this account, but you are already logged in.'
 				));
-				player.control.socket.close();
+				existingPlayer.control.socket.close();
 				// await here for a brief moment to save player data
 				await new Promise(resolve => setTimeout(resolve, 3000)); // 3s should be enough
 			}
@@ -255,77 +174,11 @@ export class World {
 			// TODO check if account is banned and other states
 
 			// Authorized, create new player or load existing player
-			this.playersCountTotal = await this.db.player.count()
-
-			// create new player
-			// set default values
-			player = new Entity({
-				type: ENTITY_TYPE.PLAYER,
-				aid: Number(account.id),
-				gid: createGameId(), // generate unique id for player
-				spriteId: SPR_ID.PLAYER_MALE, // default sprite
-				name: `player-${this.playersCountTotal}`, // initial name
-				// saveMap: 'Lobby town',
-				// saveX: 875,
-				// saveY: 830,
-				speed: 5,//ENTITY_MOVE_SPEED / 2,
-				hpRecovery: PLAYER_BASE_HP_REGEN,
-			})
-
-			// load players data from database
-			let players = await this.db.player.getByAccountId(account.id)
-			console.log(`[World] (${account.id}) account has ${players.length} players. Server has ${this.playersCountTotal} players.`)
-
-			// create new player if not found
-			if (players.length === 0) {
-				// Note: insertId can be BigInt or Number
-				// JSON.stringify can't convert BigInt, so convert to string
-				let { insertId } = await this.db.player.add(player)
-				player.id = Number(insertId) // update player id
-			} else {
-				// merge existing player data from db
-				Object.assign(player, players[0])
-			}
-
-			// load inventory items from database
-			const items = await this.db.inventory.getItems(player.id)
-			// set player inventory
-			player.inventory = items.map(item => {
-				return new Item(Object.assign({}, getItemByItemId(item.id), item))
-			})
-
-			// set player controller
-			// Note: control.map will be set in onEnterMap
-			player.control = new EntityControl(player, this, ws)
-			console.log(`[World] Player "${player.name}" (id:${player.id} aid:${player.aid} lastLogin:${player.lastLogin}) connection established.`)
-			ws.send(sendPlayer(player))
-
-			// make the player join map and update entity map property
-			const map = await this.joinMap(
-				player,
-				player.lastMap || 'Lobby town',
-				player.lastX || -1,
-				player.lastY || -1
-			)
-			if (map) {
-				// send welcome message
-				ws.send(sendChat(
-					'default',
-					'Server',
-					player.name,
-					`Welcome to the server, ${player.name}! You are in "${map.name}".`
-				));
-				// TODO load pets from database and set player.pets = [1,2,3]
-				// then load the pets entities after player is added to the map
-				// createPetEntity(player, 18) // TODO improve, test only (Dallas)
-				createPetEntity(player, 19) // TODO improve, test only (Santtu)
-			}
+			await createPlayerEntity(this, ws, account)
 		} catch (err) {
 			console.log('[World] Error', err.message, err.code || '')
 			ws.close(4401, 'Invalid credentials')
-		}/* finally {
-			if (conn) conn.end();
-		}*/
+		}
 	}
 
 	/**
@@ -353,7 +206,7 @@ export class World {
 		for (const map of this.maps) {
 			for (let entity of map.entities) {
 				// Entity with a socket is also Player
-				if (entity.type === ENTITY_TYPE.PLAYER && entity.control.socket.readyState === WebSocket.OPEN) {
+				if (entity.type === TYPE.PLAYER && entity.control.socket.readyState === WebSocket.OPEN) {
 					entity.control.socket.send(data, { binary: isBinary });
 				}
 			}
@@ -369,7 +222,7 @@ export class World {
 	broadcastMap(map, data, isBinary = false) {
 		for (let entity of map.entities) {
 			// Entity with a socket is also Player
-			if (entity.type === ENTITY_TYPE.PLAYER && entity.control.socket.readyState === WebSocket.OPEN) {
+			if (entity.type === TYPE.PLAYER && entity.control.socket.readyState === WebSocket.OPEN) {
 				entity.control.socket.send(data, { binary: isBinary });
 			}
 		}
@@ -383,7 +236,7 @@ export class World {
 		let count = 0
 		this.maps.forEach((map) => {
 			map.entities.forEach((entity) => {
-				if (entity.type === ENTITY_TYPE.PLAYER) {
+				if (entity.type === TYPE.PLAYER) {
 					count++
 				}
 			})
@@ -399,75 +252,55 @@ export class World {
 	getPlayerByAccount(id) {
 		for (const map of this.maps) {
 			for (const entity of map.entities) {
-				if (entity.aid === id) {
-					return entity
-				}
+				if (entity.aid === id) return entity
 			}
 		}
 	}
 
 	/**
-	 * Move the player to a new map.
-	 * - First, the player's onLeaveMap method is called.
-	 * - Remove the player from any old maps first.
-	 * - The player's position is set to (x, y) or the center of the map if the params are negative.
-	 * - The player's direction is set to 0 (DIRECTION.DOWN).
-	 * - The player is added to the new map's entities list.
-	 * - Finally, the player's onEnterMap method is called.
+	 * Prepare a map, load it if necessary, and return it.
 	 *
-	 * @param {WorldMap} map - The map to enter.
-	 * @param {Entity} player - The player to enter the map.
-	 * @param {number} [x=-1] - The x coordinate of the player's position.
-	 * @param {number} [y=-1] - The y coordinate of the player's position.
+	 * @param {number} mapId - The map ID (default: 1 "Lobby town")
+	 * @returns {Promise<WorldMap>} - The map
 	 */
-	async addEntityToMap(map, player, x = -1, y = -1) {
-		const oldMap = player.control.map
-		// entity event
-		await player.control.onLeaveMap(map, oldMap)
-
-		// remove player from old maps
-		this.removeEntityFromMaps(player)
-		// remove pet from old maps
-		const playerPets = []
-		if (oldMap != null) {
-			oldMap.entities.forEach(entity => {
-				if (entity.type === ENTITY_TYPE.PET && entity.owner.gid === player.gid) {
-					playerPets.push(entity)
-					this.removeEntityFromMaps(entity)
-				}
-			})
+	async loadMap(mapId = 1) {
+		// check if map exists
+		let map = this.maps.find(m => m.id === mapId)
+		if (!map) {
+			// @ts-ignore create new map from map data
+			// map = new WorldMap(this, MAPS.find(m => m.name === mapName) || { name: mapName })
+			// this.maps.push(map)
+			console.log(`[World] load map '${mapId}' not found.`)
+			return
 		}
-
-		// IMPORTANT: update map controller
-		player.control.map = map
-		// x/y coords or center of map
-		player.lastMap = map.name
-		player.lastX = x >= 0 ? x : Math.round(map.width / 2)
-		player.lastY = y >= 0 ? y : Math.round(map.height / 2)
-		player.dir = DIRECTION.DOWN
-		map.entities.push(player)
-		// send the pets
-		playerPets.forEach(pet => {
-			pet.control.map = map
-			pet.lastMap = map.name
-			pet.lastX = player.lastX
-			pet.lastY = player.lastY
-			pet.dir = player.dir
-			map.entities.push(pet)
-		})
-
-		// entity event
-		return player.control.onEnterMap(map, oldMap)
+		// load any map assets async
+		if (!map.isLoaded) {
+			await map.load()
+		}
+		// create entities async
+		if (!map.isCreated) {
+			await map.create()
+		}
+		return map
 	}
 
 	/**
-	 * Removes the given entity from the maps
-	 *
-	 * @param {Entity} entity - The entity to remove.
+	 * Changes the map of the given entity to the one with the specified id.
+	 * If the map does not exist, it will be loaded.
+	 * If the entity is a player, it will be moved to the specified coordinates.
+	 * Otherwise, it will be spawned at the default coordinates (0, 0).
+	 * @param {Entity} entity - The entity to change the map of.
+	 * @param {number} mapId - The id of the map to change to.
+	 * @param {number} [x=-1] - The x coordinate to move the entity to.
+	 * @param {number} [y=-1] - The y coordinate to move the entity to.
+	 * @returns {Promise<WorldMap>} - The map the entity was moved to.
 	 */
-	removeEntityFromMaps(entity) {
-		for (const map of this.maps) {
-			map.entities = map.entities.filter((e) => e.gid !== entity.gid)
+	async changeMap(entity, mapId, x = -1, y = -1) {
+		const map = await this.loadMap(mapId)
+		if (map) {
+			await addEntityToMap(map, entity, x, y)
 		}
+		return map
 	}
+
 }

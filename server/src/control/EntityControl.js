@@ -1,8 +1,7 @@
 import { AI } from './AI.js';
-import { DIRECTION, ENTITY_TYPE } from '../../../shared/enum/Entity.js';
+import { DIR, TYPE } from '../../../shared/enum/Entity.js';
 import { ELEMENT } from '../../../shared/enum/Element.js';
-import { WorldMap } from '../../../shared/models/WorldMap.js';
-import { Entity } from '../../../shared/models/Entity.js';
+import { inRangeOf, inRangeOfEntity, findMapEntitiesInRadius } from "../../../shared/utils/EntityUtils.js";
 import { onEntityKill } from '../events/onEntityKill.js';
 import RateLimiter from '../utils/RateLimiter.js';
 import onEntityPacketChat from '../events/onEntityPacketChat.js';
@@ -25,7 +24,9 @@ import * as Const from '../../../shared/Constants.js';
 import { sendHeartbeat } from '../events/sendHeartbeat.js';
 // import { sendRateLimit } from '../events/sendRateLimit.js';
 import SkillControl from './SkillControl.js';
-import { sendMapEntity } from '../events/sendMap.js';
+import { sendMapEntity, sendMapRemoveEntity } from '../events/sendMap.js';
+import { sendPlayerLeave } from '../events/sendPlayerLeave.js';
+import { removeEntityFromMaps } from '../actions/removeEntityFromMaps.js';
 
 export class EntityControl {
 	/**
@@ -52,7 +53,7 @@ export class EntityControl {
 		this.map = map
 
 		/** @type {import("./AI.js").AI|null=} - Monster AI. default null */
-		this.ai = entity.type === ENTITY_TYPE.MONSTER ? new AI(entity) : null
+		this.ai = entity.type === TYPE.MONSTER ? new AI(entity) : null
 
 		/** @type {import("../../../shared/models/Entity.js").Entity?} - attacking target entity */
 		this._attacking = null
@@ -80,7 +81,7 @@ export class EntityControl {
 		this.skillControl = new SkillControl(entity);
 
 		// bind WebSocket functions for Players
-		if (entity.type === ENTITY_TYPE.PLAYER) {
+		if (entity.type === TYPE.PLAYER) {
 			this._onSocketHeartbeat = setInterval(this.onSocketHeartbeat.bind(this), Const.SOCKET_HEARTBEAT_INTERVAL)
 			this._onSocketClose = this.onSocketClose.bind(this)
 			this._onSocketError = this.onSocketError.bind(this)
@@ -142,14 +143,49 @@ export class EntityControl {
 	/**
 	 * **Player** Called when the player closes the WebSocket connection.
 	 */
-	onSocketClose() {
-		console.log(`[${this.constructor.name}] onSocketClose "${this.entity.name}" connection closed.`);
-		clearInterval(this._onSocketHeartbeat) // stop heartbeat (ping/pong)
-		this.socket.off('close', this._onSocketClose)
-		this.socket.off('error', this._onSocketError)
-		this.socket.off('message', this._onSocketMessage)
-		this.world.onClientClose(this.entity)
-		this.entity.emit('socket.close')
+	async onSocketClose() {
+		try {
+			const player = this.entity
+			const world = player.control.world
+			console.log(`[${this.constructor.name}] onSocketClose "${player.name}" connection closed.`);
+			clearInterval(this._onSocketHeartbeat) // stop heartbeat (ping/pong)
+			this.socket.off('close', this._onSocketClose)
+			this.socket.off('error', this._onSocketError)
+			this.socket.off('message', this._onSocketMessage)
+			player.emit('socket.close')
+			// this.world.onClientClose(entity)
+			// this.world.emit('socket.close', entity)
+
+			if (world.isClosing) return // Skip, server closing process is handled in onExit method
+
+			this.broadcast(sendPlayerLeave(player.name));
+
+			// do logout by setting state=0
+			await world.db.account.logout(player.aid, false);
+
+			// save player data
+			let playerUpdate = await world.db.player.update(player)
+			console.log(`[World socket.close] (id:${player.id}) "${player.name}" is ${playerUpdate.affectedRows > 0 ? 'saved' : 'not saved'}.`)
+
+			// save player inventory
+			// TODO improve this logic
+			await world.db.inventory.clear(player.id)
+			await world.db.inventory.addAll(player.id, player.inventory)
+
+			// send entity remove packet to other players
+			const playerMap = player.control.map
+			const playerPets = playerMap.entities.filter(entity => entity.type === TYPE.PET && entity.owner.gid === player.gid)
+			for (let other of playerMap.entities) {
+				if (other.type === TYPE.PLAYER && other.gid !== player.gid) {
+					other.control.socket.send(sendMapRemoveEntity(player, ...playerPets))
+				}
+			}
+			// remove player from map
+			// remove player pets from map
+			removeEntityFromMaps(player, true)
+		} catch (e) {
+			console.log(`[${this.constructor.name}] onSocketClose "${this.entity.name}" error:`, (e.message || e))
+		}
 	}
 
 	/**
@@ -188,11 +224,11 @@ export class EntityControl {
 	onTick(timestamp) {
 		this.entity.emit('tick', timestamp)
 		switch (this.entity.type) {
-			case ENTITY_TYPE.PLAYER: onEntityUpdatePlayer(this.entity, timestamp); break;
-			case ENTITY_TYPE.MONSTER: onEntityUpdateMonster(this.entity, timestamp); break;
-			case ENTITY_TYPE.NPC: onEntityUpdateNPC(this.entity, timestamp); break;
-			case ENTITY_TYPE.PORTAL: onEntityUpdatePortal(this.entity, timestamp); break;
-			case ENTITY_TYPE.PET: onEntityUpdatePet(this.entity, timestamp); break;
+			case TYPE.PLAYER: onEntityUpdatePlayer(this.entity, timestamp); break;
+			case TYPE.MONSTER: onEntityUpdateMonster(this.entity, timestamp); break;
+			case TYPE.NPC: onEntityUpdateNPC(this.entity, timestamp); break;
+			case TYPE.PORTAL: onEntityUpdatePortal(this.entity, timestamp); break;
+			case TYPE.PET: onEntityUpdatePet(this.entity, timestamp); break;
 			default: break;
 		}
 	}
@@ -256,8 +292,8 @@ export class EntityControl {
 	 */
 	nearbyAutoAttack(timestamp) {
 		try {
-			const nearbyEntities = WorldMap.findEntitiesInRadius(this.map, this.entity.lastX, this.entity.lastY, this.entity.range)
-				.filter(entity => entity.gid !== this.entity.gid) // exclude self
+			const nearbyEntities = findMapEntitiesInRadius(this.map, this.entity.lastX, this.entity.lastY, this.entity.range)
+				.filter(entity => entity.type === TYPE.MONSTER && entity.hp > 0)
 
 			// no entities in radius
 			if (nearbyEntities.length === 0) {
@@ -267,7 +303,7 @@ export class EntityControl {
 
 			for (const entity of nearbyEntities) {
 				// Monster interaction, player needs to be in range
-				if (entity.type === ENTITY_TYPE.MONSTER) {
+				if (entity.type === TYPE.MONSTER) {
 					// has target set and still in range?
 					// then start combat
 					if (this._attacking != null || this._follow != null) {
@@ -290,10 +326,10 @@ export class EntityControl {
 	 */
 	attack(entity, timestamp) {
 		if (entity.hp <= 0) return // must be alive
-		if (entity.type === ENTITY_TYPE.NPC) return // NPC can't be attacked
-		if (entity.type === ENTITY_TYPE.PORTAL) return // PORTAL can't be attacked
+		if (entity.type === TYPE.NPC) return // NPC can't be attacked
+		if (entity.type === TYPE.PORTAL) return // PORTAL can't be attacked
 		if (this.map !== entity.control.map) return // must be in the same map
-		if (this.entity.type === ENTITY_TYPE.PLAYER && entity.type === ENTITY_TYPE.PLAYER && !this.map.isPVP) return // PLAYER can attack in PVP map only
+		if (this.entity.type === TYPE.PLAYER && entity.type === TYPE.PLAYER && !this.map.isPVP) return // PLAYER can attack in PVP map only
 
 		this.stopMoveTo()
 
@@ -304,7 +340,7 @@ export class EntityControl {
 		// aspd = attack speed. default 1000ms = 1 second
 		// aspdMultiplier = attack speed multiplier. default 1.0
 		if (this._attackAutoCd.isNotExpired(timestamp)) return // can't attack yet
-		if (!Entity.inRangeOfEntity(this.entity, entity)) return // out of range
+		if (!inRangeOfEntity(this.entity, entity)) return // out of range
 		// set auto-attack cooldown as timestamp + aspd * multiplier
 		this._attackAutoCd.set(timestamp + (this.entity.aspd * this.entity.aspdMultiplier))
 		this.entity.emit('attack.start', entity.gid)
@@ -333,10 +369,10 @@ export class EntityControl {
 	 */
 	takeDamageFrom(attacker, extraMultiplyer = 1.0) {
 		if (this.entity.hp <= 0) return // must be alive
-		if (this.entity.type === ENTITY_TYPE.NPC) return // NPC can't take damage
-		if (this.entity.type === ENTITY_TYPE.PORTAL) return // PORTAL can't take damage
+		if (this.entity.type === TYPE.NPC) return // NPC can't take damage
+		if (this.entity.type === TYPE.PORTAL) return // PORTAL can't take damage
 		if (this.map !== attacker.control.map) return // must be in the same map, to receive damage
-		if (this.entity.type === ENTITY_TYPE.PLAYER && attacker.type === ENTITY_TYPE.PLAYER && !this.map.isPVP) return // PLAYER can take damage in PVP map only
+		if (this.entity.type === TYPE.PLAYER && attacker.type === TYPE.PLAYER && !this.map.isPVP) return // PLAYER can take damage in PVP map only
 		let lastHp = this.entity.hp
 		// physical attacks are always neutral? what about weapons elements?
 		// TODO take defence into account
@@ -404,15 +440,15 @@ export class EntityControl {
 	 */
 	toSavePosition() {
 		// same map, just update position
-		if (this.map.name === this.entity.saveMap) {
+		if (this.map.id === this.entity.saveMap) {
 			this.lastX = this.entity.saveX
 			this.lastY = this.entity.saveY
 			this.entity.emit('savePosition', this.entity.gid)
 			return
 		}
 		// different map, join
-		if (this.entity.type === ENTITY_TYPE.PLAYER) {
-			this.map.world.joinMap(this.entity, this.entity.saveMap, this.entity.saveX, this.entity.saveY).then(() => {
+		if (this.entity.type === TYPE.PLAYER) {
+			this.map.world.changeMap(this.entity, this.entity.saveMap, this.entity.saveX, this.entity.saveY).then(() => {
 				this.entity.emit('savePosition', this.entity.gid)
 			})
 		}
@@ -466,30 +502,30 @@ export class EntityControl {
 		this._moveCd.set(timestamp + (this.entity.speed * Const.ENTITY_MOVE_STEP) - this.entity.latency)
 
 		switch (dir) {
-			case DIRECTION.LEFT:
-				this.entity.dir = DIRECTION.LEFT
+			case DIR.LEFT:
+				this.entity.dir = DIR.LEFT
 				if (this.entity.lastX > 0) {
 					this.entity.lastX -= Const.ENTITY_MOVE_STEP
 					// this.moveTo(this.entity.lastX - Const.ENTITY_MOVE_STEP, this.entity.lastY, timestamp)
 				}
 				break
-			case DIRECTION.RIGHT:
-				this.entity.dir = DIRECTION.RIGHT
+			case DIR.RIGHT:
+				this.entity.dir = DIR.RIGHT
 				if (this.entity.lastX < this.map.width) {
 					this.entity.lastX += Const.ENTITY_MOVE_STEP
 					// this.moveTo(this.entity.lastX + Const.ENTITY_MOVE_STEP, this.entity.lastY, timestamp)
 				}
 				break
-			case DIRECTION.UP:
-				this.entity.dir = DIRECTION.UP
+			case DIR.UP:
+				this.entity.dir = DIR.UP
 				if (this.entity.lastY > 0) {
 					this.entity.lastY -= Const.ENTITY_MOVE_STEP
 					// this.moveTo(this.entity.lastX, this.entity.lastY - Const.ENTITY_MOVE_STEP, timestamp)
 
 				}
 				break
-			case DIRECTION.DOWN:
-				this.entity.dir = DIRECTION.DOWN
+			case DIR.DOWN:
+				this.entity.dir = DIR.DOWN
 				if (this.entity.lastY < this.map.height) {
 					this.entity.lastY += Const.ENTITY_MOVE_STEP
 					// this.moveTo(this.entity.lastX, this.entity.lastY + Const.ENTITY_MOVE_STEP, timestamp)
@@ -513,7 +549,7 @@ export class EntityControl {
 		if (!this.entity.isMoveable) return this.stopFollow() // can't move
 		if (this.entity.hp <= 0) return this.stopFollow() // must be alive
 		if (entity.hp <= 0) return this.stopFollow() // target must be alive
-		if (Entity.inRangeOfEntity(this.entity, entity)) return this.stopFollow() // in range
+		if (inRangeOfEntity(this.entity, entity)) return this.stopFollow() // in range
 
 		this._follow = entity
 
@@ -523,17 +559,17 @@ export class EntityControl {
 
 		// follow entity
 		if (this.entity.lastX > entity.lastX) {
-			this.entity.dir = DIRECTION.LEFT
+			this.entity.dir = DIR.LEFT
 			this.entity.lastX -= Const.ENTITY_MOVE_STEP
 		} else if (this.entity.lastX < entity.lastX) {
-			this.entity.dir = DIRECTION.RIGHT
+			this.entity.dir = DIR.RIGHT
 			this.entity.lastX += Const.ENTITY_MOVE_STEP
 		}
 		if (this.entity.lastY > entity.lastY) {
-			this.entity.dir = DIRECTION.UP
+			this.entity.dir = DIR.UP
 			this.entity.lastY -= Const.ENTITY_MOVE_STEP
 		} else if (this.entity.lastY < entity.lastY) {
-			this.entity.dir = DIRECTION.DOWN
+			this.entity.dir = DIR.DOWN
 			this.entity.lastY += Const.ENTITY_MOVE_STEP
 		}
 
@@ -567,7 +603,7 @@ export class EntityControl {
 		if (!this.entity.isMoveable) return this.stopMoveTo() // can't move
 		if (this.entity.hp <= 0) return this.stopMoveTo() // must be alive
 		// stop at range
-		if (Entity.inRangeOf(this.entity, x, y, Const.ENTITY_MOVE_STEP)) {
+		if (inRangeOf(this.entity, x, y, Const.ENTITY_MOVE_STEP)) {
 			return this.stopMoveTo()
 		}
 
@@ -580,17 +616,17 @@ export class EntityControl {
 		this._moveCd.set(timestamp + (this.entity.speed * Const.ENTITY_MOVE_STEP) - this.entity.latency)
 
 		if (this.entity.lastX > x) {
-			this.entity.dir = DIRECTION.LEFT
+			this.entity.dir = DIR.LEFT
 			this.entity.lastX -= Const.ENTITY_MOVE_STEP
 		} else if (this.entity.lastX < x) {
-			this.entity.dir = DIRECTION.RIGHT
+			this.entity.dir = DIR.RIGHT
 			this.entity.lastX += Const.ENTITY_MOVE_STEP
 		}
 		if (this.entity.lastY > y) {
-			this.entity.dir = DIRECTION.UP
+			this.entity.dir = DIR.UP
 			this.entity.lastY -= Const.ENTITY_MOVE_STEP
 		} else if (this.entity.lastY < y) {
-			this.entity.dir = DIRECTION.DOWN
+			this.entity.dir = DIR.DOWN
 			this.entity.lastY += Const.ENTITY_MOVE_STEP
 		}
 
@@ -619,11 +655,11 @@ export class EntityControl {
 	 * @returns {number}
 	 */
 	getMoveDir(x, y) {
-		if (x > -1 && x < this.entity.lastX) return DIRECTION.LEFT
-		if (x > -1 && x > this.entity.lastX) return DIRECTION.RIGHT
-		if (y > -1 && y < this.entity.lastY) return DIRECTION.UP
-		if (y > -1 && y > this.entity.lastY) return DIRECTION.DOWN
-		return DIRECTION.DOWN
+		if (x > -1 && x < this.entity.lastX) return DIR.LEFT
+		if (x > -1 && x > this.entity.lastX) return DIR.RIGHT
+		if (y > -1 && y < this.entity.lastY) return DIR.UP
+		if (y > -1 && y > this.entity.lastY) return DIR.DOWN
+		return DIR.DOWN
 	}
 
 }

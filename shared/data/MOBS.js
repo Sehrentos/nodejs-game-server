@@ -1,4 +1,4 @@
-import { ENTITY_TYPE } from "../enum/Entity.js";
+import { SIZE, TYPE } from "../enum/Entity.js";
 import { SPR_ID as SPR } from "../enum/Sprite.js";
 import { ITEMS } from "./ITEMS.js";
 
@@ -15,7 +15,7 @@ export const MOBS = {
 	CAT: {
 		id: 1,
 		spriteId: SPR.MOB_CAT,
-		type: ENTITY_TYPE.MONSTER,
+		type: TYPE.MONSTER,
 		name: "Cat",
 		hp: 25,
 		hpMax: 25,
@@ -32,7 +32,7 @@ export const MOBS = {
 	ORC: {
 		id: 2,
 		spriteId: SPR.MOB_ORC,
-		type: ENTITY_TYPE.MONSTER,
+		type: TYPE.MONSTER,
 		name: "Orc",
 		hp: 35,
 		hpMax: 35,
@@ -50,7 +50,7 @@ export const MOBS = {
 	PLANKTON: {
 		id: 3,
 		spriteId: SPR.MOB_PLANKTON,
-		type: ENTITY_TYPE.MONSTER,
+		type: TYPE.MONSTER,
 		name: "Plankton",
 		hp: 500,
 		hpMax: 500,
@@ -63,7 +63,7 @@ export const MOBS = {
 	ORC2: {
 		id: 4,
 		spriteId: SPR.MOB_ORC2,
-		type: ENTITY_TYPE.MONSTER,
+		type: TYPE.MONSTER,
 		name: "Orc with gloves?",
 		hp: 500,
 		hpMax: 500,
@@ -82,7 +82,7 @@ export const MOBS = {
 	EYE: {
 		id: 5,
 		spriteId: SPR.MOB_EYE,
-		type: ENTITY_TYPE.MONSTER,
+		type: TYPE.MONSTER,
 		name: "The eye",
 		hp: 1000,
 		hpMax: 1000,
@@ -95,7 +95,7 @@ export const MOBS = {
 	LADYBUG: {
 		id: 6,
 		spriteId: SPR.MOB_LADYBUG,
-		type: ENTITY_TYPE.MONSTER,
+		type: TYPE.MONSTER,
 		name: "Ladybug",
 		hp: 1000,
 		hpMax: 1000,
@@ -108,7 +108,7 @@ export const MOBS = {
 	SKELETON: {
 		id: 7,
 		spriteId: SPR.MOB_SKELETON,
-		type: ENTITY_TYPE.MONSTER,
+		type: TYPE.MONSTER,
 		name: "Skeleton",
 		hp: 5000,
 		hpMax: 5000,
@@ -117,13 +117,12 @@ export const MOBS = {
 		atk: 160,
 		aspd: 1000,
 		range: 32,
-		w: 60,
-		h: 120,
+		size: SIZE.HUGE,
 	},
 	DINOSAUR: {
 		id: 8,
 		spriteId: SPR.MOB_DINOSAUR,
-		type: ENTITY_TYPE.MONSTER,
+		type: TYPE.MONSTER,
 		name: "Dinosaur",
 		hp: 100,
 		hpMax: 100,
@@ -140,7 +139,7 @@ export const MOBS = {
 	MUSHROOM: {
 		id: 9,
 		spriteId: SPR.MOB_MUSHROOM,
-		type: ENTITY_TYPE.MONSTER,
+		type: TYPE.MONSTER,
 		name: "Mushroom",
 		hp: 90,
 		hpMax: 90,
@@ -157,7 +156,7 @@ export const MOBS = {
 	WIND_SPIRIT: {
 		id: 10,
 		spriteId: SPR.MOB_WIND_SPIRIT,
-		type: ENTITY_TYPE.MONSTER,
+		type: TYPE.MONSTER,
 		name: "Wind spirit",
 		hp: 150,
 		hpMax: 150,
@@ -170,7 +169,7 @@ export const MOBS = {
 	SLUSHIE: {
 		id: 11,
 		spriteId: SPR.MOB_SLUSHIE,
-		type: ENTITY_TYPE.MONSTER,
+		type: TYPE.MONSTER,
 		name: "Slushie",
 		hp: 150,
 		hpMax: 150,
@@ -187,7 +186,7 @@ export const MOBS = {
 	RED_MUSHROOM: {
 		id: 12,
 		spriteId: SPR.MOB_RED_MUSHROOM,
-		type: ENTITY_TYPE.MONSTER,
+		type: TYPE.MONSTER,
 		name: "Red mushroom",
 		hp: 150,
 		hpMax: 150,
@@ -204,7 +203,7 @@ export const MOBS = {
 	LADYBUG2: {
 		id: 13,
 		spriteId: SPR.MOB_LADYBUG2,
-		type: ENTITY_TYPE.MONSTER,
+		type: TYPE.MONSTER,
 		name: "Ladybug 2",
 		hp: 150,
 		hpMax: 150,
@@ -217,7 +216,7 @@ export const MOBS = {
 	ROBOT: {
 		id: 14,
 		spriteId: SPR.MOB_ROBOT,
-		type: ENTITY_TYPE.MONSTER,
+		type: TYPE.MONSTER,
 		name: "Robot 1",
 		hp: 150,
 		hpMax: 150,
@@ -230,7 +229,7 @@ export const MOBS = {
 	UNICORN: {
 		id: 15,
 		spriteId: SPR.MOB_UNICORN,
-		type: ENTITY_TYPE.MONSTER,
+		type: TYPE.MONSTER,
 		name: "Unicorn",
 		hp: 1500,
 		hpMax: 1500,
@@ -243,7 +242,7 @@ export const MOBS = {
 	GHOST: {
 		id: 16,
 		spriteId: SPR.MOB_GHOST,
-		type: ENTITY_TYPE.MONSTER,
+		type: TYPE.MONSTER,
 		name: "Ghost",
 		hp: 1500,
 		hpMax: 1500,
@@ -256,7 +255,7 @@ export const MOBS = {
 	SNAKE: {
 		id: 17,
 		spriteId: SPR.MOB_SNAKE,
-		type: ENTITY_TYPE.MONSTER,
+		type: TYPE.MONSTER,
 		name: "Snake",
 		hp: 1500,
 		hpMax: 1500,
@@ -269,7 +268,7 @@ export const MOBS = {
 	CAT2: {
 		id: 18,
 		spriteId: SPR.MOB_CAT2,
-		type: ENTITY_TYPE.MONSTER,
+		type: TYPE.MONSTER,
 		name: "Dallas",
 		hp: 1500,
 		hpMax: 1500,
@@ -282,7 +281,7 @@ export const MOBS = {
 	DOG: {
 		id: 19,
 		spriteId: SPR.MOB_DOG,
-		type: ENTITY_TYPE.MONSTER,
+		type: TYPE.MONSTER,
 		name: "Santtu",
 		hp: 1500,
 		hpMax: 1500,
@@ -295,7 +294,7 @@ export const MOBS = {
 	FROG: {
 		id: 20,
 		spriteId: SPR.MOB_FROG,
-		type: ENTITY_TYPE.MONSTER,
+		type: TYPE.MONSTER,
 		name: "Frog",
 		hp: 1500,
 		hpMax: 1500,

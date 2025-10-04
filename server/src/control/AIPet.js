@@ -1,6 +1,7 @@
-import { ENTITY_AI_NEARBY_RANGE, ENTITY_AI_IDDLE_MOVE_MAX, ENTITY_AI_IDDLE_TIME } from "../../../shared/Constants.js"
-import { DIRECTION, ENTITY_TYPE } from "../../../shared/enum/Entity.js"
-import { WorldMap } from "../../../shared/models/WorldMap.js"
+import { ENTITY_AI_IDDLE_MOVE_MAX, ENTITY_AI_IDDLE_TIME } from "../../../shared/Constants.js"
+import { DIR, TYPE } from "../../../shared/enum/Entity.js"
+import { findMapEntitiesInRadius } from "../../../shared/utils/EntityUtils.js"
+import { removeEntityFromMaps } from "../actions/removeEntityFromMaps.js"
 
 /**
  * @module AIPet
@@ -21,7 +22,7 @@ export class AIPet {
 	onUpdate(timestamp) {
 		if (this.entity.owner == null) {
 			console.log("[DEBUG] Removing Pet, owner is null")
-			this.entity.control.world.removeEntityFromMaps(this.entity)
+			removeEntityFromMaps(this.entity)
 			return
 		}
 		this.entity.control.follow(this.entity.owner, timestamp)
@@ -63,36 +64,36 @@ export class AIPet {
 				return
 			}
 
-			if (entity.dir === DIRECTION.DOWN) {
+			if (entity.dir === DIR.DOWN) {
 				if ((entity.lastY < entity.saveY + ENTITY_AI_IDDLE_MOVE_MAX) && entity.lastY < ctrl.map.height) {
-					ctrl.move(DIRECTION.DOWN, timestamp)
+					ctrl.move(DIR.DOWN, timestamp)
 				} else {
 					// next direction
-					entity.dir = DIRECTION.RIGHT
+					entity.dir = DIR.RIGHT
 					this.iddleStart = timestamp
 				}
 			}
-			if (entity.dir === DIRECTION.RIGHT) {
+			if (entity.dir === DIR.RIGHT) {
 				if ((entity.lastX < entity.saveX + ENTITY_AI_IDDLE_MOVE_MAX) && entity.lastX < ctrl.map.width) {
-					ctrl.move(DIRECTION.RIGHT, timestamp)
+					ctrl.move(DIR.RIGHT, timestamp)
 				} else {
-					entity.dir = DIRECTION.UP
+					entity.dir = DIR.UP
 					this.iddleStart = timestamp
 				}
 			}
-			if (entity.dir === DIRECTION.UP) {
+			if (entity.dir === DIR.UP) {
 				if ((entity.lastY > entity.saveY - ENTITY_AI_IDDLE_MOVE_MAX) && entity.lastY > 0) {
-					ctrl.move(DIRECTION.UP, timestamp)
+					ctrl.move(DIR.UP, timestamp)
 				} else {
-					entity.dir = DIRECTION.LEFT
+					entity.dir = DIR.LEFT
 					this.iddleStart = timestamp
 				}
 			}
-			if (entity.dir === DIRECTION.LEFT) {
+			if (entity.dir === DIR.LEFT) {
 				if ((entity.lastX > entity.saveX - ENTITY_AI_IDDLE_MOVE_MAX) && entity.lastX > 0) {
-					ctrl.move(DIRECTION.LEFT, timestamp)
+					ctrl.move(DIR.LEFT, timestamp)
 				} else {
-					entity.dir = DIRECTION.DOWN
+					entity.dir = DIR.DOWN
 					this.iddleStart = timestamp
 				}
 			}
@@ -110,7 +111,7 @@ export class AIPet {
 			const ctrl = self.control
 
 			// find entities in x tiles radius
-			const nearbyEntities = WorldMap.findEntitiesInRadius(ctrl.map, self.lastX, self.lastY, radius)
+			const nearbyEntities = findMapEntitiesInRadius(ctrl.map, self.lastX, self.lastY, radius)
 				.filter(entity => entity.gid !== self.gid && entity.gid !== self.owner.gid) // exclude self and owner
 
 			// no entities in radius
@@ -121,7 +122,7 @@ export class AIPet {
 
 			// find entity and set it as target
 			for (const entity of nearbyEntities) {
-				if (entity.type === ENTITY_TYPE.MONSTER) {
+				if (entity.type === TYPE.MONSTER) {
 					// when player used portal, await it's cooldown to end before attack
 					if (entity.control._portalUseCd.isNotExpired(timestamp)) {
 						continue; // skip to next target

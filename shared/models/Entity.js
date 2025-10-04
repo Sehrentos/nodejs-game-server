@@ -1,5 +1,5 @@
 import EventEmitter from '../utils/EventEmitter.js';
-import { DIRECTION, ENTITY_TYPE } from "../enum/Entity.js"
+import { DIR, TYPE, SIZE, RANGE } from "../enum/Entity.js"
 import { ELEMENT } from "../enum/Element.js";
 import * as Const from "../Constants.js";
 import { Item } from "./Item.js";
@@ -12,16 +12,15 @@ import { Item } from "./Item.js";
  * @prop {number=} spriteId - Sprite ID.
  * @prop {string=} name - Visual name.
  * @prop {number=} type - Entity type. default ENTITY_TYPE.NPC
- * @prop {string=} lastMap - Current map name.
+ * @prop {number=} lastMap - Current map ID.
  * @prop {number=} lastX - Current X position.
  * @prop {number=} lastY - Current Y position.
  * prop {number=} prevX - Previous X position.
  * prop {number=} prevY - Previous Y position.
  * @prop {boolean=} isMoveable - Whether the entity can move. default true
- * @prop {number=} w - The width of the entity. default: 64
- * @prop {number=} h - The height of the entity. default: 64
+ * @prop {number=} size - The size (width/height) of the entity. default: 64 / MEDIUM
  * @prop {boolean=} visible - Whether the entity is visible. default: true
- * @prop {string=} saveMap - The map entity was created or saved.
+ * @prop {number=} saveMap - The map ID entity was created or saved.
  * @prop {number=} saveX - The position X entity was created or saved.
  * @prop {number=} saveY - The position Y entity was created or saved.
  * @prop {number=} dir - Direction facing 0: Left (x--), 1: Right (x++), 2: Up (y--), 3: Down (y++). default 0
@@ -80,14 +79,14 @@ import { Item } from "./Item.js";
  * @prop {import("./Item.js").TItemProps[]=} inventory - Inventory list.
  * @prop {number[]=} quests - Quest list.
  * @prop {number=} partyId - Party ID. default 0
- * @prop {string=} portalName - **Portal** destination map name.
+ * @prop {number=} portalId - **Portal** destination map ID.
  * @prop {number=} portalX - **Portal** destination X position.
  * @prop {number=} portalY - **Portal** destination Y position.
  * @prop {string=} dialog - **NPC** dialog text
  * @prop {Entity=} owner - **PET** Owner entity
  * @prop {number[]=} pets - **Player** Pet entity IDs.
  * @prop {import("../../server/src/control/EntityControl.js").EntityControl=} control - **CONTROL** controller instance for server-side only.
- * @prop {any} [delta] - **CONTROL** optional. container object for delta data
+ * @prop {any} [delta] - **CONTROL** optional. container object used for delta compression technique
  */
 
 export class Entity extends EventEmitter {
@@ -98,9 +97,8 @@ export class Entity extends EventEmitter {
 	 * entity type, visual name, map information, etc.
 	 *
 	 * @param {TEntityProps} p
-	 * @param {{ [key: string]: (...args: any[]) => void }} [events] optional. event emitter listeners
 	 */
-	constructor(p, events) {
+	constructor(p) {
 		super()
 		/** @type {number=} Database ID. default: 0 */
 		this.id = p?.id ?? 0
@@ -110,19 +108,17 @@ export class Entity extends EventEmitter {
 		this.aid = p?.aid ?? 0
 		/** @type {number} Sprite ID. default: 0 */
 		this.spriteId = p?.spriteId ?? 0
-		this.type = p?.type ?? ENTITY_TYPE.NPC
+		this.type = p?.type ?? TYPE.NPC
 		this.name = p?.name ?? ''
 
 		/** @type {boolean} Whether the entity is visible. default: true */
 		this.visible = p?.visible ?? true
 
-		// #region size
-		this.w = p?.w ?? Const.ENTITY_WIDTH
-		this.h = p?.h ?? Const.ENTITY_HEIGHT
-		// #endregion
+		/** @type {number=} - The size (width/height) of the entity. default: 64 / MEDIUM */
+		this.size = p?.size ?? SIZE.MEDIUM
 
 		// #region positions current & saved
-		this.dir = p?.dir ?? DIRECTION.DOWN
+		this.dir = p?.dir ?? DIR.DOWN
 		// this.prevDir = p?.prevDir ?? this.dir
 		this.lastMap = p?.lastMap ?? Const.ENTITY_LAST_MAP
 		this.lastX = p?.lastX ?? Const.ENTITY_LAST_X
@@ -159,7 +155,7 @@ export class Entity extends EventEmitter {
 		this.money = p?.money ?? 0
 		this.eAtk = p?.eAtk ?? ELEMENT.NEUTRAL
 		this.eDef = p?.eDef ?? ELEMENT.NEUTRAL
-		this.range = p?.range ?? Const.ENTITY_RANGE
+		this.range = p?.range ?? RANGE.SHORT
 		this.atk = p?.atk ?? 1
 		this.atkMultiplier = p?.atkMultiplier ?? 1.0
 		this.mAtk = p?.mAtk ?? 1
@@ -212,8 +208,8 @@ export class Entity extends EventEmitter {
 		// #endregion
 
 		// #region PORTAL
-		/** @type {string} - Warp portal destination map name */
-		this.portalName = p?.portalName ?? ''
+		/** @type {number} - Warp portal destination map name */
+		this.portalId = p?.portalId ?? 0
 		/** @type {number} - Warp portal destination X */
 		this.portalX = p?.portalX ?? 0
 		/** @type {number} - Warp portal destination Y */
@@ -232,33 +228,5 @@ export class Entity extends EventEmitter {
 		this.control = p?.control ?? null
 		this.delta = p?.delta ?? null
 		// #endregion
-
-		// add events
-		if (events) {
-			Object.keys(events).forEach(k => this.on(k, events[k]))
-		}
-	}
-
-	/**
-	 * Checks if the given coordinates (x, y) are within the range of the given entity.
-	 * The range is defined as the absolute difference between the entity's position and the given coordinates.
-	 * @param {Entity} entity - The first entity
-	 * @param {number} x - The x coordinate
-	 * @param {number} y - The y coordinate
-	 * @param {number} range - The range
-	 * @returns {boolean} True if the coordinates are within the range of the entity, otherwise false.
-	 */
-	static inRangeOf(entity, x, y, range) {
-		return Math.abs(entity.lastX - x) <= range && Math.abs(entity.lastY - y) <= range
-	}
-
-	/**
-	 * Checks if the entities are within the range of each other.
-	 * @param {Entity} entity1 - The first entity
-	 * @param {Entity} entity2 - The second entity
-	 * @returns {boolean} True if the coordinates are within the range of the first entity, otherwise false.
-	 */
-	static inRangeOfEntity(entity1, entity2) {
-		return Math.abs(entity1.lastX - entity2.lastX) <= entity1.range && Math.abs(entity1.lastY - entity2.lastY) <= entity1.range
 	}
 }

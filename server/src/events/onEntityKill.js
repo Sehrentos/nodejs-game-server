@@ -1,5 +1,5 @@
 import { EXP_BASE, EXP_JOB } from "../../../shared/Constants.js"
-import { ENTITY_TYPE } from "../../../shared/enum/Entity.js"
+import { TYPE } from "../../../shared/enum/Entity.js"
 import { Item } from "../../../shared/models/Item.js"
 import { getRandomInt } from "../utils/getRandomInt.js"
 import { sendItemsReceived } from "./sendItemsReceived.js"
@@ -7,14 +7,14 @@ import { sendMapEntity } from "./sendMap.js"
 import { sendPlayer } from "./sendPlayer.js"
 
 /**
- * Handles the event when an entity is killed.
+ * Handles the event when an entity is about to be killed.
  *
  * @param {import("../../../shared/models/Entity.js").Entity} killer - The entity responsible for the kill.
  * @param {import("../../../shared/models/Entity.js").Entity} killed - The entity that was killed.
  */
 export function onEntityKill(killer, killed) {
-	if (killed.type === ENTITY_TYPE.NPC) return // NPC can't die
-	if (killed.type === ENTITY_TYPE.PORTAL) return // PORTAL can't die
+	if (killed.type === TYPE.NPC) return // NPC can't die
+	if (killed.type === TYPE.PORTAL) return // PORTAL can't die
 	const timestamp = performance.now()
 
 	killed.hp = 0
@@ -28,13 +28,13 @@ export function onEntityKill(killer, killed) {
 	killer.control.stopAttack()
 
 	// send killed player back to saved position
-	if (killed.type === ENTITY_TYPE.PLAYER) {
+	if (killed.type === TYPE.PLAYER) {
 		killed.control.toSavePosition()
 		killed.control.revive()
 	}
 
 	// NEXT: reward the attacker, but only players can get exp
-	if (killer.type !== ENTITY_TYPE.PLAYER) return
+	if (killer.type !== TYPE.PLAYER) return
 
 	// reward the player with exp
 	killer.baseExp += killed.baseExp
@@ -73,7 +73,7 @@ export function onEntityKill(killer, killed) {
 	}
 
 	// reward the player with items from the killed monster
-	if (killed.type === ENTITY_TYPE.MONSTER) {
+	if (killed.type === TYPE.MONSTER) {
 		/** @type {Item[]} */
 		const rewardItems = []
 		for (const item of killed.inventory) {
@@ -91,16 +91,19 @@ export function onEntityKill(killer, killed) {
 				const existingItem = killer.inventory.find(itm => itm.id === item.id)
 				if (existingItem) {
 					existingItem.amount += item.amount
-					console.log(`[Event.onEntityKill] (existing) item "${item.id}" added to inventory (amount: ${item.amount} / now: ${existingItem.amount})`)
+					// console.log(`[Event.onEntityKill] (existing) item "${item.id}" added to inventory (amount: ${item.amount} / now: ${existingItem.amount})`)
 				} else {
 					killer.inventory.push(new Item(item))
-					console.log(`[Event.onEntityKill] (new) item "${item.id}" added to inventory (amount: ${item.amount})`)
+					// console.log(`[Event.onEntityKill] (new) item "${item.id}" added to inventory (amount: ${item.amount})`)
 				}
 			}
 
 			// send received items packet
 			killer.control.socket.send(sendItemsReceived(rewardItems))
 			killer.control.socket.send(sendPlayer(killer, "baseExp", "jobExp", "level", "jobLevel", "inventory"))
+		} else {
+			// console.log(`[Event.onEntityKill] no items dropped by "${killed.name}" (gid: ${killed.gid})`)
+			killer.control.socket.send(sendPlayer(killer, "baseExp", "jobExp", "level", "jobLevel"))
 		}
 	}
 

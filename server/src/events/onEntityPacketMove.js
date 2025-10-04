@@ -1,4 +1,4 @@
-import { DIRECTION } from "../../../shared/enum/Entity.js"
+import { DIR } from "../../../shared/enum/Entity.js"
 
 /**
  * Handles the movement of the player based on WebSocket messages.
@@ -19,19 +19,19 @@ export default function onEntityPacketMove(entity, json, timestamp) {
 	switch (json.code) {
 		case "KeyA":
 		case "ArrowLeft":
-			ctrl.move(DIRECTION.LEFT, timestamp)
+			ctrl.move(DIR.LEFT, timestamp)
 			break
 		case "KeyD":
 		case "ArrowRight":
-			ctrl.move(DIRECTION.RIGHT, timestamp)
+			ctrl.move(DIR.RIGHT, timestamp)
 			break
 		case "KeyW":
 		case "ArrowUp":
-			ctrl.move(DIRECTION.UP, timestamp)
+			ctrl.move(DIR.UP, timestamp)
 			break
 		case "KeyS":
 		case "ArrowDown":
-			ctrl.move(DIRECTION.DOWN, timestamp)
+			ctrl.move(DIR.DOWN, timestamp)
 			break
 		default:
 			break

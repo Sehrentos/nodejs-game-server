@@ -1,5 +1,5 @@
 import { getMobById } from "../../../shared/data/MOBS.js"
-import { ENTITY_TYPE } from "../../../shared/enum/Entity.js"
+import { TYPE } from "../../../shared/enum/Entity.js"
 import { Entity } from "../../../shared/models/Entity.js"
 import { AIPet } from "../control/AIPet.js"
 import { EntityControl } from "../control/EntityControl.js"
@@ -26,7 +26,7 @@ export function createPetEntity(entity, ...mobId) {
 
 		// If the mobId is not found, return undefined
 		if (monster == null) {
-			console.warn(`[addPet] Mob id:${mobId} not found`)
+			console.warn(`[createPetEntity] Mob id:${mobId} not found`)
 			continue
 		}
 
@@ -37,7 +37,7 @@ export function createPetEntity(entity, ...mobId) {
 			// Set the pet's ID to a new game ID
 			gid: createGameId(),
 			// Set the pet's type to PET
-			type: ENTITY_TYPE.PET,
+			type: TYPE.PET,
 			// Set the pet's name to something like "John's Dog"
 			name: `${entity.name}'s ${monster.name}`,
 			// Set the pet's owner to the given entity

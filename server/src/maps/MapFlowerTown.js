@@ -1,5 +1,6 @@
 import { Entity } from '../../../shared/models/Entity.js'
-import { ENTITY_TYPE } from '../../../shared/enum/Entity.js'
+import { RANGE, SIZE, TYPE } from '../../../shared/enum/Entity.js'
+import { MAP_ID, MAP_NAME } from '../../../shared/enum/WorldMap.js'
 import { WorldMap } from '../../../shared/models/WorldMap.js'
 import { EntityControl } from '../control/EntityControl.js'
 import createGameId from '../utils/createGameId.js'
@@ -10,9 +11,9 @@ export default class MapFlowerTown extends WorldMap {
 	/** @param {import("../../../shared/models/WorldMap.js").TWorldMapProps} props */
 	constructor(props = {}) {
 		super({
-			id: 2,
+			id: MAP_ID.FLOWER_TOWN,
+			name: MAP_NAME[MAP_ID.FLOWER_TOWN],
 			spriteId: SPR_ID.MAP_FLOWER_TOWN,
-			name: "Flower town",
 			isTown: true,
 			width: 2000,
 			height: 1400,
@@ -41,26 +42,24 @@ export default class MapFlowerTown extends WorldMap {
 		// create map entities
 		this.entities = [
 			new Entity({
-				type: ENTITY_TYPE.PORTAL,
+				type: TYPE.PORTAL,
 				lastX: this.width - 20,
 				lastY: 785,
-				portalName: "Lobby town",
+				portalId: 1,//"Lobby town",
 				portalX: 80,
 				portalY: 890,
-				range: 32,
-				w: 32,
-				h: 32,
+				range: RANGE.SHORT,
+				size: SIZE.SMALL,
 			}),
 			new Entity({
-				type: ENTITY_TYPE.PORTAL,
+				type: TYPE.PORTAL,
 				lastX: 20,
 				lastY: 785,
-				portalName: "Car town",
+				portalId: 3,//"Car town",
 				portalX: 1980,
 				portalY: 500,
-				range: 32,
-				w: 32,
-				h: 32,
+				range: RANGE.SHORT,
+				size: SIZE.SMALL,
 			}),
 			// new Entity({
 			// 	...NPCS.TOWNSFOLK,

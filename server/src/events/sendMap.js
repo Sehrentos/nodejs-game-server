@@ -1,6 +1,7 @@
 import { PLAYER_VIEW_AREA_SIZE } from "../../../shared/Constants.js";
-import { ENTITY_TYPE } from "../../../shared/enum/Entity.js";
+import { TYPE } from "../../../shared/enum/Entity.js";
 import { Entity } from "../../../shared/models/Entity.js";
+import { inRangeOf } from "../../../shared/utils/EntityUtils.js";
 
 /**
  * Returns a subset of entity properties, depending on the type of entity.
@@ -9,7 +10,7 @@ import { Entity } from "../../../shared/models/Entity.js";
  * @returns {import("../../../shared/models/Entity.js").TEntityProps}
  */
 function getEntityProps(entity) {
-	if (entity.type === ENTITY_TYPE.PORTAL) {
+	if (entity.type === TYPE.PORTAL) {
 		return {
 			id: entity.id,
 			gid: entity.gid,
@@ -17,8 +18,7 @@ function getEntityProps(entity) {
 			type: entity.type,
 			lastX: entity.lastX,
 			lastY: entity.lastY,
-			w: entity.w,
-			h: entity.h,
+			size: entity.size,
 			range: entity.range,
 			dir: entity.dir,
 			hp: entity.hp,
@@ -26,12 +26,12 @@ function getEntityProps(entity) {
 			mp: entity.mp,
 			mpMax: entity.mpMax,
 			// portal only
-			portalName: entity.portalName,
+			portalId: entity.portalId,
 			portalX: entity.portalX,
 			portalY: entity.portalY,
 		}
 	}
-	if (entity.type === ENTITY_TYPE.PLAYER) {
+	if (entity.type === TYPE.PLAYER) {
 		// entity is other player
 		return {
 			id: entity.id,
@@ -41,8 +41,7 @@ function getEntityProps(entity) {
 			name: entity.name,
 			lastX: entity.lastX,
 			lastY: entity.lastY,
-			w: entity.w,
-			h: entity.h,
+			size: entity.size,
 			range: entity.range,
 			dir: entity.dir,
 			hp: entity.hp,
@@ -51,7 +50,7 @@ function getEntityProps(entity) {
 			mpMax: entity.mpMax,
 		}
 	}
-	if (entity.type === ENTITY_TYPE.PET) {
+	if (entity.type === TYPE.PET) {
 		return {
 			id: entity.id,
 			gid: entity.gid,
@@ -61,6 +60,7 @@ function getEntityProps(entity) {
 			lastX: entity.lastX,
 			lastY: entity.lastY,
 			dir: entity.dir,
+			size: entity.size,
 			range: entity.range,
 			hp: entity.hp,
 			hpMax: entity.hpMax,
@@ -76,6 +76,7 @@ function getEntityProps(entity) {
 		type: entity.type,
 		lastX: entity.lastX,
 		lastY: entity.lastY,
+		size: entity.size,
 		dir: entity.dir,
 		hp: entity.hp,
 		hpMax: entity.hpMax,
@@ -104,41 +105,59 @@ function getEntityDelta(entity) {
 	 */
 	let delta
 
+	/**
+	 * these are the allowed properties of an entity
+	 * @type {import("../../../shared/models/Entity.js").TEntityProps}
+	 */
+	const filteredProps = getEntityProps(entity)
+
 	// initialize delta object
 	if (entity.delta == null) {
 		entity.delta = {}
 	}
 	delta = entity.delta // for convenience
 
-	// check if entity position has changed
-	if (entity.lastX !== delta.lastX || entity.lastY !== delta.lastY) {
-		entityProps = { lastX: entity.lastX, lastY: entity.lastY }
-		// update delta object, so it can be used for next delta checks
-		delta.lastX = entity.lastX
-		delta.lastY = entity.lastY
-	}
+	// // check if entity position has changed
+	// if (entity.lastX !== delta.lastX || entity.lastY !== delta.lastY) {
+	// 	entityProps = { lastX: entity.lastX, lastY: entity.lastY }
+	// 	// update delta object, so it can be used for next delta checks
+	// 	delta.lastX = entity.lastX
+	// 	delta.lastY = entity.lastY
+	// }
 
-	// check if entity direction has changed
-	if (entity.dir !== delta.dir) {
-		entityProps = { ...entityProps, dir: entity.dir }
-		delta.dir = entity.dir
-	}
+	// // check if entity direction has changed
+	// if (entity.dir !== delta.dir) {
+	// 	entityProps = { ...entityProps, dir: entity.dir }
+	// 	delta.dir = entity.dir
+	// }
 
-	// check if entity health has changed
-	if (entity.hp !== delta.hp || entity.mp !== delta.mp) {
-		entityProps = { ...entityProps, hp: entity.hp, mp: entity.mp }
-		delta.hp = entity.hp
-		delta.mp = entity.mp
-	}
+	// // check if entity health has changed
+	// if (entity.hp !== delta.hp || entity.mp !== delta.mp) {
+	// 	entityProps = { ...entityProps, hp: entity.hp, mp: entity.mp }
+	// 	delta.hp = entity.hp
+	// 	delta.mp = entity.mp
+	// }
 
-	// check if entity sprite has changed
-	if (entity.spriteId !== delta.spriteId) {
-		entityProps = { ...entityProps, spriteId: entity.spriteId }
-		delta.spriteId = entity.spriteId
+	// // check if entity sprite has changed
+	// if (entity.spriteId !== delta.spriteId) {
+	// 	entityProps = { ...entityProps, spriteId: entity.spriteId }
+	// 	delta.spriteId = entity.spriteId
+	// }
+
+	// check if any other property has changed
+	for (const key in filteredProps) {
+		if (['control', 'delta'].includes(key)) continue
+		if (entity[key] !== delta[key]) {
+			entityProps = { ...entityProps, [key]: entity[key] }
+			delta[key] = entity[key]
+		}
 	}
 
 	// if no properties have changed, return null
 	if (entityProps == null) return
+
+	// remove any circular references
+	delete delta.control;
 
 	// if properties have changed, return them
 	return { gid: entity.gid, ...entityProps }
@@ -170,7 +189,7 @@ export function sendMap(player, map, isFullUpdate = false) {
 			// filtered on purpose, so the client does not know everything. also to reduce packet size
 			entities: map.entities.filter(isFullUpdate || PLAYER_VIEW_AREA_SIZE <= 0
 				? (entity) => entity.visible /*&& entity.hp > 0*/
-				: (entity) => entity.visible /*&& entity.hp > 0*/ && Entity.inRangeOf(player, entity.lastX, entity.lastY, PLAYER_VIEW_AREA_SIZE)
+				: (entity) => entity.visible /*&& entity.hp > 0*/ && inRangeOf(player, entity.lastX, entity.lastY, PLAYER_VIEW_AREA_SIZE)
 			).map(getEntityProps)
 		}
 	})
@@ -181,13 +200,7 @@ export function sendMap(player, map, isFullUpdate = false) {
  * each entity in map will be checked if it's state has changed,
  * and if so, it will be sent to the client.
  *
- * 1. **Aggregated Updates (Batching):**
- *  Core Concept: Multiple updates for different entities are combined into
- *  a single packet before being sent to the client. This reduces the overhead of sending individual packets.
- *  Implementation: The server buffers updates for a short period and
- *  then packages them together into a single message.
- *
- * 2. **Delta Updates:**
+ * **Delta Updates/Compression:**
  *  Core Concept: Instead of sending the complete state of an entity every
  *  time it changes, the server sends only the differences (deltas) from
  *  the previous update. For example, if an entity's position changes slightly,
@@ -205,18 +218,18 @@ export function sendMap(player, map, isFullUpdate = false) {
  * @prop {import("../../../shared/models/Entity.js").TEntityProps[]} entities
  */
 export function sendMapUpdate(player, map) {
-	const updateStack = [] // the aggregated update packet
+	const updateStack = [] // the delta updates
 
 	// reduce packet size, by filtering out entities that are not visible or not in range
 	const entities = map.entities.filter(PLAYER_VIEW_AREA_SIZE <= 0
 		? (entity) => entity.visible/* && entity.hp > 0*/
-		: (entity) => entity.visible/* && entity.hp > 0*/ && Entity.inRangeOf(player, entity.lastX, entity.lastY, PLAYER_VIEW_AREA_SIZE)
+		: (entity) => entity.visible/* && entity.hp > 0*/ && inRangeOf(player, entity.lastX, entity.lastY, PLAYER_VIEW_AREA_SIZE)
 	)
 
 	// delta updates, identify entity changes
 	for (const entity of entities) {
 		// dont send portal or npc, these are static for now
-		if (entity.type === ENTITY_TYPE.PORTAL || entity.type === ENTITY_TYPE.NPC) continue
+		if (entity.type === TYPE.PORTAL || entity.type === TYPE.NPC) continue
 		let delta = getEntityDelta(entity)
 		if (delta != null) updateStack.push(delta)
 	}

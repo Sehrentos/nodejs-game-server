@@ -1,5 +1,6 @@
 import { Entity } from '../../../shared/models/Entity.js'
-import { ENTITY_TYPE } from '../../../shared/enum/Entity.js'
+import { RANGE, SIZE, TYPE } from '../../../shared/enum/Entity.js'
+import { MAP_ID, MAP_NAME } from '../../../shared/enum/WorldMap.js'
 import { WorldMap } from '../../../shared/models/WorldMap.js'
 import { EntityControl } from '../control/EntityControl.js'
 import createGameId from '../utils/createGameId.js'
@@ -10,9 +11,9 @@ export default class MapCarTown extends WorldMap {
 	/** @param {import("../../../shared/models/WorldMap.js").TWorldMapProps} props */
 	constructor(props = {}) {
 		super({
-			id: 3,
+			id: MAP_ID.CAR_TOWN,
+			name: MAP_NAME[MAP_ID.CAR_TOWN],
 			spriteId: SPR_ID.MAP_CAR_TOWN,
-			name: "Car town",
 			isTown: true,
 			width: 2000,
 			height: 1400,
@@ -40,28 +41,26 @@ export default class MapCarTown extends WorldMap {
 		this.isCreated = true
 		// create map entities
 		this.entities = [
-			new Entity({ // TODO fix portal positions
-				type: ENTITY_TYPE.PORTAL,
+			new Entity({
+				type: TYPE.PORTAL,
 				lastX: this.width - 60,
 				lastY: 395,
-				portalName: "Flower town",
+				portalId: 2,//"Flower town",
 				portalX: 80,
 				portalY: 785,
-				range: 32,
-				w: 32,
-				h: 32,
+				range: RANGE.SHORT,
+				size: SIZE.SMALL,
 			}),
 			new Entity({ // hidden portal in the lake
-				type: ENTITY_TYPE.PORTAL,
+				type: TYPE.PORTAL,
 				visible: false, // when hidden. no packet is sent to client in map update
 				lastX: 545,
 				lastY: 860,
-				portalName: "Under water 1",
+				portalId: 4, //"Under water 1",
 				portalX: 1000,
 				portalY: 100,
 				range: 350,
-				w: 32,
-				h: 32,
+				size: SIZE.SMALL,
 			}),
 			// new Entity({
 			// 	...NPCS.TOWNSFOLK,

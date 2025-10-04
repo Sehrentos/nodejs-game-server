@@ -1,5 +1,5 @@
-import { DIRECTION, ENTITY_TYPE } from "../../../shared/enum/Entity.js"
-import { WorldMap } from "../../../shared/models/WorldMap.js"
+import { DIR, TYPE } from "../../../shared/enum/Entity.js"
+import { findMapEntitiesInRadius } from "../../../shared/utils/EntityUtils.js"
 
 /**
  * **NPC** Server update tick callback. Used to do NPC actions etc.
@@ -30,15 +30,15 @@ export default function onEntityUpdateNPC(npc, timestamp) {
  * @param {number} timestamp
  */
 function moveEntitiesAroundNPC(npc, range, timestamp) {
-	const nearbyEntities = WorldMap.findEntitiesInRadius(npc.control.map, npc.lastX, npc.lastY, range)
+	const nearbyEntities = findMapEntitiesInRadius(npc.control.map, npc.lastX, npc.lastY, range)
 		.filter(ent => ent.gid !== npc.gid) // exclude itself
 
 	if (nearbyEntities.length === 0) return
 
 	for (const entity of nearbyEntities) {
-		if (entity.type === ENTITY_TYPE.PLAYER) {
+		if (entity.type === TYPE.PLAYER) {
 			// move player away from the NPC
-			entity.control.move(DIRECTION.DOWN, timestamp)
+			entity.control.move(DIR.DOWN, timestamp)
 		}
 	}
 }

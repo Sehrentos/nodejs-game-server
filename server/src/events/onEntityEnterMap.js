@@ -1,5 +1,5 @@
 import { COOLDOWN_PORTAL_USE } from "../../../shared/Constants.js";
-import { ENTITY_TYPE } from "../../../shared/enum/Entity.js";
+import { TYPE } from "../../../shared/enum/Entity.js";
 import { sendMap, sendMapNewEntity } from "./sendMap.js";
 import { sendPlayer } from "./sendPlayer.js";
 
@@ -31,9 +31,9 @@ export default async function onEntityEnterMap(entity, map, oldMap) {
 		ctrl.socket.send(sendMap(entity, map, true))
 
 		// notify other players about the player entering the map
-		const entityPets = map.entities.filter(e => e.type === ENTITY_TYPE.PET && e.owner.gid === entity.gid)
+		const entityPets = map.entities.filter(e => e.type === TYPE.PET && e.owner.gid === entity.gid)
 		for (let other of map.entities) {
-			if (other.type === ENTITY_TYPE.PLAYER && other.gid !== entity.gid) {
+			if (other.type === TYPE.PLAYER && other.gid !== entity.gid) {
 				other.control.socket.send(sendMapNewEntity(entity, ...entityPets))
 			}
 		}

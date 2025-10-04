@@ -71,46 +71,4 @@ export class WorldMap {
 	async create() {
 		this.isCreated = true
 	}
-
-	/**
-	 * Finds entities in the given radius around a specific point.
-	 * @param {import("./WorldMap.js").WorldMap} map - The map to search for entities.
-	 * @param {number} x - The x-coordinate of the center point.
-	 * @param {number} y - The y-coordinate of the center point.
-	 * @param {number} radius - The radius to search for entities.
-	 * @returns {Array<import("./Entity.js").Entity>} - An array of entities within the specified radius.
-	 */
-	static findEntitiesInRadius(map, x, y, radius) {
-		const stack = [] // entities can be on top of each other
-		for (const entity of map.entities) {
-			// TODO take entity w and h into account
-			if (
-				(Math.abs((x - (radius / 2)) - entity.lastX) > radius || Math.abs((y - (radius / 2)) - entity.lastY) > radius) &&
-				(Math.abs(x - entity.lastX) > radius || Math.abs(y - entity.lastY) > radius)
-			) continue;
-
-			stack.push(entity)
-		}
-		return stack
-	}
-
-	/**
-	 * Find an entity by its ID.
-	 * @param {import("./WorldMap.js").WorldMap} map - The map to search for entities.
-	 * @param {number} id - The entity ID to search for.
-	 * @returns {import("./Entity.js").Entity|undefined} - The entity with the given ID, or `undefined` if not found.
-	 */
-	static findMapEntityById(map, id) {
-		return map.entities.find((entity) => entity.id === id)
-	}
-
-	/**
-	 * Find an entity by its GID.
-	 * @param {import("./WorldMap.js").WorldMap} map - The map to search for entities.
-	 * @param {string} gid - The entity Game ID to search for.
-	 * @returns {import("./Entity.js").Entity|undefined} - The entity with the given ID, or `undefined` if not found.
-	 */
-	static findMapEntityByGid(map, gid) {
-		return map.entities.find((entity) => entity.gid === gid)
-	}
 }

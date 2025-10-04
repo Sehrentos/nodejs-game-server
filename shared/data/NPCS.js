@@ -1,4 +1,4 @@
-import { ENTITY_TYPE } from "../enum/Entity.js";
+import { TYPE } from "../enum/Entity.js";
 import { SPR_ID as SPR } from "../enum/Sprite.js";
 
 /**
@@ -13,7 +13,7 @@ import { SPR_ID as SPR } from "../enum/Sprite.js";
 export const NPCS = {
 	DEFAULT: {
 		id: 0,
-		type: ENTITY_TYPE.NPC,
+		type: TYPE.NPC,
 		name: "NPC",
 		dialog: `<article>
 			<header>NPC</header>
@@ -24,7 +24,7 @@ export const NPCS = {
 	TOWNSFOLK: {
 		id: 1,
 		spriteId: SPR.NPC_TOWNSFOLK,
-		type: ENTITY_TYPE.NPC,
+		type: TYPE.NPC,
 		name: "Townsfolk",
 		dialog: `<article>
 			<header>Townsfolk</header>
@@ -35,7 +35,7 @@ export const NPCS = {
 	BLACKSMITH: {
 		id: 2,
 		spriteId: SPR.NPC_BLACKSMITH,
-		type: ENTITY_TYPE.NPC,
+		type: TYPE.NPC,
 		name: "Blacksmith",
 		dialog: `<article>
 			<header>Blacksmith</header>
@@ -46,7 +46,7 @@ export const NPCS = {
 	TOOL_DEALER: {
 		id: 3,
 		spriteId: SPR.NPC_TOOL_DEALER,
-		type: ENTITY_TYPE.NPC,
+		type: TYPE.NPC,
 		name: "Tool dealer",
 		dialog: `<article>
 			<header>Tool dealer</header>
@@ -66,7 +66,7 @@ export const NPCS = {
 	MERCHANT: {
 		id: 4,
 		spriteId: SPR.NPC_MERCHANT,
-		type: ENTITY_TYPE.NPC,
+		type: TYPE.NPC,
 		name: "Merchant",
 		dialog: `<article>
 			<header>Merchant</header>
@@ -77,7 +77,7 @@ export const NPCS = {
 	STRANGER: {
 		id: 5,
 		spriteId: SPR.NPC_STRANGER,
-		type: ENTITY_TYPE.NPC,
+		type: TYPE.NPC,
 		name: "Stranger",
 		dialog: `<article>
 			<header>Stranger (NPC)</header>

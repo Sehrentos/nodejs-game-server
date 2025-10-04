@@ -248,6 +248,11 @@ export default class SocketControl {
 					onUpdatePlayer(this, data);
 					break;
 
+				// player delta updates (specific properties)
+				case "player-update":
+					onUpdatePlayer(this, data);
+					break;
+
 				// update world map state
 				case "map":
 					onUpdateMap(this, data);

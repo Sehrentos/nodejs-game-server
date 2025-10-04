@@ -1,7 +1,6 @@
+import { inRangeOfEntity, findMapEntitiesInRadius } from "../../../shared/utils/EntityUtils.js"
 import { PLAYER_TOUCH_AREA_SIZE } from "../../../shared/Constants.js"
-import { ENTITY_TYPE } from "../../../shared/enum/Entity.js"
-import { Entity } from "../../../shared/models/Entity.js"
-import { WorldMap } from "../../../shared/models/WorldMap.js"
+import { TYPE } from "../../../shared/enum/Entity.js"
 import { sendDialog } from "./sendDialog.js"
 
 /**
@@ -21,7 +20,7 @@ export default function onEntityPacketTouchPosition(player, json, timestamp) {
 	if (player.hp <= 0) return // must be alive
 
 	// find entities at clicked position in x radius
-	const entities = WorldMap.findEntitiesInRadius(ctrl.map, json.x, json.y, PLAYER_TOUCH_AREA_SIZE)
+	const entities = findMapEntitiesInRadius(ctrl.map, json.x, json.y, PLAYER_TOUCH_AREA_SIZE)
 		.filter(entity => entity.gid !== player.gid) // exclude self
 
 	// if no entities found
@@ -32,25 +31,25 @@ export default function onEntityPacketTouchPosition(player, json, timestamp) {
 	}
 
 	// 1. priority - Monster (alive)
-	const mobs = entities.filter(e => e.type === ENTITY_TYPE.MONSTER && e.hp > 0)
+	const mobs = entities.filter(e => e.type === TYPE.MONSTER && e.hp > 0)
 	if (mobs.length) {
 		return touch(player, mobs[0], timestamp)
 	}
 
 	// 2. priority - NPC
-	const npcs = entities.filter(e => e.type === ENTITY_TYPE.NPC)
+	const npcs = entities.filter(e => e.type === TYPE.NPC)
 	if (npcs.length) {
 		return touch(player, npcs[0], timestamp)
 	}
 
 	// 3. priority - Player
-	const players = entities.filter(e => e.type === ENTITY_TYPE.PLAYER)
+	const players = entities.filter(e => e.type === TYPE.PLAYER)
 	if (players.length) {
 		return touch(player, players[0], timestamp)
 	}
 
 	// 4. priority - PORTAL
-	const portals = entities.filter(e => e.type === ENTITY_TYPE.PORTAL)
+	const portals = entities.filter(e => e.type === TYPE.PORTAL)
 	if (portals.length) {
 		return touch(player, portals[0], timestamp)
 	}
@@ -74,14 +73,14 @@ export default function onEntityPacketTouchPosition(player, json, timestamp) {
  */
 function touch(player, entity, timestamp) {
 	const ctrl = player.control
-	const inRange = Entity.inRangeOfEntity(player, entity)
+	const inRange = inRangeOfEntity(player, entity)
 
 	switch (entity.type) {
-		case ENTITY_TYPE.MONSTER:
+		case TYPE.MONSTER:
 			ctrl.attack(entity, timestamp)
 			break;
 
-		case ENTITY_TYPE.PLAYER:
+		case TYPE.PLAYER:
 			// player interaction
 			if (ctrl.map.isPVP) {
 				// in PVP maps, players can attack each other
@@ -89,7 +88,7 @@ function touch(player, entity, timestamp) {
 			}
 			break;
 
-		case ENTITY_TYPE.NPC:
+		case TYPE.NPC:
 			// must be in range to interact with
 			if (!inRange) {
 				// start moving towards the NPC
@@ -103,7 +102,7 @@ function touch(player, entity, timestamp) {
 			ctrl.socket.send(sendDialog(entity.gid, entity.dialog))
 			break;
 
-		case ENTITY_TYPE.PORTAL:
+		case TYPE.PORTAL:
 			ctrl.moveTo(entity.lastX, entity.lastY, timestamp)
 			break;
 
