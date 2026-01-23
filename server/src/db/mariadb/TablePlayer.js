@@ -60,7 +60,7 @@ export class TablePlayer {
 	/**
 	 * Add a new player to the database.
 	 *
-	 * @param {import("../../../shared/models/Entity.js").TEntityProps=} player
+	 * @param {import("../../../../shared/models/Entity.js").TEntityProps=} player
 	 * @returns {Promise<import("./Database.js").TQueryResult>}
 	 */
 	add(player) {
@@ -106,7 +106,7 @@ export class TablePlayer {
 	/**
 	 * Update a player in the database.
 	 *
-	 * @param {import("../../../shared/models/Entity.js").TEntityProps=} player
+	 * @param {import("../../../../shared/models/Entity.js").TEntityProps=} player
 	 * @returns {Promise<import("./Database.js").TQueryResult>}
 	 */
 	update(player) {
@@ -151,7 +151,7 @@ export class TablePlayer {
 	/**
 	 * Get players by their Account ID.
 	 * @param {number} aid
-	 * @returns {Promise<import("../../../shared/models/Entity.js").TEntityProps[]>}
+	 * @returns {Promise<import("../../../../shared/models/Entity.js").TEntityProps[]>}
 	 */
 	async getByAccountId(aid) {
 		const rows = await this.db.query(
@@ -160,7 +160,7 @@ export class TablePlayer {
 		)
 		// map rows to Player objects
 		return rows.map(row => {
-			/** @type {import("../../../shared/models/Entity.js").TEntityProps} */
+			/** @type {import("../../../../shared/models/Entity.js").TEntityProps} */
 			let props = {
 				// Note: id | account_id can be number or bigint (MariaDB int(11) auto_increment)
 				id: Number(row.id),

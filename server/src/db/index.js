@@ -1,4 +1,4 @@
-import { Database } from "./Database.js";
+import { Database } from "./sqlite/Database.js";
 
 /**
  * @type {Database} database connection for login, register etc.

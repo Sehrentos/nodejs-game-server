@@ -3,7 +3,7 @@ import { WorldMap } from '../../shared/models/WorldMap.js';
 import { Entity } from '../../shared/models/Entity.js';
 import { TYPE } from '../../shared/enum/Entity.js';
 import { verifyToken } from './utils/jwt.js';
-import { Database } from './db/Database.js';
+import { Database } from './db/sqlite/Database.js';
 import MapLobbyTown from './maps/MapLobbyTown.js';
 import MapPlainFields1 from './maps/MapPlainFields1.js';
 import MapPlainFields2 from './maps/MapPlainFields2.js';
@@ -94,7 +94,7 @@ export class World {
 					entity.control.socket.close()
 					// save player data
 					let playerUpdate = await this.db.player.update(entity)
-					console.log(`[World (debug)] (id:${entity.id}) "${entity.name}" is ${playerUpdate.affectedRows > 0 ? 'saved' : 'not saved'}.`)
+					console.log(`[World (debug)] (id:${entity.id}) "${entity.name}" is ${playerUpdate.changes > 0 ? 'saved' : 'not saved'}.`)
 					// save player inventory
 					// TODO improve this logic
 					await this.db.inventory.clear(entity.id)

@@ -1,6 +1,6 @@
 // tool to drop all tables and recreate the database
 // example: node tools/dropTables.js
-import { Database } from "../src/db/Database.js";
+import { Database } from "../Database.js";
 
 // create connection to database
 const db = new Database();

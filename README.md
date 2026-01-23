@@ -52,7 +52,7 @@ Game view 5 (without any assets):
 ## Prerequisites
  - Some coding experience is required.
  - NodeJS & NPM installed
- - MariaDB or other database installed
+ - SQLite, MariaDB or other database installed
  - Optional: Certificates (see [./certs/README.md](./certs/README.md) for self-signed certs) set `SSL_ENABLED=true` and `PORT=443` in the `.env` file.
  - Have some skills with Paint or other drawing applications or an scanner machine for scanning paper drawings (like in the example images above).
 
@@ -100,7 +100,10 @@ JWT_EXPIRES=2d
 
 ### Database
 
-You need to have or install [MariaDB](https://mariadb.com/downloads/), for the [nodejs connector](https://mariadb.com/kb/en/getting-started-with-the-node-js-connector/) to use it.
+**Note:** the project currently uses [SQLite](https://github.com/WiseLibs/better-sqlite3) for quick development,
+but it can be swapped to other databases like MariaDB.
+
+Install [MariaDB](https://mariadb.com/downloads/), for the [nodejs connector](https://mariadb.com/kb/en/getting-started-with-the-node-js-connector/) to use it.
 
 Create the database: see the [src/db/main.sql](./src/db/main.sql) SQL file for the database structure.
 

@@ -42,10 +42,10 @@ export async function createPlayerEntity(world, ws, account) {
 
 	// create new player if not found
 	if (players.length === 0) {
-		// Note: insertId can be BigInt or Number
+		// Note: insertId can be BigInt or Number in mariaDB
 		// JSON.stringify can't convert BigInt, so convert to string
-		let { insertId } = await world.db.player.add(player)
-		player.id = Number(insertId) // update player id
+		let { lastInsertRowid } = await world.db.player.add(player)
+		player.id = Number(lastInsertRowid) // update player id
 	} else {
 		// merge existing player data from db
 		Object.assign(player, players[0])

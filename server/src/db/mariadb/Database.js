@@ -1,3 +1,4 @@
+// requires npm "mariadb": "^3.4.1"
 import 'dotenv/config';
 import mariadb from 'mariadb';
 import { TableAccount } from './TableAccount.js';

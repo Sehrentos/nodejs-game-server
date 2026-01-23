@@ -1,7 +1,7 @@
 // tool to create a new account
 // example: node tools/createAccount.js john_doe password123 johndoe@example.com
-import { Account } from "../../shared/models/Account.js";
-import { Database } from "../src/db/Database.js";
+import { Account } from "../../../../../shared/models/Account.js";
+import { Database } from "../Database.js";
 
 // get cli arguments
 const args = process.argv.slice(2);
