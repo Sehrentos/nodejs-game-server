@@ -1,4 +1,4 @@
-import { Account } from "../../../shared/models/Account.js";
+import { Account } from "../../../../shared/models/Account.js";
 import { Database } from "./Database.js";
 
 // test Database class

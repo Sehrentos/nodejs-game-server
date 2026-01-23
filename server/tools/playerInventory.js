@@ -1,6 +1,6 @@
 // tool to look into player inventory table
 // example: node tools/playerInventory.js 1
-import { Database } from "../src/db/Database.js";
+import { Database } from "../src/db/mariadb/Database.js";
 
 // get cli arguments
 const args = process.argv.slice(2);

@@ -1,4 +1,4 @@
-import { Account } from "../../../shared/models/Account.js";
+import { Account } from "../../../../shared/models/Account.js";
 
 const SALT = process.env.DB_SALT || 'your_unique_salt';
 export const DB_CREATE = `CREATE TABLE IF NOT EXISTS \`account\` (
@@ -43,7 +43,7 @@ export class TableAccount {
 
 	/**
 	 * Note: on duplicate username, it will throw `Error.code='ER_DUP_ENTRY'`
-	 * @param {import("../../../shared/models/Account.js").TAccount=} account - The account object
+	 * @param {import("../../../../shared/models/Account.js").TAccount=} account - The account object
 	 * @returns {Promise<{ affectedRows:number, insertId:number, warningStatus:number }>}
 	 */
 	add(account) {
@@ -79,7 +79,7 @@ export class TableAccount {
 	 * @param {string} username - The username to validate
 	 * @param {string} password - The password to validate
 	 * @param {string=} last_ip - The last IP of the user. optional
-	 * @returns {Promise<import("../../../shared/models/Account.js").Account>} - The account object if the login is valid
+	 * @returns {Promise<import("../../../../shared/models/Account.js").Account>} - The account object if the login is valid
 	 */
 	async login(username, password, last_ip) {
 		const rows = await this.db.query(
@@ -107,7 +107,7 @@ export class TableAccount {
 	/**
 	 * Login attempt using the given token.
 	 * @param {string} token - The token to validate
-	 * @returns {Promise<import("../../../shared/models/Account.js").Account>} - The account object if the token is valid
+	 * @returns {Promise<import("../../../../shared/models/Account.js").Account>} - The account object if the token is valid
 	 */
 	async loginToken(token) {
 		const rows = await this.db.query(

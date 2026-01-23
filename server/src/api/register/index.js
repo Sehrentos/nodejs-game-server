@@ -30,7 +30,7 @@ router.post('/', async (req, res, next) => {
             email,
             last_ip,
         }));
-        console.log('[API/register] account registered:', newAccount.insertId)
+        console.log('[API/register] account registered:', newAccount.lastInsertRowid)
 
         // do login with the new account
         account = await DB.account.login(username, password, last_ip);
