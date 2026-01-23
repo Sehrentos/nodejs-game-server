@@ -10,20 +10,20 @@
 		"resolveJsonModule": false,
 		"typeRoots": [
 			"./node_modules/@types",
-			"./types",
-		],
+			"./types"
+		]
 	},
 	"exclude": [
 		"certs",
 		"docs",
-		"node_modules",
+		"node_modules"
 	],
 	"include": [
 		"**/*.js",
-		"**/*.ts", "../shared/utils/Cooldown.js",
+		"**/*.ts"
 	],
 	"typeAcquisition": {
 		"enable": true,
-		"include": [],
-	},
+		"include": []
+	}
 }

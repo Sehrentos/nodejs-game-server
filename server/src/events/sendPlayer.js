@@ -1,3 +1,5 @@
+import { isEqual } from "../../../shared/utils/ObjectUtils.js"
+
 /**
  * @param {import("../../../shared/models/Entity.js").TEntityProps} player
  * @returns {import("../../../shared/models/Entity.js").TEntityProps}
@@ -144,7 +146,44 @@ function getDeltaUpdates(entity) {
 
 	// check if any property has changed
 	for (const key in filteredProps) {
-		if (['control', 'delta', 'latency'].includes(key)) continue
+		// ignore these
+		if (['control', 'delta', 'latency', 'owner'].includes(key)) continue
+
+		// when the key is an Array, check if any element has changed
+		// these include: skills, equipment, inventory, pets
+		// Note: This will return the changed elements within the array,
+		// instead of the whole array, but how do the client update state?
+		// does the client need to know the whole array, if one element changes?
+		if (Array.isArray(entity[key])) {
+			// initialize delta array
+			if (delta[key] == null) {
+				delta[key] = []
+			}
+			// check if any element has changed
+			for (let i = 0; i < entity[key].length; i++) {
+				// whole array change
+				// if (entity[key][i] !== delta[key][i]) {
+				// 	entityProps = { ...entityProps, [key]: entity[key] }
+				// 	delta[key] = entity[key]
+				// 	break
+				// }
+				if (key === "inventory" && typeof entity[key][i] === "object") {
+					// compare Item objects
+					if (!isEqual(entity[key][i], delta[key][i])) {
+						delta[key][i] = entity[key][i]
+					}
+					continue
+				}
+				// specific element changed
+				if (entity[key][i] !== delta[key][i]) {
+					// copy only the changed element property for delta update
+					delta[key][i] = entity[key][i]
+				}
+			}
+			continue
+		}
+
+		// other types
 		if (entity[key] !== delta[key]) {
 			entityProps = { ...entityProps, [key]: entity[key] }
 			delta[key] = entity[key]

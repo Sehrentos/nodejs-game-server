@@ -117,36 +117,11 @@ function getEntityDelta(entity) {
 	}
 	delta = entity.delta // for convenience
 
-	// // check if entity position has changed
-	// if (entity.lastX !== delta.lastX || entity.lastY !== delta.lastY) {
-	// 	entityProps = { lastX: entity.lastX, lastY: entity.lastY }
-	// 	// update delta object, so it can be used for next delta checks
-	// 	delta.lastX = entity.lastX
-	// 	delta.lastY = entity.lastY
-	// }
-
-	// // check if entity direction has changed
-	// if (entity.dir !== delta.dir) {
-	// 	entityProps = { ...entityProps, dir: entity.dir }
-	// 	delta.dir = entity.dir
-	// }
-
-	// // check if entity health has changed
-	// if (entity.hp !== delta.hp || entity.mp !== delta.mp) {
-	// 	entityProps = { ...entityProps, hp: entity.hp, mp: entity.mp }
-	// 	delta.hp = entity.hp
-	// 	delta.mp = entity.mp
-	// }
-
-	// // check if entity sprite has changed
-	// if (entity.spriteId !== delta.spriteId) {
-	// 	entityProps = { ...entityProps, spriteId: entity.spriteId }
-	// 	delta.spriteId = entity.spriteId
-	// }
-
 	// check if any other property has changed
 	for (const key in filteredProps) {
-		if (['control', 'delta'].includes(key)) continue
+		if (['control', 'delta', 'owner'].includes(key)) continue
+
+		// if property has changed
 		if (entity[key] !== delta[key]) {
 			entityProps = { ...entityProps, [key]: entity[key] }
 			delta[key] = entity[key]
