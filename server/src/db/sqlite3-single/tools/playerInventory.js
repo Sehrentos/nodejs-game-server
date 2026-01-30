@@ -1,6 +1,6 @@
 // tool to look into player inventory table
 // example: node tools/playerInventory.js 1
-import { Database } from "../Database.js";
+import db, { getInventory } from '../index.js';
 
 // get cli arguments
 const args = process.argv.slice(2);
@@ -11,12 +11,11 @@ if (!ownerId) {
 	process.exit(1);
 }
 
-// create connection to database
-const db = new Database();
+// using factory adapter instance `db`
 
 try {
 	// const res = await db.query("SELECT * FROM inventory WHERE _owner = ?", [ownerId]);
-	const items = await db.inventory.getItems(ownerId);
+	const items = await getInventory(ownerId);
 	console.table(items);
 } catch (error) {
 	console.error("Failed to look into player inventory", error);

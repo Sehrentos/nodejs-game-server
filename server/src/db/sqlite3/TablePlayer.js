@@ -35,9 +35,9 @@ const DB_CREATE = `CREATE TABLE IF NOT EXISTS player (
  * A class to manage player-related database operations.
  */
 export class TablePlayer {
-	/** @param {import("./Database.js").Database} database */
+	/** @param {import("./index.js").Database} database */
 	constructor(database) {
-		/** @type {import("./Database.js").Database} */
+		/** @type {import("./index.js").Database} */
 		this.db = database;
 
 		// create the database
@@ -48,7 +48,7 @@ export class TablePlayer {
 	 * Creates the table in the database if it doesn't already exist
 	 */
 	create() {
-		return this.db.db.exec(DB_CREATE)
+		return this.db.exec(DB_CREATE)
 	}
 
 	/**
@@ -90,7 +90,7 @@ export class TablePlayer {
 		}
 		const names = Object.keys(params).map((v) => '`' + v + '`').join(',')
 		const values = Object.values(params)
-		return this.db.query(
+		return this.db.exec(
 			`INSERT INTO player (${names}, last_login) VALUES (${values.map(() => '?').join(',')}, ?)`,
 			[...values, new Date().toISOString()]
 		)
@@ -134,7 +134,7 @@ export class TablePlayer {
 		// to `name`=? pairs
 		const names = Object.keys(params).map((v) => '`' + v + '`=?').join(',')
 		const values = Object.values(params)
-		return this.db.query(
+		return this.db.exec(
 			`UPDATE player SET ${names}, last_login = ? WHERE id=?`,
 			[...values, new Date().toISOString(), player.id]
 		)
@@ -146,11 +146,10 @@ export class TablePlayer {
 	 * @returns {Promise<import("../../../../shared/models/Entity.js").TEntityProps[]>}
 	 */
 	async getByAccountId(aid) {
-		const stmt = this.db.db.prepare(
+		const rows = await this.db.query(
 			`SELECT * FROM player WHERE account_id = ?`,
+			[aid]
 		)
-		/** @type {any[]} */
-		const rows = stmt.all(aid)
 
 		return rows.map(row => {
 			/** @type {import("../../../../shared/models/Entity.js").TEntityProps} */
@@ -194,10 +193,8 @@ export class TablePlayer {
 	 * @returns {Promise<number>}
 	 */
 	async count() {
-		//@ts-ignore
-		const count = this.db.db.prepare(`SELECT COUNT(*) as count FROM player`).get().count;
-		console.log('[PLAYER COUNT]:', count)
-		return count
+		const rows = await this.db.query(`SELECT COUNT(*) as count FROM player`)//=[{count: 2}]
+		return rows[0]?.count || 0
 	}
 
 	/**
@@ -208,13 +205,22 @@ export class TablePlayer {
 	async setName(id, name) {
 		// trim name to 30, if too long
 		if (name.length > 30) name = name.slice(0, 30)
-		return this.db.query(`UPDATE player SET name=? WHERE id=?`, [name, id])
+		return this.db.exec(`UPDATE player SET name=? WHERE id=?`, [name, id])
+	}
+
+	/**
+	 * Delete an item by its database ID.
+	 *
+	 * @param {number} id - The database ID of the inventory item to delete.
+	 */
+	async delete(id) {
+		return this.db.exec(`DELETE FROM player WHERE id = ?`, [id])
 	}
 
 	/**
 	 * Drop the table, removing all associated data
 	 */
 	async drop() {
-		return this.db.query(`DROP TABLE IF EXISTS player`)
+		return this.db.exec(`DROP TABLE IF EXISTS player`)
 	}
 }

@@ -1,7 +1,7 @@
 // tool to create a new account
 // example: node tools/createAccount.js john_doe password123 johndoe@example.com
 import { Account } from "../../../../../shared/models/Account.js";
-import { Database } from "../Database.js";
+import db, { query, addAccount, loginToAccount } from '../index.js';
 
 // get cli arguments
 const args = process.argv.slice(2);
@@ -15,12 +15,11 @@ if (!username || !password || !email) {
 	process.exit(1);
 }
 
-// create connection to database
-const db = new Database();
+// using factory adapter instance `db`
 
 try {
 	// check if account already exists
-	const queryResultExist = await db.query("SELECT username FROM account WHERE username = ?", [username]);
+	const queryResultExist = await query("SELECT username FROM account WHERE username = ?", [username]);
 	// OK: [ { username: 'john_doe' } ]
 	if (queryResultExist.length > 0) {
 		console.log('Account already exists:', queryResultExist);
@@ -28,7 +27,7 @@ try {
 	}
 
 	// add new account
-	const queryResultInsert = await db.account.add(new Account({
+	const queryResultInsert = await addAccount(new Account({
 		username,
 		password,
 		email,
@@ -37,7 +36,7 @@ try {
 	console.log('Added result:', queryResultInsert)
 
 	// test login
-	const account = await db.account.login(username, password, last_ip);
+	const account = await loginToAccount(username, password, last_ip);
 	console.log('Test login:', account)
 
 } catch (err) {

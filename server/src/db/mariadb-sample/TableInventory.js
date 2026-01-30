@@ -1,39 +1,46 @@
-const DB_CREATE = `CREATE TABLE IF NOT EXISTS inventory (
-  _id INTEGER PRIMARY KEY AUTOINCREMENT,
-  _owner INTEGER NOT NULL DEFAULT 0,
-  id INTEGER NOT NULL DEFAULT 0,
-  amount INTEGER NOT NULL DEFAULT 0,
-  slot INTEGER NOT NULL DEFAULT 0,
-  is_equipped INTEGER NOT NULL DEFAULT 0,
-  UNIQUE (_owner, id)
-);`.replace(/\s{2}|\n/gm, '');
+// database class for controlling player inventory
+const DB_CREATE = `CREATE TABLE IF NOT EXISTS \`inventory\` (
+  \`_id\` int(11) unsigned NOT NULL auto_increment,
+  \`_owner\` int(11) unsigned NOT NULL default '0',
+  \`id\` int(11) unsigned NOT NULL default '0',
+  \`amount\` smallint(4) unsigned NOT NULL default '0',
+  \`slot\` smallint(4) unsigned NOT NULL default '0',
+  \`is_equipped\` tinyint(1) unsigned NOT NULL default '0',
+  PRIMARY KEY  (\`_id\`),
+  KEY \`_owner\` (\`_owner\`),
+  KEY \`id\` (\`id\`)
+) AUTO_INCREMENT=1;`;
 
 /**
+ * @typedef {import("./index.js").Database} TDatabase
+ *
  * @typedef {Object} TTableInventoryProps
  * @prop {number} [_id] - The database ID
  * @prop {number} [_owner] - The ID of the player/entity who owns the item
+ *
  * @typedef {TTableInventoryProps & import("../../../../shared/models/Item.js").TItemProps} TInventoryItem
  */
 
-/**
- * @module TableInventory
- * This class manages inventory-related database operations.
- */
 export class TableInventory {
-	/** @param {import("./Database.js").Database} database */
-	constructor(database) {
-		/** @type {import("./Database.js").Database} */
-		this.db = database;
+	/**
+	 * @constructor
+	 * @param {import("./index.js").Database} db - The database object to use for queries
+	 */
+	constructor(db) {
+		/** @type {import("./index.js").Database} */
+		this.db = db
 
 		// create the database
 		this.create();
 	}
 
 	/**
-	 * Creates the table in the database if it doesn't already exist
+	 * Creates the table in the database if it doesn't already exist.
+	 *
+	 * @returns {Promise<import("./index.js").TQueryResult>} - The result of the create query
 	 */
 	create() {
-		return this.db.db.exec(DB_CREATE)
+		return this.db.query(DB_CREATE);
 	}
 
 	/**
@@ -41,11 +48,11 @@ export class TableInventory {
 	 *
 	 * @param {number} owner - The ID of the player whose inventory is being updated.
 	 * @param {TInventoryItem} item - The item to be added to the inventory.
+	 * @returns {Promise<import("./index.js").TQueryResult>} - The result of the insert query.
 	 */
-	async add(owner, item) {
+	add(owner, item) {
 		return this.db.query(
-			`INSERT INTO inventory (_owner, id, amount, slot, is_equipped)
-			VALUES (?, ?, ?, ?, ?)`.replace(/\t|\n/gm, ''),
+			"INSERT INTO inventory (_owner, id, amount, slot, is_equipped) VALUES (?, ?, ?, ?, ?)",
 			[owner, item.id, item.amount, item.slot, item.isEquipped ? 1 : 0]
 		);
 	}
@@ -55,28 +62,14 @@ export class TableInventory {
 	 *
 	 * @param {number} owner - The ID of the player whose inventory is being updated.
 	 * @param {TInventoryItem[]} items - The list of items to be added to the inventory.
+	 * @returns {Promise<import("./index.js").TQueryResult[]>} - The result of the insert query.
 	 */
-	async addAll(owner, items) {
+	addAll(owner, items) {
 		if (items.length === 0) return Promise.resolve([]);
-		// return this.db.batch(
-		// 	"INSERT INTO inventory (_owner, id, amount, slot, is_equipped) VALUES (?, ?, ?, ?, ?)",
-		// 	items.map(item => [owner, item.id, item.amount, item.slot, item.isEquipped ? 1 : 0])
-		// );
-		const stmt = this.db.db.prepare(`INSERT INTO inventory (
-			_owner,
-			id,
-			amount,
-			slot,
-			is_equipped
-		) VALUES (?, ?, ?, ?, ?)`.replace(/\t|\n/gm, ''));
-
-		const insertMany = this.db.db.transaction((rows) => {
-			for (const item of rows) {
-				stmt.run(owner, item.id, item.amount, item.slot, item.isEquipped ? 1 : 0);
-			}
-		});
-
-		return insertMany(items);
+		return this.db.batch(
+			"INSERT INTO inventory (_owner, id, amount, slot, is_equipped) VALUES (?, ?, ?, ?, ?)",
+			items.map(item => [owner, item.id, item.amount, item.slot, item.isEquipped ? 1 : 0])
+		);
 	}
 
 	/**
@@ -86,13 +79,10 @@ export class TableInventory {
 	 * @returns {Promise<TInventoryItem[]>} - The items in the player's inventory.
 	 */
 	async getItems(owner) {
-		const stmt = this.db.db.prepare(
+		const rows = await this.db.query(
 			"SELECT * FROM inventory WHERE _owner = ?",
+			[owner]
 		);
-
-		/** @type {any[]} */
-		const rows = stmt.all(owner)
-
 		return rows.map(row => ({
 			_id: Number(row._id),
 			_owner: Number(row._owner),
@@ -108,8 +98,9 @@ export class TableInventory {
 	 *
 	 * @param {number} owner - The ID of the player whose inventory is being updated.
 	 * @param {TInventoryItem[]} items - The list of items to be removed from the inventory.
+	 * @returns {Promise<import("./index.js").TQueryResult>} - The result of the delete query.
 	 */
-	async removeAll(owner, items) {
+	removeAll(owner, items) {
 		return this.db.query(
 			`DELETE FROM inventory WHERE _owner = ? AND id IN (${items.map(item => item.id).join(", ")})`,
 			[owner]
@@ -120,15 +111,17 @@ export class TableInventory {
 	 * Clear all items from a player's inventory in the database.
 	 *
 	 * @param {number} owner - The ID of the player whose inventory is being cleared.
+	 * @returns {Promise<import("./index.js").TQueryResult>} - The result of the delete query.
 	 */
-	async clear(owner) {
+	clear(owner) {
 		return this.db.query("DELETE FROM inventory WHERE _owner = ?", [owner]);
 	}
 
 	/**
 	 * Drop the table, removing all associated data.
+	 * @returns {Promise<import("./index.js").TQueryResult>} - The result of the drop query
 	 */
-	async drop() {
+	drop() {
 		return this.db.query(`DROP TABLE IF EXISTS inventory`)
 	}
 }

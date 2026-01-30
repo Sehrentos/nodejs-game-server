@@ -26,7 +26,8 @@ import { sendHeartbeat } from '../events/sendHeartbeat.js';
 import SkillControl from './SkillControl.js';
 import { sendMapEntity, sendMapRemoveEntity } from '../events/sendMap.js';
 import { sendPlayerLeave } from '../events/sendPlayerLeave.js';
-import { removeEntityFromMaps } from '../actions/removeEntityFromMaps.js';
+import { removeEntityFromMaps } from '../actions/entity.js';
+import DB from '../db/index.js';
 
 export class EntityControl {
 	/**
@@ -83,6 +84,10 @@ export class EntityControl {
 		// bind WebSocket functions for Players
 		if (entity.type === TYPE.PLAYER) {
 			this._onSocketHeartbeat = setInterval(this.onSocketHeartbeat.bind(this), Const.SOCKET_HEARTBEAT_INTERVAL)
+			// periodic player state sync (fallback to 60s if not defined)
+			this._onPeriodicSave = setInterval(() => {
+				this.syncPlayerToDb().catch(e => console.log(`[${this.constructor.name}] periodic sync error:`, e.message || e))
+			}, (Const.PLAYER_AUTO_SAVE_INTERVAL || 60000))
 			this._onSocketClose = this.onSocketClose.bind(this)
 			this._onSocketError = this.onSocketError.bind(this)
 			this._onSocketMessage = this.onSocketMessage.bind(this)
@@ -149,6 +154,8 @@ export class EntityControl {
 			const world = player.control.world
 			console.log(`[${this.constructor.name}] onSocketClose "${player.name}" connection closed.`);
 			clearInterval(this._onSocketHeartbeat) // stop heartbeat (ping/pong)
+			// stop periodic save
+			if (this._onPeriodicSave) clearInterval(this._onPeriodicSave)
 			this.socket.off('close', this._onSocketClose)
 			this.socket.off('error', this._onSocketError)
 			this.socket.off('message', this._onSocketMessage)
@@ -161,16 +168,11 @@ export class EntityControl {
 			this.broadcast(sendPlayerLeave(player.name));
 
 			// do logout by setting state=0
-			await world.db.account.logout(player.aid, false);
+			await DB.account.logout(player.aid, false);
 
-			// save player data
-			let playerUpdate = await world.db.player.update(player)
-			console.log(`[World socket.close] (id:${player.id}) "${player.name}" is ${playerUpdate.affectedRows > 0 ? 'saved' : 'not saved'}.`)
-
-			// save player inventory
-			// TODO improve this logic
-			await world.db.inventory.clear(player.id)
-			await world.db.inventory.addAll(player.id, player.inventory)
+			// final sync using centralized method (player + inventory)
+			const playerUpdate = await this.syncPlayerToDb()
+			console.log(`[World socket.close] (id:${player.id}) "${player.name}" is ${playerUpdate && playerUpdate.id ? 'saved' : 'not saved'}.`)
 
 			// send entity remove packet to other players
 			const playerMap = player.control.map
@@ -411,6 +413,27 @@ export class EntityControl {
 		const world = this.entity.control.world
 		const map = this.entity.control.map
 		world.broadcastMap(map, sendMapEntity(this.entity, "hp", "mp", "death"))
+	}
+
+	/**
+	 * Persist player core data and inventory to the database.
+	 * Used for periodic saves and final logout save.
+	 * @returns {Promise<object|null>} The result of `db.player.update` or null on error.
+	 */
+	async syncPlayerToDb() {
+		if (this.entity.type !== TYPE.PLAYER) return null
+		const player = this.entity
+		try {
+			// update player row
+			const playerUpdate = await DB.player.sync(player)
+			console.log(`[${this.constructor.name}] syncPlayerToDb (id:${player.id}) "${player.name}" ${playerUpdate && playerUpdate.id ? 'saved' : 'not saved'} to database.`)
+			await DB.inventory.sync(player)
+			player.emit('sync.saved', player.gid)
+			return playerUpdate
+		} catch (e) {
+			console.log(`[${this.constructor.name}] syncPlayerToDb error:`, (e.message || e))
+			return null
+		}
 	}
 
 	/**

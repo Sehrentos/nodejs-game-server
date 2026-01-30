@@ -77,6 +77,7 @@ export const PLAYER_TOUCH_AREA_SIZE = 25
  * Use `0` for no limit.
  */
 export const PLAYER_VIEW_AREA_SIZE = 600
+export const PLAYER_AUTO_SAVE_INTERVAL = 1 * 60 * 1000 // 1 minute
 
 // #region Player experience
 export const EXP_BASE = 200

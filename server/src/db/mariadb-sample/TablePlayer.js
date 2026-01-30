@@ -38,10 +38,10 @@ const DB_CREATE = `CREATE TABLE IF NOT EXISTS \`player\` (
 export class TablePlayer {
 	/**
 	 * @constructor
-	 * @param {import("./Database.js").Database} db - The database object to use for queries
+	 * @param {import("./index.js").Database} db - The database object to use for queries
 	 */
 	constructor(db) {
-		/** @type {import("./Database.js").Database} */
+		/** @type {import("./index.js").Database} */
 		this.db = db
 
 		// create the database
@@ -51,7 +51,7 @@ export class TablePlayer {
 	/**
 	 * Creates the table in the database if it doesn't already exist.
 	 *
-	 * @returns {Promise<import("./Database.js").TQueryResult>} - The result of the create query
+	 * @returns {Promise<import("./index.js").TQueryResult>} - The result of the create query
 	 */
 	create() {
 		return this.db.query(DB_CREATE);
@@ -61,7 +61,7 @@ export class TablePlayer {
 	 * Add a new player to the database.
 	 *
 	 * @param {import("../../../../shared/models/Entity.js").TEntityProps=} player
-	 * @returns {Promise<import("./Database.js").TQueryResult>}
+	 * @returns {Promise<import("./index.js").TQueryResult>}
 	 */
 	add(player) {
 		// map player object to database columns
@@ -107,7 +107,7 @@ export class TablePlayer {
 	 * Update a player in the database.
 	 *
 	 * @param {import("../../../../shared/models/Entity.js").TEntityProps=} player
-	 * @returns {Promise<import("./Database.js").TQueryResult>}
+	 * @returns {Promise<import("./index.js").TQueryResult>}
 	 */
 	update(player) {
 		// map player object to database columns
@@ -209,7 +209,7 @@ export class TablePlayer {
 	 * Set player name. Trim name to 30 chars if too long.
 	 * @param {number} id
 	 * @param {string} name
-	 * @returns {Promise<import("./Database.js").TQueryResult>}
+	 * @returns {Promise<import("./index.js").TQueryResult>}
 	 */
 	async setName(id, name) {
 		// trim name to 30, if too long
@@ -219,7 +219,7 @@ export class TablePlayer {
 
 	/**
 	 * Drop the table, removing all associated data.
-	 * @returns {Promise<import("./Database.js").TQueryResult>} - The result of the drop query
+	 * @returns {Promise<import("./index.js").TQueryResult>} - The result of the drop query
 	 */
 	drop() {
 		return this.db.query(`DROP TABLE IF EXISTS player`)

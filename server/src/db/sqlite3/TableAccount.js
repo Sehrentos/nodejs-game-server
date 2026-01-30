@@ -21,9 +21,9 @@ const DB_CREATE = `CREATE TABLE IF NOT EXISTS account (
  * A class to manage account-related database operations.
  */
 export class TableAccount {
-	/** @param {import("./Database.js").Database} database */
+	/** @param {import("./index.js").Database} database */
 	constructor(database) {
-		/** @type {import("./Database.js").Database} */
+		/** @type {import("./index.js").Database} */
 		this.db = database;
 
 		// create the database
@@ -34,7 +34,7 @@ export class TableAccount {
 	 * Creates the table in the database if it doesn't already exist
 	 */
 	create() {
-		return this.db.db.exec(DB_CREATE)
+		return this.db.exec(DB_CREATE)
 	}
 
 	/**
@@ -49,7 +49,7 @@ export class TableAccount {
 		hash.update(account.password + SALT);
 		const hashedPassword = hash.digest('hex'); // base64,hex
 
-		return this.db.query(
+		return this.db.exec(
 			`INSERT INTO account (
 				username,
 				password,
@@ -93,7 +93,7 @@ export class TableAccount {
 	 * @param {string} token - The new authentication token
 	 */
 	async updateToken(id, token) {
-		return this.db.query(`UPDATE account SET auth_token = ? WHERE id = ?`, [token, id])
+		return this.db.exec(`UPDATE account SET auth_token = ? WHERE id = ?`, [token, id])
 	}
 
 	/**
@@ -110,11 +110,11 @@ export class TableAccount {
 		hash.update(password + SALT);
 		const hashedPassword = hash.digest('hex'); // base64,hex
 
-		const stmt = this.db.db.prepare(
+		const rows = await this.db.query(
 			`SELECT * FROM account WHERE username = ? AND password = ?`,
-		)
+			[username, hashedPassword]
+		);
 
-		const rows = stmt.all(username, hashedPassword);
 		if (rows.length === 0) {
 			throw Error('Invalid login credentials')
 		}
@@ -124,7 +124,7 @@ export class TableAccount {
 		//     throw Error('Account already logged in')
 		// }
 
-		this.db.query(
+		this.db.exec(
 			`UPDATE account SET state = 1, logincount = logincount + 1, lastlogin = ?, last_ip = ? WHERE id = ?`,
 			[
 				new Date().toISOString(),
@@ -143,31 +143,21 @@ export class TableAccount {
 	 * @returns {Promise<Account>} - The account object if the token is valid
 	 */
 	async loginToken(token) {
-		const stmt = this.db.db.prepare(
-			`SELECT * FROM account WHERE auth_token = ?`,
+		const rows = await this.db.query(
+			`SELECT * FROM account WHERE auth_token = ? LIMIT 1`,
+			[token]
 		)
-
-		/** @type {any[]} */
-		const rows = stmt.all(token);
 
 		if (rows.length === 0) {
 			throw Error('Invalid login token')
 		}
 
-		this.db.query(
+		this.db.exec(
 			`UPDATE account SET state = 1, logincount = logincount + 1, lastlogin = ? WHERE id = ?`,
 			[new Date().toISOString(), rows[0].id]
 		)
 
 		return new Account(rows[0])
-	}
-
-	/**
-	 * Remove an account
-	 * @param {string|number|bigint} id - The Account ID
-	 */
-	async delete(id) {
-		return this.db.query(`DELETE FROM account WHERE id = ?`, [id])
 	}
 
 	/**
@@ -178,9 +168,9 @@ export class TableAccount {
 	 */
 	async logout(id, clearToken = true) {
 		if (clearToken) {
-			return this.db.query(`UPDATE account SET state = 0, auth_token = NULL WHERE id = ?`, [id])
+			return this.db.exec(`UPDATE account SET state = 0, auth_token = NULL WHERE id = ?`, [id])
 		}
-		return this.db.query(`UPDATE account SET state = 0 WHERE id = ?`, [id])
+		return this.db.exec(`UPDATE account SET state = 0 WHERE id = ?`, [id])
 	}
 
 	/**
@@ -191,15 +181,23 @@ export class TableAccount {
 	 */
 	async logoutAll(clearToken = true) {
 		if (clearToken) {
-			return this.db.query(`UPDATE account SET state = 0, auth_token = NULL WHERE state = 1`)
+			return this.db.exec(`UPDATE account SET state = 0, auth_token = NULL WHERE state = 1`)
 		}
-		return this.db.query(`UPDATE account SET state = 0 WHERE state = 1`)
+		return this.db.exec(`UPDATE account SET state = 0 WHERE state = 1`)
+	}
+
+	/**
+	 * Remove an account
+	 * @param {string|number|bigint} id - The Account ID
+	 */
+	async delete(id) {
+		return this.db.exec(`DELETE FROM account WHERE id = ?`, [id])
 	}
 
 	/**
 	 * Drop the table, removing all associated data
 	 */
 	async drop() {
-		return this.db.query(`DROP TABLE IF EXISTS account`)
+		return this.db.exec(`DROP TABLE IF EXISTS account`)
 	}
 }

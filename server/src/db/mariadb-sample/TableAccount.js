@@ -22,10 +22,10 @@ KEY \`name\` (\`username\`)
 export class TableAccount {
 	/**
 	 * @constructor
-	 * @param {import("./Database.js").Database} db - The database object to use for queries
+	 * @param {import("./index.js").Database} db - The database object to use for queries
 	 */
 	constructor(db) {
-		/** @type {import("./Database.js").Database} */
+		/** @type {import("./index.js").Database} */
 		this.db = db
 
 		// create the database
@@ -35,7 +35,7 @@ export class TableAccount {
 	/**
 	 * Creates the table in the database if it doesn't already exist.
 	 *
-	 * @returns {Promise<import("./Database.js").TQueryResult>} - The result of the create query
+	 * @returns {Promise<import("./index.js").TQueryResult>} - The result of the create query
 	 */
 	create() {
 		return this.db.query(DB_CREATE);
@@ -68,7 +68,7 @@ export class TableAccount {
 	 * Update the authentication token for the given account ID.
 	 * @param {string|number|bigint} id - The Account ID
 	 * @param {string} token - The new authentication token
-	 * @returns {Promise<import("./Database.js").TQueryResult>} - The result of the update query
+	 * @returns {Promise<import("./index.js").TQueryResult>} - The result of the update query
 	 */
 	updateToken(id, token) {
 		return this.db.query(`UPDATE account SET auth_token = ? WHERE id = ?`, [token, id])
@@ -130,7 +130,7 @@ export class TableAccount {
 	/**
 	 * Remove an account
 	 * @param {string|number|bigint} id - The Account ID
-	 * @returns {Promise<import("./Database.js").TQueryResult>} - The result of the update query
+	 * @returns {Promise<import("./index.js").TQueryResult>} - The result of the update query
 	 */
 	delete(id) {
 		return this.db.query(`DELETE FROM account WHERE id = ?`, [id])
@@ -140,7 +140,7 @@ export class TableAccount {
 	 * Logout an account by setting the state to 0 and optionally removing the token
 	 * @param {string|number|bigint} id - The Account ID
 	 * @param {boolean} clearToken - Whether to clear the token
-	 * @returns {Promise<import("./Database.js").TQueryResult>} - The result of the update query
+	 * @returns {Promise<import("./index.js").TQueryResult>} - The result of the update query
 	 */
 	logout(id, clearToken = true) {
 		if (clearToken) {
@@ -153,7 +153,7 @@ export class TableAccount {
 	 * Logs out all accounts by setting their state to 0 and clearing their authentication tokens.
 	 * This method updates the entire account table, effectively logging out all users.
 	 * @param {boolean} clearToken - Whether to clear the token
-	 * @returns {Promise<import("./Database.js").TQueryResult>} - The result of the update query
+	 * @returns {Promise<import("./index.js").TQueryResult>} - The result of the update query
 	 */
 	logoutAll(clearToken = true) {
 		if (clearToken) {
@@ -164,7 +164,7 @@ export class TableAccount {
 
 	/**
 	 * Drop the table, removing all associated data.
-	 * @returns {Promise<import("./Database.js").TQueryResult>} - The result of the drop query
+	 * @returns {Promise<import("./index.js").TQueryResult>} - The result of the drop query
 	 */
 	drop() {
 		return this.db.query(`DROP TABLE IF EXISTS account`)
