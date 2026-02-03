@@ -1,5 +1,5 @@
 import crypto from 'node:crypto';
-import { Account } from "../../../../shared/models/Account.js";
+import { Account } from "../../../shared/models/Account.js";
 
 const SALT = process.env.DB_SALT || 'your_unique_salt';
 

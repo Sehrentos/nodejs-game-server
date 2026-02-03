@@ -1,14 +1,14 @@
 /**
  * @typedef {Object} TAccount
  * @prop {number=} id
- * @prop {string=} username 
- * @prop {string=} password 
- * @prop {string=} email 
- * @prop {number=} state 
- * @prop {number=} expires 
- * @prop {number=} logincount 
- * @prop {Date=} lastlogin 
- * @prop {string=} last_ip 
+ * @prop {string=} username
+ * @prop {string=} password
+ * @prop {string=} email
+ * @prop {number=} state
+ * @prop {number=} expires
+ * @prop {number=} logincount
+ * @prop {Date=} lastlogin
+ * @prop {string=} last_ip
  * @prop {string=} auth_token
  */
 

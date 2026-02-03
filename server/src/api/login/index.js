@@ -1,6 +1,6 @@
 import express from 'express';
 import { generateToken, verifyToken } from '../../utils/jwt.js';
-import { DB } from '../../db/index.js';
+import DB from '../../db/index.js';
 import jwt from 'jsonwebtoken';
 const loginRouter = express.Router({ caseSensitive: false });
 
@@ -18,11 +18,11 @@ loginRouter.post('/', async (req, res, next) => {
 	}
 
 	// load user data from database
-	let conn;
 	try {
-		conn = await DB.connect()
+		await DB.connect()
 
 		const account = await DB.account.login(username, password, last_ip);
+		console.log('[API/login] account login:', account.id, last_ip)
 
 		// generate JWT token, but filter some account props
 		const token = generateToken({
@@ -39,8 +39,8 @@ loginRouter.post('/', async (req, res, next) => {
 		})
 
 		// update web token in database
-		await DB.account.updateToken(account.id, token);
-		console.log('[API/login] account login:', account.id)
+		const aid = await DB.account.setToken(account.id, token);
+		console.log('[API/login] account token updated:', aid)
 
 		res.json({
 			type: 'success',
@@ -51,8 +51,6 @@ loginRouter.post('/', async (req, res, next) => {
 		console.log('[API/login] Error', err.message, err.code || '')
 		res.status(401);
 		res.json({ type: 'error', message: 'Invalid credentials' });
-	} finally {
-		if (conn) conn.end();
 	}
 });
 
@@ -86,9 +84,8 @@ loginRouter.post('/token', async (req, res, next) => {
 	}
 
 	// load user data from database
-	let conn;
 	try {
-		conn = await DB.connect()
+		await DB.connect()
 
 		// get account data with old token
 		const account = await DB.account.loginToken(token);
@@ -108,7 +105,7 @@ loginRouter.post('/token', async (req, res, next) => {
 		})
 
 		// update new web token in database
-		await DB.account.updateToken(account.id, jwtToken);
+		await DB.account.setToken(account.id, jwtToken);
 		console.log('[API/login/token] account login:', account.id)
 
 		res.json({
@@ -120,8 +117,6 @@ loginRouter.post('/token', async (req, res, next) => {
 		console.log('[API/login/token] Error', err.message, err.code || '')
 		res.status(401);
 		res.json({ type: 'error', message: 'Invalid token' });
-	} finally {
-		if (conn) conn.end();
 	}
 });
 

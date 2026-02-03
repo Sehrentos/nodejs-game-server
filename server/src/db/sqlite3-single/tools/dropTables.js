@@ -1,15 +1,14 @@
 // tool to drop all tables and recreate the database
 // example: node tools/dropTables.js
-import db from '../src/db/index.js';
+import db, { dropAccountTable, dropInventoryTable, dropPlayerTable } from '../index.js';
+
+// using factory adapter instance `db`
 
 try {
-	await db.connect();
-
 	console.log("drop all tables...");
-
-	await db.account.drop();
-	await db.inventory.drop();
-	await db.player.drop();
+	await dropPlayerTable();
+	await dropInventoryTable();
+	await dropAccountTable();
 
 	// TODO missing table create calls
 	// console.log("create the tables...");

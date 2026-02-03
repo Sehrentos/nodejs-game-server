@@ -27,9 +27,7 @@ export default {
 					// values will be visible in the browser's source code.
 
 					// non-sensitive config:
-					'HOST': JSON.stringify(process.env.HOST),
-					'PORT': JSON.stringify(process.env.PORT),
-					'SSL_ENABLED': JSON.stringify(process.env.SSL_ENABLED),
+					'WS_URL': JSON.stringify(process.env.WS_URL),
 
 					// INSECURE EXAMPLE (DO NOT DO THIS):
 					// 'API_KEY': JSON.stringify(process.env.API_KEY), // VERY BAD - Never expose API keys!

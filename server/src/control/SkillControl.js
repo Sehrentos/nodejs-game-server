@@ -1,7 +1,7 @@
 import { TYPE } from "../../../shared/enum/Entity.js";
 import { SKILL_ID, SKILL_STATE } from "../../../shared/enum/Skill.js";
 import { inRangeOfEntity } from "../../../shared/utils/EntityUtils.js";
-import * as PetAction from "../actions/createPetEntity.js";
+import * as PetAction from "../actions/entity.js";
 import { sendSkillUse } from "../events/sendSkillUse.js";
 import Cooldown from "../../../shared/utils/Cooldown.js";
 // import createGameId from "../utils/createGameId.js";

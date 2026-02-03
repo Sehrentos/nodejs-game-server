@@ -1,7 +1,7 @@
 import { ENTITY_AI_IDDLE_MOVE_MAX, ENTITY_AI_IDDLE_TIME } from "../../../shared/Constants.js"
 import { DIR, TYPE } from "../../../shared/enum/Entity.js"
 import { findMapEntitiesInRadius } from "../../../shared/utils/EntityUtils.js"
-import { removeEntityFromMaps } from "../actions/removeEntityFromMaps.js"
+import { removeEntityFromMaps } from "../actions/entity.js"
 
 /**
  * @module AIPet

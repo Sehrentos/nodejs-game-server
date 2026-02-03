@@ -25,35 +25,34 @@ In this game, players can...
 
 **Please note: some of the demo assets are not included in the project!**
 
-Login view:
+### Login view:
 
-![Login](./docs/login_01.jpg)
+![Login](./client/sample_1.jpg)
 
-Game view 1 (town):
+### Game view 1 (town):
+Sample town where player can interact with NPC's
+![Lobby town](./client/sample_2.jpg)
 
-![Lobby town](./docs/game_01.jpg)
+### Game view 1 (Strange NPC dialog):
+Sample NPC interaction dialog UI
+![Strange NPC dialog](./client/sample_3.jpg)
 
-Game view 1 (Strange NPC dialog):
+### Game view 3 (Plain field 1 - Monsters):
+Sample field map with monsters
+![Plain field 1 - Monsters](./client/sample_4.jpg)
 
-![Strange NPC dialog](./docs/game_02.jpg)
+### Game view 4 (Other Players):
+Sample with other player in same map
+![Other Players](./client/sample_5.jpg)
 
-Game view 3 (Plain field 1 - Monsters):
-
-![Plain field 1 - Monsters](./docs/game_03.jpg)
-
-Game view 4 (Other Players):
-
-![Other Players](./docs/game_04.jpg)
-
-Game view 5 (without any assets):
-
-![No assets](./docs/game_05.jpg)
+### Game view 5 (without any assets):
+Sample without any image assets loaded
+![No assets](./client/sample_6.jpg)
 
 ## Prerequisites
  - Some coding experience is required.
  - NodeJS & NPM installed
- - SQLite, MariaDB or other database installed
- - Optional: Certificates (see [./certs/README.md](./certs/README.md) for self-signed certs) set `SSL_ENABLED=true` and `PORT=443` in the `.env` file.
+ - Optional: Certificates (see [./certs/README.md](./certs/README.md) for self-signed certs) set `SSL_KEY`, `SSL_CERT` and `PORT=443` in the `.env` file.
  - Have some skills with Paint or other drawing applications or an scanner machine for scanning paper drawings (like in the example images above).
 
 ## Getting Started
@@ -62,9 +61,9 @@ To get started with the game, follow these steps:
 
 ### Install
 
-Start by installing the required Node modules.
+Start by installing the required Node modules in both client/ and server/ directories.
 
-Client side
+#### Client-side
 ```sh
 cd client
 npm install
@@ -72,14 +71,11 @@ npm install
 
 Create or modify the `/client/.env` file and set web options:
 ```sh
-# Web
-HOST=127.0.0.1
-#PORT=80
-PORT=443
-SSL_ENABLED=true
+# WebSocket URL
+WS_URL=wss://127.0.0.1:3000/world
 ```
 
-Server side
+#### Server-side
 ```sh
 cd server
 npm install
@@ -91,11 +87,14 @@ Create or modify the `/server/.env` file and set web options:
 HOST=127.0.0.1
 #PORT=80
 PORT=443
-SSL_ENABLED=true
 SSL_KEY=./certs/key.pem
 SSL_CERT=./certs/cert.pem
 JWT_SECRET=your_unique_secret
 JWT_EXPIRES=2d
+# Database salt
+DB_SALT=your_unique_salt
+# SQLite
+SQLITE_FILE=./database.sqlite
 ```
 
 ### Database
@@ -103,43 +102,9 @@ JWT_EXPIRES=2d
 **Note:** the project currently uses [SQLite](https://github.com/WiseLibs/better-sqlite3) for quick development,
 but it can be swapped to other databases like MariaDB.
 
-Install [MariaDB](https://mariadb.com/downloads/), for the [nodejs connector](https://mariadb.com/kb/en/getting-started-with-the-node-js-connector/) to use it.
+ - Install [MariaDB](https://mariadb.com/downloads/), for the [nodejs connector](https://mariadb.com/kb/en/getting-started-with-the-node-js-connector/) to use it. See samples in [server/src/db/mariadb-sample/README.md](./server/src/db/mariadb-sample/README.md)
 
-Create the database: see the [src/db/main.sql](./src/db/main.sql) SQL file for the database structure.
-
-Set database user privileges to read and write. Examples:
-```sql
--- Create database --
-CREATE DATABASE myDatabase;
-
--- Create user --
-CREATE USER 'myUser'@localhost IDENTIFIED BY 'myPassword';
-CREATE USER 'myUser'@127.0.0.1 IDENTIFIED BY 'myPassword';
-
--- Grant all privileges --
-GRANT ALL PRIVILEGES ON *.* TO 'myUser'@localhost IDENTIFIED BY 'myPassword';
-GRANT ALL PRIVILEGES ON *.* TO 'myUser'@127.0.0.1 IDENTIFIED BY 'myPassword';
-
--- Grant specific privileges --
-GRANT create, select, insert, delete, alter, update, drop ON myDatabase.* TO 'myUser'@'localhost' IDENTIFIED BY 'myPassword';
-GRANT create, select, insert, delete, alter, update, drop ON myDatabase.* TO 'myUser'@'127.0.0.1' IDENTIFIED BY 'myPassword';
-
--- Update active privileges and show what were granted --
-FLUSH PRIVILEGES;
-SHOW GRANTS FOR 'myUser'@localhost;
-```
-
-Create or modify the `/server/.env` file with database connection options (example):
-```sh
-# MariaDB
-DB_HOST=127.0.0.1
-DB_USER=myUser
-DB_PASS=myPassword
-DB_DATABASE=myDatabase
-DB_PORT=3306
-DB_CONNECTION_LIMIT=5
-DB_SALT=your_unique_salt
-```
+Modify the `/server/.env` file with database options (example)
 
 ### Build client app
 
@@ -181,10 +146,8 @@ open "http://127.0.0.1/"
  - See the *Future Plans* section below.
 
 ## Docs
- - See more documentation in the [docs/README.md](./docs/README.md).
- - Or view the source files, it's pretty verbal with comments.
-   - Server-side start from [server/index](./server/index.js) and follow from there.
-   - Client-side start from [client/index](./client/src/index.js) and follow from there.
+ - Server-side start from [README](./server/README.md) or [server/index](./server/index.js) and follow from there.
+ - Client-side start from [README](./client/README.md) or [client/index](./client/src/index.js) and follow from there.
 
 ## Future Plans
  - Improve safety.

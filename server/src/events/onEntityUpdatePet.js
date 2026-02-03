@@ -1,4 +1,4 @@
-import { ENTITY_AUTO_REVIVE_TIME } from "../../../shared/Constants.js"
+// import { ENTITY_AUTO_REVIVE_TIME } from "../../../shared/Constants.js"
 
 /**
  * **Pet** Server update tick callback. Used to do animations etc.

@@ -8,7 +8,6 @@ import api from './api/index.js';
 export function server() {
 	const HOST = process.env.HOST || '127.0.0.1';
 	const PORT = Number(process.env.PORT) || 3000;
-	const SSL_ENABLED = process.env.SSL_ENABLED === 'true' ? true : false;
 	const SSL_KEY = process.env.SSL_KEY;
 	const SSL_CERT = process.env.SSL_CERT;
 
@@ -17,7 +16,7 @@ export function server() {
 
 	// create HTTP or HTTPS server
 	let srv;
-	if (SSL_ENABLED) { // SSL/HTTPS certificates
+	if (SSL_KEY && SSL_CERT) { // SSL/HTTPS certificates
 		srv = https.createServer({
 			key: readFileSync(SSL_KEY),
 			cert: readFileSync(SSL_CERT),

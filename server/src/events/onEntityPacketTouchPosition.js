@@ -111,5 +111,5 @@ function touch(player, entity, timestamp) {
 	}
 
 	// DEBUG
-	console.log(`[Event.onEntityPacketTouchPosition] (inRange:${inRange}) "${player.name}" interact with "${entity.name}" x:${entity.lastX}, y:${entity.lastY} (gid: ${entity.gid})`)
+	console.log(`[Event.onEntityPacketTouchPosition] ${inRange ? 'in range' : 'out of range'} "${player.name}" interact with "${entity.name}" x:${entity.lastX}, y:${entity.lastY} (gid: ${entity.gid})`)
 }

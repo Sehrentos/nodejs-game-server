@@ -3,7 +3,7 @@ import { WorldMap } from '../../shared/models/WorldMap.js';
 import { Entity } from '../../shared/models/Entity.js';
 import { TYPE } from '../../shared/enum/Entity.js';
 import { verifyToken } from './utils/jwt.js';
-import { Database } from './db/sqlite/Database.js';
+import DB from './db/index.js';
 import MapLobbyTown from './maps/MapLobbyTown.js';
 import MapPlainFields1 from './maps/MapPlainFields1.js';
 import MapPlainFields2 from './maps/MapPlainFields2.js';
@@ -15,8 +15,7 @@ import MapUnderWater1 from './maps/MapUnderWater1.js';
 import MapUnderWater2 from './maps/MapUnderWater2.js';
 import MapDungeon1 from './maps/MapDungeon1.js';
 import { sendChat } from './events/sendChat.js';
-import { addEntityToMap } from './actions/addEntityToMap.js';
-import { createPlayerEntity } from './actions/createPlayerEntity.js';
+import { addEntityToMap, createPlayerEntity } from './actions/entity.js';
 
 /**
  * @module World
@@ -41,9 +40,9 @@ export class World {
 			perMessageDeflate: false, // {Boolean|Object} Enable/disable permessage-deflate.
 		})
 
-		/** @type {Database} - database instance */
-		this.db = new Database();
-		this.dbPools = [];
+		// /** @type {import('./db/index.js').Database} - database instance */
+		// this.db = DB;
+		// this.dbPools = []; // mariadb
 
 		/** @type {Array<WorldMap>} - Game maps */
 		this.maps = [
@@ -93,20 +92,17 @@ export class World {
 					// terminate client connection
 					entity.control.socket.close()
 					// save player data
-					let playerUpdate = await this.db.player.update(entity)
-					console.log(`[World (debug)] (id:${entity.id}) "${entity.name}" is ${playerUpdate.changes > 0 ? 'saved' : 'not saved'}.`)
-					// save player inventory
-					// TODO improve this logic
-					await this.db.inventory.clear(entity.id)
-					await this.db.inventory.addAll(entity.id, entity.inventory)
+					let player = await DB.player.sync(entity) // returns={id:number}
+					console.log(`[World (debug)] (id:${entity.id}) "${entity.name}" is ${player && player.id ? 'saved' : 'not saved'}.`)
+					await DB.inventory.sync(entity)
 				}
 			}
 			// logout all accounts
-			await this.db.account.logoutAll(false)
+			await DB.account.logoutAll(false)
 			// close databases
 			this.socket.close()
-			this.dbPools.forEach(pool => pool.end())
-			this.db.close()
+			// this.dbPools.forEach(pool => pool.end()) // mariadb
+			DB.close()
 		} catch (e) {
 			console.log('[World] SIGINT signal received. Close all connections and exit. But players was not saved due to an error:', e.message)
 		} finally {
@@ -149,12 +145,18 @@ export class World {
 			}
 			// const datetime = new Date().toLocaleString();
 			const tokenExpires = new Date(payload.exp * 1000).toLocaleString();
-			console.log(`[World] token verified, account_id:${payload.id}, expires:${tokenExpires}`)
+			const ip_address = String(req.headers['x-forwarded-for'] || req.socket.remoteAddress || '');
+			console.log(`[World] token verified, from ${ip_address}, account_id:${payload.id}, expires:${tokenExpires}`)
 
 			// token is valid. Next step is to load user data from database
 			// Note: find the account with same token
 			// account = await this.db.account.login(payload.username, payload.password);
-			const account = await this.db.account.loginToken(token);
+			const account = await DB.account.loginToken(token, ip_address);
+			if (!account) {
+				console.log('[World] Invalid token, account not found in database.');
+				ws.close(4401, 'Invalid credentials');
+				return;
+			}
 
 			// when multiple logins on the same account
 			// send notification and close connection

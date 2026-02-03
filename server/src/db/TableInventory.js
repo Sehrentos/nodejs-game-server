@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS inventory (
  * @prop {number} slot - The inventory slot where the item is located
  * @prop {number} isEquipped - Whether the item is currently equipped
  *
- * @typedef {import("../../../../shared/models/Item.js").TItemProps} TItemProps
+ * @typedef {import("../../../shared/models/Item.js").TItemProps} TItemProps
  */
 
 /**
