@@ -40,23 +40,21 @@ API and usage
 
 The `Database` class exposes convenience methods you can use from server code:
 
-- `query(sql, params)` — returns all rows for SELECT-like queries.
-- `exec(sql, params)` — run INSERT/UPDATE/DELETE and returns `{ affectedRows, insertId }`.
-- `batch(sql, paramsArray)` — run many parameterized statements in a transaction.
-- `transaction(fn, ...params)` — create/run a transaction wrapping a callback.
-- `close()` — close the underlying SQLite file handle.
+- `connect()` — connects to the database and creates tables.
+- `close()` — closes the database.
+- `get(query, params)` — executes a prepared READ statement and returns the first result as an object.
+- `all(query, params)` — executes a prepared READ statement and returns all results as an array of objects.
+- `query(action, query, params)` — executes a prepared WRITE statement in worker.
 
 Simple usage example (ES module):
 
 ```js
 import 'dotenv/config';
-import Database from './db/index.js';
+import db from './db/index.js';
 
 async function main() {
-  // `Database` default export is the singleton instance
-  const db = Database;
-  const rows = await db.query('SELECT 1 AS ok');
-  console.log(rows);
+  const items = await db.inventory.getAll(1);
+  console.log(items);
   await db.close();
 }
 
@@ -67,14 +65,10 @@ Implementation notes
 --------------------
 
 - The wrapper uses `better-sqlite3` and sets `PRAGMA journal_mode = WAL` for improved concurrency.
-- `index.js` provides a singleton via `Database.getInstance()` and also exports the instance as the default export.
+- `index.js` provides a singleton as the default export.
 - Table-specific logic is implemented in the sibling modules: `TableAccount.js`, `TablePlayer.js`, and `TableInventory.js`.
 
 References
 ----------
 
 - better-sqlite3: https://github.com/WiseLibs/better-sqlite3
-SQLite database adapter
-=================
-
-This directory contains

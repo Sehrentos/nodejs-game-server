@@ -49,14 +49,14 @@ export class TableAccount {
 	 * Creates the table in the database if it doesn't already exist
 	 */
 	create() {
-		return this.db.instance.exec(DB_CREATE)
+		return this.db.query('run', DB_CREATE)
 	}
 
 	/**
 	 * Adds a new account to the database.
 	 *
 	 * @param {TAccountProps=} account
-	 * @returns
+	 * @returns {Promise<{id:number}>}
 	 */
 	async add(account) {
 		// SHA2(CONCAT(account.password, SALT), 512); // password hashing
@@ -64,7 +64,7 @@ export class TableAccount {
 		hash.update(account.password + SALT);
 		const hashedPassword = hash.digest('hex'); // base64,hex
 
-		return this.db.get(
+		const res = this.db.query('get',
 			`
 			INSERT INTO account (
 				username,
@@ -90,16 +90,20 @@ export class TableAccount {
 			)
 			RETURNING id
 			`,
-			account.username,
-			hashedPassword,
-			account.email,
-			account.state,
-			account.expires,
-			account.logincount,
-			account.lastlogin.toISOString(),
-			account.last_ip,
-			account.auth_token
+			[
+				account.username,
+				hashedPassword,
+				account.email,
+				account?.state ?? 0,
+				account?.expires ?? 0,
+				account?.logincount ?? 0,
+				account?.lastlogin?.toISOString() ?? null,
+				account?.last_ip ?? '',
+				account?.auth_token ?? ''
+			]
 		)
+
+		return res
 	}
 
 	/**
@@ -107,16 +111,16 @@ export class TableAccount {
 	 *
 	 * @param {string|number|bigint} id - The Account ID
 	 * @param {string} token - The new authentication token
+	 * @returns {Promise<{id:number}>}
 	 */
 	async setToken(id, token) {
-		return this.db.get(
+		return this.db.query('get',
 			`
 			UPDATE account SET auth_token = ?
 			WHERE id = ?
 			RETURNING id
 			`,
-			token,
-			id
+			[token, id]
 		)
 	}
 
@@ -134,8 +138,8 @@ export class TableAccount {
 		hash.update(password + SALT);
 		const hashedPassword = hash.digest('hex'); // base64,hex
 
-		// update account state to logged in
-		const row = await this.db.get(
+		const row = await this.db.query(
+			'get',
 			`
 			UPDATE account
 			SET state = 1,
@@ -150,15 +154,20 @@ export class TableAccount {
 				expires, logincount,
 				lastlogin, last_ip
 			`,
-			new Date().toISOString(),
-			last_ip || "",
-			username,
-			hashedPassword
+			[
+				new Date().toISOString(),
+				last_ip || "",
+				username,
+				hashedPassword
+			]
 		)
 
 		if (!row) {
 			throw Error('Invalid login credentials')
 		}
+
+		// correct types
+		row.lastlogin = new Date(row.lastlogin || 0);
 
 		return new Account(row)
 	}
@@ -171,8 +180,8 @@ export class TableAccount {
 	 * @returns {Promise<Account>} - The account object if the token is valid
 	 */
 	async loginToken(token, last_ip) {
-		// update account state to logged in
-		const account = await this.db.get(
+		const account = await this.db.query(
+			'get',
 			`
 			UPDATE account
 			SET state = 1,
@@ -185,9 +194,11 @@ export class TableAccount {
 				expires, logincount,
 				lastlogin, last_ip
 			`,
-			new Date().toISOString(),
-			last_ip || "",
-			token
+			[
+				new Date().toISOString(),
+				last_ip || "",
+				token
+			]
 		)
 
 		if (!account) {
@@ -202,12 +213,13 @@ export class TableAccount {
 	 *
 	 * @param {string|number|bigint} id - The Account ID
 	 * @param {boolean} clearToken - Whether to clear the token
+	 * @returns {Promise<import("./index.js").TSQLResult>} - The result of the update query
 	 */
 	async logout(id, clearToken = true) {
 		if (clearToken) {
-			return this.db.query(`UPDATE account SET state = 0, auth_token = NULL WHERE id = ?`, id)
+			return this.db.query('run', `UPDATE account SET state = 0, auth_token = NULL WHERE id = ?`, [id])
 		}
-		return this.db.query(`UPDATE account SET state = 0 WHERE id = ?`, id)
+		return this.db.query('run', `UPDATE account SET state = 0 WHERE id = ?`, [id])
 	}
 
 	/**
@@ -215,26 +227,29 @@ export class TableAccount {
 	 * This method updates the entire account table, effectively logging out all users.
 	 *
 	 * @param {boolean} clearToken - Whether to clear the token
+	 * @returns {Promise<import("./index.js").TSQLResult>} - The result of the update query
 	 */
 	async logoutAll(clearToken = true) {
 		if (clearToken) {
-			return this.db.query(`UPDATE account SET state = 0, auth_token = NULL WHERE state = 1`)
+			return this.db.query('run', `UPDATE account SET state = 0, auth_token = NULL WHERE state = 1`)
 		}
-		return this.db.query(`UPDATE account SET state = 0 WHERE state = 1`)
+		return this.db.query('run', `UPDATE account SET state = 0 WHERE state = 1`)
 	}
 
 	/**
 	 * Remove an account
 	 * @param {string|number|bigint} id - The Account ID
+	 * @returns {Promise<import("./index.js").TSQLResult>}
 	 */
 	async delete(id) {
-		return this.db.query(`DELETE FROM account WHERE id = ?`, id)
+		return this.db.query('run', `DELETE FROM account WHERE id = ?`, [id])
 	}
 
 	/**
 	 * Drop the table, removing all associated data
+	 * @returns {Promise<import("./index.js").TSQLResult>}
 	 */
 	async drop() {
-		return this.db.exec(`DROP TABLE IF EXISTS account`)
+		return this.db.query('run', `DROP TABLE IF EXISTS account`)
 	}
 }

@@ -78,7 +78,7 @@ export class TablePlayer {
 	 * Creates the table in the database if it doesn't already exist
 	 */
 	create() {
-		return this.db.instance.exec(DB_CREATE)
+		return this.db.query('run', DB_CREATE)
 	}
 
 	/**
@@ -121,8 +121,8 @@ export class TablePlayer {
 		}
 		const names = Object.keys(params).map((v) => '`' + v + '`').join(',')
 		const values = Object.values(params)
-		//@ts-ignore
-		return this.db.get(
+
+		return this.db.query('get',
 			`
 			INSERT INTO player (
 				${names},
@@ -133,8 +133,7 @@ export class TablePlayer {
 				?
 			)
 			RETURNING id`,
-			...values,
-			new Date().toISOString()
+			[...values, new Date().toISOString()]
 		)
 	}
 
@@ -142,7 +141,7 @@ export class TablePlayer {
 	 * Update a player in the database.
 	 *
 	 * @param {import("../../../shared/models/Entity.js").TEntityProps=} player
-	 * @returns {Promise<{id:number}>}
+	 * @returns {Promise<{ id: number }>}
 	 */
 	async sync(player) {
 		// map player object to database columns
@@ -177,17 +176,19 @@ export class TablePlayer {
 		// to `name`=? pairs
 		const names = Object.keys(params).map((v) => '`' + v + '`=?').join(',')
 		const values = Object.values(params)
-		//@ts-ignore
-		return this.db.get(
+
+		return this.db.query('get',
 			`
 			UPDATE player SET ${names},
 				last_login = ?
 			WHERE id=?
 			RETURNING id
 			`,
-			...values,
-			new Date().toISOString(),
-			player.id
+			[
+				...values,
+				new Date().toISOString(),
+				player.id
+			]
 		)
 	}
 
@@ -202,7 +203,7 @@ export class TablePlayer {
 			SELECT * FROM player
 			WHERE account_id = ?
 			`,
-			aid
+			[aid]
 		)
 
 		return rows.map(row => {
@@ -243,7 +244,7 @@ export class TablePlayer {
 	}
 
 	/**
-	 * Get total palyers.
+	 * Get total players in the database.
 	 * @returns {Promise<number>}
 	 */
 	async getCount() {
@@ -252,6 +253,7 @@ export class TablePlayer {
 			SELECT COUNT(*) as count FROM player
 			`
 		)
+		console.log('[DB] Player count result:', result);
 		return Number(result?.count || 0)
 	}
 
@@ -264,37 +266,37 @@ export class TablePlayer {
 	setName(id, name) {
 		// trim name to 30, if too long
 		if (name.length > 30) name = name.slice(0, 30)
-		//@ts-ignore
-		return this.db.get(
+		return this.db.query('get',
 			`
 			UPDATE player SET name=?
 			WHERE id=?
 			RETURNING name
 			`,
-			name,
-			id
+			[name, id]
 		)
 	}
 
 	/**
-	 * Delete an item by its database ID.
+	 * Delete an player by ID.
 	 *
-	 * @param {number} id - The database ID of the inventory item to delete.
+	 * @param {number} id - Player ID
+	 * @returns {Promise<import("./index.js").TSQLResult>}
 	 */
 	delete(id) {
-		return this.db.query(
+		return this.db.query('run',
 			`
 			DELETE FROM player WHERE id = ?
 			`,
-			id
+			[id]
 		)
 	}
 
 	/**
 	 * Drop the table, removing all associated data
+	 * @returns {Promise<import("./index.js").TSQLResult>}
 	 */
 	drop() {
-		return this.db.exec(
+		return this.db.query('run',
 			`
 			DROP TABLE IF EXISTS player
 			`

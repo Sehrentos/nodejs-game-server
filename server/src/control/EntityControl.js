@@ -426,8 +426,10 @@ export class EntityControl {
 		try {
 			// update player row
 			const playerUpdate = await DB.player.sync(player)
+			console.log('[DB] player sync result:', playerUpdate)
 			console.log(`[${this.constructor.name}] syncPlayerToDb (id:${player.id}) "${player.name}" ${playerUpdate && playerUpdate.id ? 'saved' : 'not saved'} to database.`)
-			await DB.inventory.sync(player)
+			const itemsUpdate = await DB.inventory.sync(player)
+			console.log('[DB] inventory sync result:', itemsUpdate)
 			player.emit('sync.saved', player.gid)
 			return playerUpdate
 		} catch (e) {

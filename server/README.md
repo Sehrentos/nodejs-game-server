@@ -2,7 +2,7 @@
 
 # Overview
 - Server side of the NodeJS game. Provides WebSocket/game logic, REST API endpoints, and persistence.
-- Uses Express for HTTP APIs and `ws` for WebSocket communication. Database access via `node:sqlite`.
+- Uses Express for HTTP APIs and `ws` for WebSocket communication. Database access via `better-sqlite3`.
 
 # Quick start
 - Install dependencies, run the server, or run tests:

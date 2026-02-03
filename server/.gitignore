@@ -4,5 +4,7 @@ certs/*
 .env
 .zip
 .7z
+*.db
+*.db*
 *.sqlite
 *.sqlite*

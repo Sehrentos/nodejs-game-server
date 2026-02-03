@@ -2,6 +2,7 @@ import { TYPE } from "../../../shared/enum/Entity.js";
 import { REGEX_BLACKLIST_PLAYER_NAMES } from "../../../shared/Constants.js";
 import { sendChat } from "./sendChat.js";
 import { SPR_ID, SPR_MAP } from "../../../shared/enum/Sprite.js";
+import DB from '../../src/db/index.js';
 
 /**
  * Chat commands available in the game
@@ -111,11 +112,21 @@ CMD['/save'] = async (entity, data, params) => {
 CMD['/changename'] = async (entity, data, params) => {
 	try {
 		const ctrl = entity.control
-		const name = params.join(' ');
+		let name = params.join(' ');
 
 		// blacklist validation for names
 		if (REGEX_BLACKLIST_PLAYER_NAMES.test(name)) {
 			ctrl.socket.send(sendChat("default", "Server", entity.name, "Change name failed."))
+			return
+		}
+
+		// update in database
+		try {
+			const res = await DB.player.setName(entity.id, name)
+			name = res.name;
+		} catch (e) {
+			console.log('[DB] Error setting player name:', e.message || e)
+			ctrl.socket.send(sendChat("default", "Server", entity.name, "Change name failed. Name may already be in use."))
 			return
 		}
 

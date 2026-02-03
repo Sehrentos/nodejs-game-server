@@ -52,7 +52,7 @@ Sample without any image assets loaded
 ## Prerequisites
  - Some coding experience is required.
  - NodeJS & NPM installed
- - Optional: Certificates (see [./certs/README.md](./certs/README.md) for self-signed certs) set `SSL_ENABLED=true` and `PORT=443` in the `.env` file.
+ - Optional: Certificates (see [./certs/README.md](./certs/README.md) for self-signed certs) set `SSL_KEY`, `SSL_CERT` and `PORT=443` in the `.env` file.
  - Have some skills with Paint or other drawing applications or an scanner machine for scanning paper drawings (like in the example images above).
 
 ## Getting Started
@@ -87,7 +87,6 @@ Create or modify the `/server/.env` file and set web options:
 HOST=127.0.0.1
 #PORT=80
 PORT=443
-SSL_ENABLED=true
 SSL_KEY=./certs/key.pem
 SSL_CERT=./certs/cert.pem
 JWT_SECRET=your_unique_secret

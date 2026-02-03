@@ -37,7 +37,7 @@ export class TableInventory {
 	 * Creates the table in the database if it doesn't already exist
 	 */
 	create() {
-		return this.db.instance.exec(DB_CREATE)
+		return this.db.query('run', DB_CREATE)
 	}
 
 	/**
@@ -48,8 +48,7 @@ export class TableInventory {
 	 * @returns {Promise<{_id:number, _owner:number, id:number}>} - The inserted inventory item details.
 	 */
 	add(owner, item) {
-		//@ts-ignore
-		return this.db.get(
+		return this.db.query('get',
 			`
 			INSERT INTO inventory (
 				_owner,
@@ -61,11 +60,13 @@ export class TableInventory {
 			VALUES (?, ?, ?, ?, ?)
 			RETURNING _id, _owner, id
 			`,
-			owner,
-			item.id,
-			item.amount,
-			item.slot,
-			item.isEquipped ? 1 : 0
+			[
+				owner,
+				item.id,
+				item.amount,
+				item.slot,
+				item.isEquipped ? 1 : 0
+			]
 		);
 	}
 
@@ -76,10 +77,11 @@ export class TableInventory {
 	 *
 	 * @param {number} owner - The ID of the player whose inventory is being updated.
 	 * @param {TItemProps[]} items - The list of items to be added to the inventory.
+	 * @returns {Promise<import("./index.js").TSQLResult>}
 	 */
 	put(owner, items) {
-		if (items.length === 0) return Promise.resolve([]);
-		return this.db.batch(
+		if (items.length === 0) return Promise.resolve({ changes: 0, lastInsertRowid: 0 });
+		return this.db.query('run',
 			`
 			INSERT INTO inventory (
 				_owner,
@@ -111,12 +113,13 @@ export class TableInventory {
 	 * @returns {Promise<Array<TItemProps>>} - The items in the player's inventory.
 	 */
 	async getAll(owner) {
+		/** @type {Array<TInventoryTable>} */
 		const items = await this.db.all(
 			`
 			SELECT * FROM inventory
 			WHERE _owner = ?
 			`,
-			owner
+			[owner]
 		);
 
 		return items.map(row => ({
@@ -125,7 +128,7 @@ export class TableInventory {
 			id: Number(row.id),
 			amount: Number(row.amount),
 			slot: Number(row.slot),
-			isEquipped: row.isEquiped === 1,
+			isEquipped: row.isEquipped === 1,
 		}))
 	}
 
@@ -134,16 +137,17 @@ export class TableInventory {
 	 *
 	 * @param {number} owner - The ID of the player whose inventory is being updated.
 	 * @param {TItemProps[]} items - The list of items to be removed from the inventory.
+	 * @returns {Promise<import("./index.js").TSQLResult>}
 	 */
 	removeAll(owner, items) {
 		const itemIds = items.map(item => item.id).join(", ");
-		return this.db.query(
+		return this.db.query('run',
 			`
 			DELETE FROM inventory
 			WHERE _owner = ?
 			AND id IN (${itemIds})
 			`,
-			owner
+			[owner]
 		);
 	}
 
@@ -151,14 +155,15 @@ export class TableInventory {
 	 * Delete an inventory item from the database by its ID.
 	 *
 	 * @param {number} id - The database ID of the inventory item to delete.
+	 * @returns {Promise<import("./index.js").TSQLResult>}
 	 */
 	delete(id) {
-		return this.db.query(
+		return this.db.query('run',
 			`
 			DELETE FROM inventory
 			WHERE _id = ?
 			`,
-			id
+			[id]
 		);
 	}
 
@@ -166,22 +171,24 @@ export class TableInventory {
 	 * Clear the inventory of a specific player in the database.
 	 *
 	 * @param {number} owner - The ID of the player whose inventory is being cleared.
+	 * @returns {Promise<import("./index.js").TSQLResult>}
 	 */
 	clear(owner) {
-		return this.db.query(
+		return this.db.query('run',
 			`
 			DELETE FROM inventory
 			WHERE _owner = ?
 			`,
-			owner
+			[owner]
 		);
 	}
 
 	/**
 	 * Drop the table, removing all associated data.
+	 * @returns {Promise<import("./index.js").TSQLResult>}
 	 */
 	drop() {
-		return this.db.exec(
+		return this.db.query('run',
 			`
 			DROP TABLE IF EXISTS inventory
 			`
@@ -192,57 +199,55 @@ export class TableInventory {
 	 * Synchronize the player's inventory in the database.
 	 *
 	 * @param {import("../../../shared/models/Entity.js").Entity} player - The player whose inventory is being synchronized
-	 *
-	 * @example
-	 * this.sync(player);
+	 * @returns {Promise<import("./index.js").TSQLResult>}
 	 */
 	async sync(player) {
 		// 1. Prepare the IDs for the "Sweep" phase
 		const currentItemIds = player.inventory.map(item => item.id);
 
-		// 2. Execute Upserts for all items
-		await this.db.batch(
-			`
-			INSERT INTO inventory (
-				_owner,
-				id,
-				amount,
-				slot,
-				isEquiped
-			)
-			VALUES (?, ?, ?, ?, ?)
-			ON CONFLICT(_owner, id) DO UPDATE SET
-				amount = excluded.amount,
-				slot = excluded.slot,
-				isEquiped = excluded.isEquiped
-			`,
-			player.inventory.map(item => [
-				player.id,
-				item.id,
-				item.amount,
-				item.slot,
-				item.isEquipped ? 1 : 0
-			])
-		);
-
-		// 3. Execute Deletions (only if there are items to keep, otherwise just clear owner)
 		if (currentItemIds.length > 0) {
-			return this.db.query(
+			// 2. Execute Upserts for all items
+			await this.db.query('run',
+				`
+				INSERT INTO inventory (
+					_owner,
+					id,
+					amount,
+					slot,
+					isEquiped
+				)
+				VALUES (?, ?, ?, ?, ?)
+				ON CONFLICT(_owner, id) DO UPDATE SET
+					amount = excluded.amount,
+					slot = excluded.slot,
+					isEquiped = excluded.isEquiped
+				`,
+				player.inventory.map(item => [
+					player.id,
+					item.id,
+					item.amount,
+					item.slot,
+					item.isEquipped ? 1 : 0
+				])
+			);
+
+			// 3. Execute Deletions (only if there are items to keep, otherwise just clear owner)
+			return this.db.query('run',
 				`
 				DELETE FROM inventory
 				WHERE _owner = ?
 				AND id NOT IN (${currentItemIds.join(',')})
 				`,
-				player.id
+				[player.id]
 			);
 		}
 
 		// If no items to keep, clear all
-		return this.db.query(
+		return this.db.query('run',
 			`
 			DELETE FROM inventory WHERE _owner = ?
 			`,
-			player.id
+			[player.id]
 		);
 	}
 }

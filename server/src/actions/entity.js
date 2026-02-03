@@ -180,12 +180,14 @@ export async function createPlayerEntity(world, ws, account) {
 	const players = await DB.player.getByAccountId(account.id) //world.db.player.getByAccountId(account.id)
 	console.log(`[World] (${account.id}) account has ${players.length} players. Server has ${playersTotalCount} players.`)
 
+	// TODO implement player select with websocket messages
+
 	// create new player if not found
 	if (players.length === 0) {
 		// Note: insertId can be BigInt or Number in mariaDB
 		// JSON.stringify can't convert BigInt, so convert to string
-		let insertId = await DB.player.add(player)
-		player.id = Number(insertId) // update player id
+		const res = await DB.player.add(player)
+		player.id = Number(res.id) // update player id
 	} else {
 		// merge existing player data from db
 		Object.assign(player, players[0])

@@ -17,20 +17,20 @@ router.post('/', async (req, res, next) => {
 		return;
 	}
 
-	// load user data from database
-	let account;
+	/** @type {Account} */
+	let account, response;
 	try {
 		await DB.connect()
 
 		// register new account
 		// duplicate error.code: 'ER_DUP_ENTRY', when run again
-		const accountId = await DB.account.add({
+		response = await DB.account.add({
 			username,
 			password,
 			email,
 			last_ip,
 		});
-		console.log('[API/register] account registered:', accountId)
+		console.log('[API/register] account registered:', response)
 
 		// do login with the new account
 		account = await DB.account.login(username, password, last_ip);
@@ -48,8 +48,8 @@ router.post('/', async (req, res, next) => {
 		})
 
 		// update web token in database
-		const aid = await DB.account.setToken(account.id, token);
-		console.log('[API/register] account register completed:', aid)
+		response = await DB.account.setToken(account.id, token);
+		console.log('[API/register] account register completed:', response)
 
 		res.json({
 			type: 'success',
